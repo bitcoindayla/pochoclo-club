@@ -4,7 +4,7 @@ Aplicación web privada y mobile-first para reservar lugares en las funciones de
 
 ## Estado
 
-Están implementados los **slices 1, 2, 3, 4, 5, 6 y 7** del [PRD](./PRD.md):
+Están implementados los **slices 1, 2, 3, 4, 5, 6, 7 y 8** del [PRD](./PRD.md):
 
 - primer administrador mediante un email configurado;
 - acceso con Google usando Firebase Authentication;
@@ -43,8 +43,8 @@ Están implementados los **slices 1, 2, 3, 4, 5, 6 y 7** del [PRD](./PRD.md):
 - visualización de la función cerrada en modo de solo lectura;
 - apertura de una nueva función después de cerrar la anterior.
 - chequeo de concurrencia contra Firestore real para reservas, espera, promociones y bloqueos.
-
-El slice 8 está en progreso: queda la revisión de uso desde pantallas mobile.
+- interfaz revisada en Chrome para escritorio y pantallas mobile de 375 px;
+- recorrido automático en Chrome de un miembro normal: reserva propia, `+1` externo y cancelación conjunta.
 
 ## Tecnología
 
@@ -120,6 +120,14 @@ npm run test:concurrency
 ```
 
 Requiere que no haya una función real abierta. Crea funciones temporales, ejecuta operaciones simultáneas, restaura la función que estaba visible y comprueba que los fixtures hayan sido eliminados.
+
+El recorrido real de un miembro normal se ejecuta con la aplicación local encendida en `http://localhost:3000`:
+
+```bash
+npm run test:member-flow
+```
+
+Requiere una función abierta, P1 y P2 libres y una lista de espera vacía. Crea un miembro temporal, reserva P1, agrega un invitado externo en P2, cancela todo desde la interfaz y comprueba que las reservas, los lugares y la cuenta temporal hayan sido eliminados incluso si el test falla.
 
 ## Decisiones de seguridad
 
