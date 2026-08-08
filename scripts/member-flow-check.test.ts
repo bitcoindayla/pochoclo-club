@@ -295,7 +295,7 @@ describe("normal member browser flow", () => {
 
     if (adminScreenshotPath) {
       await page.goto(`${BASE_URL}/admin/ocupacion`, { waitUntil: "networkidle0" });
-      await page.waitForSelector(".occupancySummary");
+      await page.waitForSelector(".adminRoomReference");
       await saveScreenshot(page, adminScreenshotPath);
       await page.goto(`${BASE_URL}/club`, { waitUntil: "networkidle0" });
       await page.waitForSelector(".roomMap");
