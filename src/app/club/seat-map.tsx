@@ -314,7 +314,6 @@ export function SeatMap({
               onChange={(event) => {
                 setGuestQuery(event.target.value);
                 setGuestMember(null);
-                setGuestSeat(null);
               }}
               placeholder="Por ejemplo: Mauro"
               type="search"
@@ -334,7 +333,6 @@ export function SeatMap({
                       onClick={() => {
                         setGuestMember(candidate);
                         setGuestQuery(candidate.name);
-                        setGuestSeat(null);
                       }}
                       type="button"
                     >

@@ -268,8 +268,8 @@ describe("normal member browser flow", () => {
 
     await clickButtonByText(page, "Agregar un +1");
     await page.waitForSelector("#guest-search");
-    await page.type("#guest-search", guestName);
     await clickPlace(page, guestPlaceCode);
+    await page.type("#guest-search", guestName);
     await clickButtonByText(page, "Confirmar reserva del +1");
     await page.waitForFunction(
       (placeCode) =>
