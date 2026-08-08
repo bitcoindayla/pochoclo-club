@@ -36,6 +36,9 @@
     "vitest": "4.1.10"
   },
   "overrides": {
+    "jwks-rsa": {
+      "jose": "4.15.9"
+    },
     "postcss": "8.5.25",
     "sharp": "0.35.3"
   }
