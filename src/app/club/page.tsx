@@ -47,7 +47,7 @@ export default async function ClubPage() {
     <div className="dashboard shell">
       <div className="dashboardHeader">
         <div>
-          <p className="kicker">Membresía activa</p>
+          <p className="kicker">Carnet habilitado</p>
           <h1>Hola, {firstName}.</h1>
         </div>
         <SignOutButton />
@@ -58,7 +58,7 @@ export default async function ClubPage() {
           <div className="screeningIntro">
             <div>
               <p className="kicker">
-                {screening.status === "closed" ? "Función cerrada · solo lectura" : "Reservas abiertas"}
+                {screening.status === "closed" ? "Cinta archivada · solo lectura" : "En alquiler · Reservas abiertas"}
               </p>
               <h2>{screening.title || "Próxima función"}</h2>
               <p className="screeningDate">{screeningDate}</p>
@@ -96,8 +96,8 @@ export default async function ClubPage() {
       {member.role === "admin" ? (
         <section className="adminCallout">
           <div>
-            <p className="kicker">Administración</p>
-            <h2>Prepará la próxima ronda.</h2>
+            <p className="kicker">Detrás del mostrador</p>
+            <h2>Prepará el próximo estreno.</h2>
           </div>
           <div className="buttonRow">
             <Link className="secondaryButton lightButton" href="/admin/ocupacion">

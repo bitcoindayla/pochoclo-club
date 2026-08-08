@@ -18,12 +18,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <header className="siteHeader">
           <Brand />
-          <span className="eyebrow">Mendoza · Domingos</span>
+          <span className="eyebrow">Mendoza · Rebobinar antes de devolver</span>
         </header>
         <main>{children}</main>
         <footer className="siteFooter">
           <span>Pochoclo Club</span>
-          <span>Una función, catorce lugares.</span>
+          <span>Una función · Catorce lugares · Be kind, rewind.</span>
         </footer>
       </body>
     </html>
