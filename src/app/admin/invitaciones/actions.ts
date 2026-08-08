@@ -15,7 +15,11 @@ export type GenerateInvitationsState = {
 };
 
 function applicationUrl() {
-  const configuredUrl = process.env.APP_URL;
+  const configuredUrl =
+    process.env.APP_URL ??
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : undefined);
   if (!configuredUrl) throw new Error("Falta configurar APP_URL.");
   return new URL(configuredUrl);
 }

@@ -1,6 +1,11 @@
 import "server-only";
 
-import { applicationDefault, getApps, initializeApp } from "firebase-admin/app";
+import {
+  applicationDefault,
+  cert,
+  getApps,
+  initializeApp,
+} from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 
@@ -10,9 +15,19 @@ function getAdminApp() {
 
   const projectId = process.env.FIREBASE_PROJECT_ID;
   if (!projectId) throw new Error("FIREBASE_PROJECT_ID no está configurado.");
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  if (Boolean(clientEmail) !== Boolean(privateKey)) {
+    throw new Error(
+      "FIREBASE_CLIENT_EMAIL y FIREBASE_PRIVATE_KEY deben configurarse juntas.",
+    );
+  }
 
   return initializeApp({
-    credential: applicationDefault(),
+    credential:
+      clientEmail && privateKey
+        ? cert({ projectId, clientEmail, privateKey })
+        : applicationDefault(),
     projectId,
   });
 }
