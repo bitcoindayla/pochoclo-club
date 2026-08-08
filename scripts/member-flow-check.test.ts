@@ -22,6 +22,7 @@ const memberName = "Miembro Temporal Codex";
 const guestName = "Invitado Temporal Codex";
 const ownPlaceCode = "P1";
 const guestPlaceCode = "P2";
+const adminScreenshotPath = process.env.E2E_ADMIN_SCREENSHOT_PATH;
 const guestReservationId = `external-${createHash("sha256").update(uid).digest("hex")}`;
 
 let browser: Browser | null = null;
@@ -123,6 +124,16 @@ async function clickPlace(currentPage: Page, placeCode: string) {
   );
 }
 
+async function saveScreenshot(currentPage: Page, screenshotPath: string) {
+  if (!screenshotPath.endsWith(".png")) {
+    throw new Error("La ruta de la captura debe terminar en .png.");
+  }
+  await currentPage.screenshot({
+    fullPage: true,
+    path: screenshotPath as `${string}.png`,
+  });
+}
+
 beforeAll(async () => {
   const firestore = getAdminFirestore();
   const pointerSnapshot = await firestore.collection("system").doc("openScreening").get();
@@ -164,7 +175,7 @@ beforeAll(async () => {
     email,
     name: memberName,
     imageUrl: null,
-    role: "member",
+    role: adminScreenshotPath ? "admin" : "member",
     active: true,
     createdAt: now,
     updatedAt: now,
@@ -276,6 +287,14 @@ describe("normal member browser flow", () => {
     expect(plusOne.exists).toBe(true);
     expect(plusOne.data()).toMatchObject({ memberName: guestName, placeCode: guestPlaceCode });
     expect(guestReservation.exists).toBe(true);
+
+    if (adminScreenshotPath) {
+      await page.goto(`${BASE_URL}/admin/ocupacion`, { waitUntil: "networkidle0" });
+      await page.waitForSelector(".adminRoomReference");
+      await saveScreenshot(page, adminScreenshotPath);
+      await page.goto(`${BASE_URL}/club`, { waitUntil: "networkidle0" });
+      await page.waitForSelector(".roomMap");
+    }
 
     await clickButtonByText(page, `Mi lugar · ${ownPlaceCode}`);
     await clickButtonByText(page, "Cancelar mi reserva");

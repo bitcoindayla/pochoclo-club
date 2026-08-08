@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 
-import { ALL_PLACE_CODES, type PlaceCode } from "@/lib/room";
+import { ALL_PLACE_CODES, FLOOR_PLACES, ROOM_ROWS, type PlaceCode } from "@/lib/room";
 import type { ScreeningOccupancy, WaitlistEntry } from "@/lib/screenings";
 
 import {
@@ -78,12 +78,79 @@ export function OccupancyManager({
   ];
   const feedback = [...states].reverse().find((state) => state.error || state.message);
 
+  function renderReferencePlace(placeCode: PlaceCode, floor = false) {
+    const occupant = occupiedByPlace.get(placeCode);
+    const blocked = blockedPlaces.has(placeCode);
+    const stateClass = occupant
+      ? occupant.kind === "guest"
+        ? "adminMiniGuest"
+        : "adminMiniOccupied"
+      : blocked
+        ? "adminMiniBlocked"
+        : "adminMiniAvailable";
+    const stateLabel = occupant
+      ? occupant.kind === "guest"
+        ? `ocupado por ${occupant.memberName}, +1 de ${occupant.bookedByName}`
+        : `ocupado por ${occupant.memberName}`
+      : blocked
+        ? "bloqueado"
+        : "disponible";
+
+    return (
+      <span
+        aria-label={`${placeCode}, ${stateLabel}`}
+        className={`adminMiniPlace ${floor ? "adminMiniFloor" : ""} ${stateClass}`}
+        key={placeCode}
+        role="img"
+        title={`${placeCode} · ${stateLabel}`}
+      >
+        <strong>{placeCode}</strong>
+        {occupant ? <small>{occupant.memberName}</small> : null}
+      </span>
+    );
+  }
+
   return (
     <>
       {!readOnly && feedback?.error ? <p className="formError adminFeedback" role="alert">{feedback.error}</p> : null}
       {!readOnly && feedback?.message ? <p className="formSuccess adminFeedback" role="status">{feedback.message}</p> : null}
 
       <section className="occupancySection">
+        <div className="adminRoomReference">
+          <p className="kicker">Mapa de referencia</p>
+          <div className="adminMiniScreen">Pantalla</div>
+          <div className="adminMiniRows">
+            {ROOM_ROWS.map((row, rowIndex) => {
+              const floorPlace =
+                rowIndex === 1
+                  ? FLOOR_PLACES[0]
+                  : rowIndex === 2
+                    ? FLOOR_PLACES[1]
+                    : null;
+
+              return (
+                <div className="adminMiniRow" key={row[0].code}>
+                  <span className="adminMiniRowLabel">{String.fromCharCode(65 + rowIndex)}</span>
+                  {row.slice(0, 2).map((place) => renderReferencePlace(place.code))}
+                  {floorPlace ? (
+                    renderReferencePlace(floorPlace.code, true)
+                  ) : (
+                    <span aria-hidden="true" className="adminMiniGap" />
+                  )}
+                  {row.slice(2).map((place) => renderReferencePlace(place.code))}
+                </div>
+              );
+            })}
+          </div>
+          <div className="adminMiniEntrance">Puerta de ingreso ↗</div>
+          <div className="adminMiniLegend" aria-label="Referencias del mapa">
+            <span><i className="adminMiniAvailable" /> Disponible</span>
+            <span><i className="adminMiniOccupied" /> Ocupado</span>
+            <span><i className="adminMiniGuest" /> +1</span>
+            <span><i className="adminMiniBlocked" /> Bloqueado</span>
+          </div>
+        </div>
+
         <div className="sectionHeading">
           <div>
             <p className="kicker">Sala</p>
