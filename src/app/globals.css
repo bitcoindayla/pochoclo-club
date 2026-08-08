@@ -1,13 +1,15 @@
 :root {
-  --ink: #171714;
-  --paper: #f4eedf;
-  --cream: #fff8e8;
-  --red: #e4452f;
-  --pink: #ec9aa5;
-  --yellow: #f3c94c;
-  --green: #38775c;
-  --muted: #777166;
-  --line: rgba(23, 23, 20, 0.18);
+  --ink: #171126;
+  --paper: #f3e9c8;
+  --cream: #fff9df;
+  --red: #ff3d7f;
+  --pink: #ff82ca;
+  --yellow: #ffe15a;
+  --green: #00a77f;
+  --purple: #6441d7;
+  --cyan: #22d9d1;
+  --muted: #6d6477;
+  --line: rgba(23, 17, 38, 0.24);
 }
 
 * { box-sizing: border-box; }
@@ -528,4 +530,364 @@ body::after { content: ""; position: fixed; z-index: -1; inset: 0; pointer-event
 @media (prefers-reduced-motion: no-preference) {
   .primaryButton, .secondaryButton, .googleButton, .copyButton, .seat, .floorPlace { transition: transform 160ms ease, box-shadow 160ms ease; }
   .primaryButton:hover, .secondaryButton:hover, .googleButton:hover, .copyButton:hover { transform: translateY(-2px); box-shadow: 0 5px 0 rgba(23,23,20,0.22); }
+}
+
+/* Videoclub 90: etiquetas VHS, neón de mostrador y controles físicos. */
+html { background: var(--ink); }
+
+body {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(rgba(100, 65, 215, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(100, 65, 215, 0.035) 1px, transparent 1px),
+    radial-gradient(circle at 8% 4%, rgba(255, 61, 127, 0.2), transparent 24rem),
+    radial-gradient(circle at 92% 32%, rgba(34, 217, 209, 0.18), transparent 26rem);
+  background-size: 24px 24px, 24px 24px, auto, auto;
+  font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+}
+
+main { position: relative; overflow: clip; }
+main::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 15rem;
+  height: 15rem;
+  right: -6rem;
+  top: 8rem;
+  border: 2.5rem solid rgba(100, 65, 215, 0.09);
+  border-radius: 50%;
+}
+
+.siteHeader {
+  min-height: 82px;
+  margin-top: 0.75rem;
+  padding-inline: clamp(0.7rem, 2vw, 1.2rem);
+  border: 3px solid var(--ink);
+  background: var(--yellow);
+  box-shadow: 6px 6px 0 var(--ink);
+}
+
+.brand { gap: 0.65rem; font-family: Impact, "Arial Black", sans-serif; font-size: clamp(0.95rem, 3vw, 1.35rem); letter-spacing: 0.015em; }
+.brand i { color: var(--red); font-family: inherit; font-style: italic; font-weight: 900; text-shadow: 2px 2px 0 var(--cyan); }
+.brandMark {
+  width: 2.7rem;
+  height: 1.8rem;
+  color: var(--cyan);
+  border: 2px solid var(--ink);
+  border-radius: 0.25rem;
+  background:
+    radial-gradient(circle at 28% 50%, var(--cream) 0 12%, transparent 13%),
+    radial-gradient(circle at 72% 50%, var(--cream) 0 12%, transparent 13%),
+    var(--ink);
+  box-shadow: inset 0 -0.35rem 0 var(--purple);
+  transform: rotate(-4deg);
+  font-family: "Courier New", monospace;
+  font-size: 0;
+}
+.brandMark::after { content: "P"; font-size: 0.7rem; font-weight: 900; }
+.siteHeader .eyebrow { padding: 0.35rem 0.5rem; color: var(--ink); border: 2px solid var(--ink); background: var(--cyan); box-shadow: 3px 3px 0 var(--ink); }
+
+.eyebrow, .kicker { font-family: "Courier New", monospace; font-weight: 900; }
+.kicker {
+  width: fit-content;
+  margin-bottom: 1rem;
+  padding: 0.32rem 0.55rem;
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  background: var(--pink);
+  box-shadow: 3px 3px 0 var(--ink);
+  transform: rotate(-1deg);
+}
+
+.landing { gap: clamp(3rem, 7vw, 6rem); }
+.hero h1, .ticket h1, .messageCard h1, .dashboard h1, .adminPage h1 {
+  font-family: Impact, "Arial Black", "Trebuchet MS", sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+.hero h1 { max-width: 9ch; text-shadow: -4px 4px 0 var(--cyan); }
+.hero h1 em { color: var(--red); font-style: italic; text-shadow: 4px 4px 0 var(--yellow); }
+.heroCopy { color: #40374d; font-size: clamp(1rem, 2vw, 1.2rem); font-weight: 700; }
+
+.accessCard {
+  max-width: 720px;
+  padding: 1rem;
+  border: 3px solid var(--ink);
+  border-radius: 0.45rem;
+  background: linear-gradient(115deg, var(--cream) 0 72%, var(--cyan) 72%);
+  box-shadow: 7px 7px 0 var(--ink);
+}
+.accessCard h2 { font-family: "Arial Black", "Trebuchet MS", sans-serif; text-transform: uppercase; }
+.accessCard p { color: #4f4658; }
+.accessNumber {
+  padding: 0.55rem 0.45rem;
+  color: var(--cream);
+  border: 2px solid var(--ink);
+  background: var(--purple);
+  box-shadow: 3px 3px 0 var(--ink);
+  transform: rotate(-4deg);
+  font-family: "Courier New", monospace;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.googleButton, .primaryButton, .secondaryButton, .copyButton {
+  border: 3px solid var(--ink);
+  border-radius: 0.38rem;
+  box-shadow: 4px 4px 0 var(--ink);
+  font-family: "Arial Black", "Trebuchet MS", sans-serif;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.googleButton, .primaryButton { color: var(--cream); background: var(--purple); }
+.secondaryButton { background: var(--yellow); }
+.googleGlyph { border: 2px solid var(--ink); border-radius: 0.2rem; }
+
+.poster { isolation: isolate; }
+.poster::before {
+  content: "NUEVO INGRESO";
+  position: absolute;
+  z-index: 4;
+  right: -1rem;
+  top: -1.5rem;
+  width: 5.3rem;
+  height: 5.3rem;
+  display: grid;
+  place-items: center;
+  padding: 0.5rem;
+  color: var(--ink);
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  background: var(--yellow);
+  box-shadow: 4px 4px 0 var(--ink);
+  transform: rotate(9deg);
+  font-family: "Arial Black", sans-serif;
+  font-size: 0.62rem;
+  line-height: 1.05;
+  text-align: center;
+}
+.posterFrame {
+  aspect-ratio: 3 / 4;
+  padding: 1.2rem;
+  color: var(--cream);
+  border: 7px solid var(--ink);
+  border-radius: 0.5rem;
+  background:
+    linear-gradient(155deg, transparent 0 54%, rgba(23, 17, 38, 0.78) 54% 68%, transparent 68%),
+    repeating-linear-gradient(135deg, var(--purple) 0 28px, var(--red) 28px 52px, var(--cyan) 52px 73px);
+  box-shadow: inset 0 0 0 4px var(--cream);
+  transform: rotate(2.5deg);
+}
+.posterFrame::before {
+  content: "VHS";
+  position: absolute;
+  right: 1.15rem;
+  bottom: 1.2rem;
+  padding: 0.35rem 0.5rem;
+  color: var(--cream);
+  border: 2px solid var(--cream);
+  font-family: "Courier New", monospace;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+.posterFrame::after { width: 13rem; height: 13rem; right: -5rem; top: 20%; border: 2rem solid rgba(255, 225, 90, 0.6); background: transparent; mix-blend-mode: normal; }
+.posterFrame > span { width: fit-content; padding: 0.45rem 0.55rem; color: var(--ink); border: 2px solid var(--ink); background: var(--yellow); }
+.posterFrame strong { padding: 0.1em 0.05em; color: var(--red); background: var(--ink); font-family: Impact, "Arial Black", sans-serif; font-size: clamp(5rem, 18vw, 7rem); font-style: italic; line-height: 0.82; text-shadow: 4px 4px 0 var(--cyan); }
+.posterFrame p { padding: 0.55rem; color: var(--ink); border: 2px solid var(--ink); background: var(--cream); font-family: "Courier New", monospace; font-weight: 900; }
+.posterShadow { inset: 1.2rem -1.2rem -1.2rem 1.2rem; border: 4px solid var(--ink); background: var(--cyan); }
+
+.ticket, .messageCard, .emptyFeature, .generatorCard, .screeningCreator, .occupancySummary, .screeningFeature {
+  border: 3px solid var(--ink);
+  border-radius: 0.45rem;
+  box-shadow: 7px 7px 0 var(--ink);
+}
+.ticket { background: var(--yellow); }
+.ticketStub { color: var(--cream); border-color: var(--ink); background: var(--purple); }
+.ticketStub b { color: var(--yellow); font-family: Impact, sans-serif; font-style: normal; text-shadow: 2px 2px 0 var(--red); }
+.messageCard { background: linear-gradient(135deg, var(--cream), #f7dcff); }
+.largeIndex { color: rgba(100, 65, 215, 0.12); font-family: Impact, sans-serif; font-style: normal; }
+
+.dashboardHeader { padding-bottom: 1.5rem; border-bottom: 5px solid var(--ink); }
+.dashboard h1, .adminPage h1 { text-shadow: -3px 3px 0 var(--cyan); }
+.textButton, .inlineLink, .backLink, .dangerLink, .dangerButton { font-family: "Courier New", monospace; font-weight: 900; }
+.textButton, .backLink { color: var(--ink); }
+.emptyFeature { background: linear-gradient(90deg, var(--yellow), var(--cream)); }
+.emptyFeature h2, .adminCallout h2, .generatorCard h2, .invitationHistory h2, .screeningCreator h2, .screeningHistory h2, .screeningFeature h2, .occupancySummary h2, .occupancySection h2, .waitlistPanel h3, .guestSearch h3 {
+  font-family: "Arial Black", "Trebuchet MS", sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+}
+.featureDate { color: var(--purple); font-family: Impact, sans-serif; font-style: normal; }
+.adminCallout { border: 3px solid var(--ink); background: var(--purple); box-shadow: 7px 7px 0 var(--ink); }
+.adminCallout .secondaryButton { color: var(--ink); border-color: var(--ink); background: var(--cyan); }
+
+.screeningFeature { overflow: hidden; background: var(--cream); }
+.screeningIntro {
+  position: relative;
+  border-bottom: 3px solid var(--ink);
+  background:
+    linear-gradient(90deg, transparent 0 70%, rgba(255,255,255,0.35) 70%),
+    var(--yellow);
+}
+.screeningIntro::after {
+  content: "ESTRENO";
+  position: absolute;
+  right: clamp(1rem, 4vw, 2.5rem);
+  top: -0.45rem;
+  padding: 0.3rem 0.55rem;
+  color: var(--cream);
+  border: 2px solid var(--ink);
+  background: var(--red);
+  box-shadow: 3px 3px 0 var(--ink);
+  transform: rotate(3deg);
+  font-family: "Courier New", monospace;
+  font-size: 0.65rem;
+  font-weight: 900;
+}
+.availabilityCount { color: var(--ink); font-family: "Courier New", monospace; }
+.availabilityCount strong { color: var(--purple); font-family: Impact, sans-serif; font-style: normal; text-shadow: 2px 2px 0 var(--cyan); }
+.reservationForm { background: var(--cream); }
+.reservationMode { border: 3px solid var(--ink); border-radius: 0.4rem; box-shadow: 4px 4px 0 var(--ink); }
+.modeButton { font-family: "Arial Black", sans-serif; text-transform: uppercase; }
+.modeButton + .modeButton { border-left: 3px solid var(--ink); }
+.modeButtonActive { background: var(--purple); }
+.guestNotice, .closedNotice { border: 3px solid var(--ink); border-left-width: 8px; background: var(--pink); box-shadow: 4px 4px 0 var(--ink); }
+.guestSearch, .waitlistPanel { border: 3px solid var(--ink); background: var(--paper); box-shadow: 5px 5px 0 var(--ink); }
+.guestSearchControl input, .generatorForm select, .fieldGroup input, .fieldGroup textarea, .moveForm select {
+  border: 3px solid var(--ink);
+  border-radius: 0.3rem;
+  background: var(--cream);
+  box-shadow: inset 3px 3px 0 rgba(100, 65, 215, 0.12);
+}
+.memberResult { border: 2px solid var(--ink); border-radius: 0.25rem; box-shadow: 2px 2px 0 var(--ink); }
+.memberResultSelected { background: var(--purple); }
+.guestSelection { color: var(--ink); border: 2px solid var(--ink); background: var(--cyan); font-family: "Courier New", monospace; font-weight: 900; }
+
+.roomMap {
+  position: relative;
+  max-width: 900px;
+  padding: clamp(1rem, 4vw, 2.2rem);
+  overflow: hidden;
+  border: 4px solid var(--ink);
+  border-radius: 1rem;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0 2px, transparent 2px 5px),
+    radial-gradient(circle at 50% -10%, rgba(34, 217, 209, 0.25), transparent 48%),
+    #1e1633;
+  box-shadow: 8px 8px 0 var(--purple), 12px 12px 0 var(--ink);
+}
+.cinemaScreen {
+  width: 86%;
+  color: var(--ink);
+  border: 3px solid var(--ink);
+  border-radius: 0.2rem 0.2rem 50% 50% / 0.2rem 0.2rem 35% 35%;
+  background: linear-gradient(90deg, var(--pink), var(--yellow), var(--cyan));
+  box-shadow: 0 0.55rem 0 var(--ink), 0 1rem 2.2rem rgba(34, 217, 209, 0.3);
+}
+.cinemaScreen span { font-family: "Courier New", monospace; }
+.seatRows { gap: clamp(0.5rem, 1.6vw, 0.9rem); }
+.seatRow { grid-template-columns: 1.4rem repeat(5, minmax(0, 1fr)); gap: clamp(0.25rem, 1vw, 0.65rem); }
+.rowLabel { color: var(--cyan); font-family: Impact, sans-serif; font-style: normal; }
+.floorSlot { min-width: 0; }
+.seat, .floorPlace {
+  min-width: 0;
+  min-height: clamp(68px, 12vw, 98px);
+  padding: 0.5rem 0.2rem;
+  border: 3px solid var(--ink);
+  border-radius: 0.42rem;
+  box-shadow: inset 0 -0.38rem 0 rgba(23, 17, 38, 0.16), 3px 3px 0 #090611;
+}
+.seat strong, .floorPlace strong { font-family: "Arial Black", sans-serif; font-size: clamp(0.9rem, 3.2vw, 1.35rem); }
+.seat span, .floorPlace span { display: -webkit-box; overflow: hidden; font-size: clamp(0.46rem, 1.35vw, 0.64rem); line-height: 1.1; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.seatAvailable { background: var(--cream); }
+.seatSelected, .floorSelected { background: var(--yellow); box-shadow: 0 0 0 3px var(--cyan), 4px 4px 0 #090611; }
+.seatOccupied, .floorOccupied { color: #5d5665; border-color: #090611; background: #aaa1b2; }
+.seatBlocked, .floorBlocked { color: #665d70; border-color: #090611; background: repeating-linear-gradient(135deg, #aaa1b2 0 7px, #71677a 7px 14px); }
+.seatMine, .floorMine { color: var(--cream); border-color: #090611; background: var(--green); box-shadow: 0 0 0 3px var(--cyan), 3px 3px 0 #090611; }
+.seatGuest, .floorGuest { color: var(--ink); background: var(--pink); box-shadow: 0 0 0 3px var(--yellow), 3px 3px 0 #090611; }
+.floorPlace { align-content: center; color: var(--ink); border-style: dashed; border-radius: 50%; background: var(--cyan); }
+.floorPlace small { color: currentColor; font-family: "Courier New", monospace; font-size: 0.48rem; font-weight: 900; text-transform: uppercase; }
+.floorPlace.floorAvailable { color: var(--ink); background: var(--cyan); }
+.floorPlace.floorSelected { color: var(--ink); background: var(--yellow); }
+.floorPlace.floorOccupied { color: #5d5665; background: #aaa1b2; }
+.floorPlace.floorBlocked { color: #665d70; background: repeating-linear-gradient(135deg, #aaa1b2 0 7px, #71677a 7px 14px); }
+.floorPlace.floorMine { color: var(--cream); background: var(--green); }
+.floorPlace.floorGuest { color: var(--ink); background: var(--pink); }
+.aisle { margin: clamp(1rem, 4vw, 1.8rem) 0 0; border-color: rgba(255,255,255,0.25); }
+.aisle span { color: var(--cyan); background: #1e1633; font-family: "Courier New", monospace; }
+.entrance { width: fit-content; margin: 0.25rem 0 0 auto; color: var(--yellow); border-color: var(--cyan); font-family: "Courier New", monospace; }
+.mapLegend { font-family: "Courier New", monospace; }
+.mapLegend i { border: 2px solid var(--ink); border-radius: 0.1rem; }
+.legendAvailable { background: var(--cream); }
+.legendSelected { background: var(--yellow); }
+.legendMine { background: var(--green); }
+.legendGuest { background: var(--pink); }
+.reservationControls { border-top: 3px dashed var(--ink); }
+.reservationSubmit p, .waitlistControl p { color: #4f4658; font-family: "Courier New", monospace; font-weight: 700; }
+.dangerButton, .dangerLink { color: #b51253; }
+.closedNotice { background: var(--yellow); }
+
+.generatorCard, .screeningCreator, .occupancySummary { background: var(--cream); }
+.freshLinks { border: 3px solid var(--ink); border-radius: 0.35rem; background: var(--purple); box-shadow: 5px 5px 0 var(--ink); }
+.copyButton { background: var(--yellow); }
+.sectionHeading { padding-bottom: 0.8rem; border-bottom: 5px solid var(--ink); }
+.tableScroll, .screeningList, .adminWaitlist, .waitlistPanel ol { border-top: 0; }
+table { background: rgba(255, 249, 223, 0.72); }
+th { color: var(--ink); background: var(--cyan); font-family: "Courier New", monospace; }
+th, td { border-color: var(--ink); }
+.screeningRow, .adminWaitlist li { border: 2px solid var(--ink); border-top: 0; background: var(--cream); }
+.screeningRow:nth-child(even), .adminWaitlist li:nth-child(even) { background: #f3d9ff; }
+.screeningRow:first-child, .adminWaitlist li:first-child { border-top: 2px solid var(--ink); }
+.screeningRow h3 { font-family: "Arial Black", sans-serif; }
+.status { border: 2px solid currentColor; border-radius: 0.25rem; background: var(--cream); font-family: "Courier New", monospace; box-shadow: 2px 2px 0 currentColor; }
+.occupancyStats span { border: 2px solid var(--ink); background: var(--yellow); box-shadow: 3px 3px 0 var(--ink); font-family: "Courier New", monospace; }
+.occupancyStats strong { font-family: Impact, sans-serif; }
+.smallButton { border: 2px solid var(--ink); background: var(--cyan); box-shadow: 2px 2px 0 var(--ink); font-family: "Courier New", monospace; }
+.waitPosition { border: 2px solid var(--ink); border-radius: 0.25rem; background: var(--purple); font-family: Impact, sans-serif; box-shadow: 2px 2px 0 var(--ink); }
+.emptyList { border: 3px dashed var(--ink); background: rgba(255, 249, 223, 0.55); font-family: "Courier New", monospace; }
+
+.siteFooter { margin-top: 1.5rem; padding-inline: 1rem; color: var(--cyan); border: 0; border-top: 4px solid var(--red); font-family: "Courier New", monospace; font-weight: 900; }
+body::after { opacity: 0.18; mix-blend-mode: multiply; }
+
+@media (max-width: 699px) {
+  .siteHeader { width: min(100% - 1.25rem, 1180px); }
+  .siteHeader .eyebrow { max-width: 8.5rem; font-size: 0.54rem; text-align: center; }
+  .accessCard { background: var(--cream); }
+  .poster { width: min(88%, 330px); }
+  .screeningIntro::after { right: 0.6rem; }
+  .roomMap { padding: 1rem 0.55rem; border-radius: 0.65rem; box-shadow: 5px 5px 0 var(--purple), 8px 8px 0 var(--ink); }
+  .cinemaScreen { margin-bottom: 2.3rem; }
+  .seatRow { grid-template-columns: 1rem repeat(5, minmax(0, 1fr)); gap: 0.22rem; }
+  .seat, .floorPlace { min-height: 68px; padding-inline: 0.12rem; border-width: 2px; box-shadow: inset 0 -0.3rem 0 rgba(23, 17, 38, 0.14), 2px 2px 0 #090611; }
+  .seat strong, .floorPlace strong { font-size: 0.85rem; }
+  .seat span, .floorPlace span { font-size: 0.43rem; }
+  .floorPlace small { font-size: 0.4rem; }
+  .occupancyTable tr, .invitationTable tr { border: 2px solid var(--ink); background: var(--cream); box-shadow: 3px 3px 0 var(--ink); }
+}
+
+@media (max-width: 370px) {
+  .seatRow { grid-template-columns: 0.8rem repeat(5, minmax(0, 1fr)); gap: 0.15rem; }
+  .seat, .floorPlace { min-height: 62px; }
+  .seat span, .floorPlace span { font-size: 0.39rem; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .poster { animation: videoFloat 4.8s ease-in-out infinite; }
+  .hero { animation: shelfSlide 420ms ease-out both; }
+  .seatAvailable:hover, .floorAvailable:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--cyan); }
+  .primaryButton:hover, .secondaryButton:hover, .googleButton:hover, .copyButton:hover, .smallButton:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--ink); }
+}
+
+@keyframes videoFloat {
+  0%, 100% { transform: translateY(0) rotate(-0.4deg); }
+  50% { transform: translateY(-0.55rem) rotate(0.6deg); }
+}
+
+@keyframes shelfSlide {
+  from { opacity: 0; transform: translateX(-1rem); }
+  to { opacity: 1; transform: translateX(0); }
 }

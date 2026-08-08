@@ -128,11 +128,130 @@ export function SeatMap({
         .filter((candidate) => searchableName(candidate.name).includes(normalizedQuery))
         .slice(0, 8)
     : [];
+  const selectedOwnSeat = ownPlaceCode === selected ? null : selected;
+  const selectedGuestSeat = guestReservation?.placeCode === guestSeat ? null : guestSeat;
 
   function chooseMode(nextMode: "self" | "guest") {
     setMode(nextMode);
     setSelected(null);
     setGuestSeat(null);
+  }
+
+  function renderSeat(place: (typeof ROOM_ROWS)[number][number]) {
+    const occupied = occupancyByPlace.get(place.code);
+    const blocked = blockedPlaces.has(place.code);
+    const mine = occupied?.isMine || ownPlaceCode === place.code;
+    const myGuest = occupied?.isMyGuest;
+    const isSelected =
+      mode === "guest" ? selectedGuestSeat === place.code : selectedOwnSeat === place.code;
+    const className = mine
+      ? "seat seatMine"
+      : myGuest
+        ? "seat seatGuest"
+        : occupied
+          ? "seat seatOccupied"
+          : blocked
+            ? "seat seatBlocked"
+            : isSelected
+              ? "seat seatSelected"
+              : "seat seatAvailable";
+
+    return (
+      <button
+        aria-label={
+          mine
+            ? `${place.code}, reservado por mí`
+            : myGuest
+              ? `${place.code}, reservado para mi +1, ${occupied.memberName}`
+              : occupied
+                ? `${place.code}, ocupado por ${occupied.memberName}`
+                : blocked
+                  ? `${place.code}, bloqueado por administración`
+                  : `${place.code}, ${place.name}, disponible`
+        }
+        aria-pressed={isSelected}
+        className={className}
+        disabled={Boolean(occupied) || blocked || pending || readOnly}
+        key={place.code}
+        onClick={() => {
+          if (mode === "guest") setGuestSeat(place.code);
+          else setSelected(place.code);
+        }}
+        type="button"
+      >
+        <strong>{place.code}</strong>
+        <span>
+          {blocked
+            ? "Bloqueado"
+            : occupied
+              ? mine
+                ? "Tu lugar"
+                : myGuest
+                  ? `${occupied.memberName} · +1`
+                  : occupied.memberName
+              : place.name}
+        </span>
+      </button>
+    );
+  }
+
+  function renderFloorPlace(place: (typeof FLOOR_PLACES)[number]) {
+    const occupied = occupancyByPlace.get(place.code);
+    const blocked = blockedPlaces.has(place.code);
+    const mine = occupied?.isMine || ownPlaceCode === place.code;
+    const myGuest = occupied?.isMyGuest;
+    const isSelected =
+      mode === "guest" ? selectedGuestSeat === place.code : selectedOwnSeat === place.code;
+    const className = mine
+      ? "floorPlace floorMine"
+      : myGuest
+        ? "floorPlace floorGuest"
+        : occupied
+          ? "floorPlace floorOccupied"
+          : blocked
+            ? "floorPlace floorBlocked"
+            : isSelected
+              ? "floorPlace floorSelected"
+              : "floorPlace floorAvailable";
+
+    return (
+      <button
+        aria-label={
+          mine
+            ? `${place.code}, reservado por mí`
+            : myGuest
+              ? `${place.code}, reservado para mi +1, ${occupied.memberName}`
+              : occupied
+                ? `${place.code}, ocupado por ${occupied.memberName}`
+                : blocked
+                  ? `${place.code}, bloqueado por administración`
+                  : `${place.code}, ${place.name}, disponible en el piso`
+        }
+        aria-pressed={isSelected}
+        className={className}
+        disabled={Boolean(occupied) || blocked || pending || readOnly}
+        key={place.code}
+        onClick={() => {
+          if (mode === "guest") setGuestSeat(place.code);
+          else setSelected(place.code);
+        }}
+        type="button"
+      >
+        <strong>{place.code}</strong>
+        <span>
+          {blocked
+            ? "Bloqueado"
+            : occupied
+              ? mine
+                ? "Tu lugar"
+                : myGuest
+                  ? `${occupied.memberName} · +1`
+                  : occupied.memberName
+              : place.name}
+        </span>
+        <small>Piso</small>
+      </button>
+    );
   }
 
   return (
@@ -252,132 +371,31 @@ export function SeatMap({
         <div className="cinemaScreen"><span>Pantalla</span></div>
 
         <div className="seatRows">
-          {ROOM_ROWS.map((row, rowIndex) => (
-            <div className="seatRow" key={row[0].code}>
-              <span className="rowLabel">{String.fromCharCode(65 + rowIndex)}</span>
-              {row.map((place) => {
-                const occupied = occupancyByPlace.get(place.code);
-                const blocked = blockedPlaces.has(place.code);
-                const mine = occupied?.isMine || ownPlaceCode === place.code;
-                const myGuest = occupied?.isMyGuest;
-                const isSelected =
-                  mode === "guest" ? guestSeat === place.code : selected === place.code;
-                const className = mine
-                  ? "seat seatMine"
-                  : myGuest
-                    ? "seat seatGuest"
-                    : occupied
-                      ? "seat seatOccupied"
-                      : blocked
-                        ? "seat seatBlocked"
-                      : isSelected
-                        ? "seat seatSelected"
-                        : "seat seatAvailable";
-
-                return (
-                  <button
-                    aria-label={
-                      mine
-                        ? `${place.code}, reservado por mí`
-                        : myGuest
-                          ? `${place.code}, reservado para mi +1, ${occupied.memberName}`
-                          : occupied
-                            ? `${place.code}, ocupado por ${occupied.memberName}`
-                            : blocked
-                              ? `${place.code}, bloqueado por administración`
-                            : `${place.code}, ${place.name}, disponible`
-                    }
-                    aria-pressed={isSelected}
-                    className={className}
-                    disabled={Boolean(occupied) || blocked || pending || readOnly}
-                    key={place.code}
-                    onClick={() => {
-                      if (mode === "guest") setGuestSeat(place.code);
-                      else setSelected(place.code);
-                    }}
-                    type="button"
-                  >
-                    <strong>{place.code}</strong>
-                    <span>
-                      {blocked
-                        ? "Bloqueado"
-                        : occupied
-                        ? mine
-                          ? "Tu lugar"
-                          : myGuest
-                            ? `${occupied.memberName} · +1`
-                            : occupied.memberName
-                        : place.name}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-
-        <div className="aisle"><span>Pasillo</span></div>
-        <div className="floorRow">
-          {FLOOR_PLACES.map((place) => {
-            const occupied = occupancyByPlace.get(place.code);
-            const blocked = blockedPlaces.has(place.code);
-            const mine = occupied?.isMine || ownPlaceCode === place.code;
-            const myGuest = occupied?.isMyGuest;
-            const isSelected =
-              mode === "guest" ? guestSeat === place.code : selected === place.code;
-            const className = mine
-              ? "floorPlace floorMine"
-              : myGuest
-                ? "floorPlace floorGuest"
-                : occupied
-                  ? "floorPlace floorOccupied"
-                  : blocked
-                    ? "floorPlace floorBlocked"
-                  : isSelected
-                    ? "floorPlace floorSelected"
-                    : "floorPlace floorAvailable";
+          {ROOM_ROWS.map((row, rowIndex) => {
+            const floorPlace =
+              rowIndex === 1
+                ? FLOOR_PLACES[0]
+                : rowIndex === 2
+                  ? FLOOR_PLACES[1]
+                  : null;
 
             return (
-              <button
-                aria-label={
-                  mine
-                    ? `${place.code}, reservado por mí`
-                    : myGuest
-                      ? `${place.code}, reservado para mi +1, ${occupied.memberName}`
-                      : occupied
-                        ? `${place.code}, ocupado por ${occupied.memberName}`
-                        : blocked
-                          ? `${place.code}, bloqueado por administración`
-                        : `${place.code}, ${place.name}, disponible en el piso`
-                }
-                aria-pressed={isSelected}
-                className={className}
-                disabled={Boolean(occupied) || blocked || pending || readOnly}
-                key={place.code}
-                onClick={() => {
-                  if (mode === "guest") setGuestSeat(place.code);
-                  else setSelected(place.code);
-                }}
-                type="button"
-              >
-                <strong>{place.code}</strong>
-                <span>
-                  {blocked
-                    ? "Bloqueado"
-                    : occupied
-                    ? mine
-                      ? "Tu lugar"
-                      : myGuest
-                        ? `${occupied.memberName} · +1`
-                        : occupied.memberName
-                    : place.name}
-                </span>
-                <small>Espacio de piso</small>
-              </button>
+              <div className="seatRow" key={row[0].code}>
+                <span className="rowLabel">{String.fromCharCode(65 + rowIndex)}</span>
+                {row.slice(0, 2).map(renderSeat)}
+                {floorPlace ? (
+                  renderFloorPlace(floorPlace)
+                ) : (
+                  <span aria-hidden="true" className="floorSlot" />
+                )}
+                {row.slice(2).map(renderSeat)}
+              </div>
             );
           })}
-          <div className="entrance">Puerta de ingreso ↗</div>
         </div>
+
+        <div className="aisle"><span>Pasillo de salida</span></div>
+        <div className="entrance">Puerta de ingreso ↗</div>
       </div>
 
       <div className="mapLegend" aria-label="Referencias">
@@ -416,17 +434,17 @@ export function SeatMap({
           ) : (
             <form action={ownPlaceCode ? changeAction : reserveAction} className="reservationSubmit">
               <input name="screeningId" type="hidden" value={screeningId} />
-              <input name="placeCode" type="hidden" value={selected ?? ""} />
+              <input name="placeCode" type="hidden" value={selectedOwnSeat ?? ""} />
               <p>
                 {ownPlaceCode
-                  ? selected
-                    ? `Vas a cambiar ${ownPlaceCode} por ${selected}.`
+                  ? selectedOwnSeat
+                    ? `Vas a cambiar ${ownPlaceCode} por ${selectedOwnSeat}.`
                     : `Tu lugar actual es ${ownPlaceCode}. Elegí otro lugar para cambiarlo.`
-                  : selected
-                    ? `Elegiste ${selected}.`
+                  : selectedOwnSeat
+                    ? `Elegiste ${selectedOwnSeat}.`
                     : "Tocá un lugar disponible para elegirlo."}
               </p>
-              <button className="primaryButton" disabled={!selected || pending} type="submit">
+              <button className="primaryButton" disabled={!selectedOwnSeat || pending} type="submit">
                 {reservePending
                   ? "Reservando…"
                   : changePending
@@ -484,19 +502,19 @@ export function SeatMap({
               <input name="screeningId" type="hidden" value={screeningId} />
               <input name="guestMemberId" type="hidden" value={guestMember?.id ?? ""} />
               <input name="guestName" type="hidden" value={guestMember?.name ?? guestQuery.trim()} />
-              <input name="placeCode" type="hidden" value={guestSeat ?? ""} />
+              <input name="placeCode" type="hidden" value={selectedGuestSeat ?? ""} />
               <p>
                 {guestReservation
-                  ? guestSeat
-                    ? `Vas a cambiar ${guestReservation.placeCode} por ${guestSeat}.`
+                  ? selectedGuestSeat
+                    ? `Vas a cambiar ${guestReservation.placeCode} por ${selectedGuestSeat}.`
                     : "Elegí otro lugar disponible para tu +1."
-                  : guestQuery.trim() && guestSeat
-                    ? `${guestMember?.name ?? guestQuery.trim()} va a ocupar ${guestSeat}.`
+                  : guestQuery.trim() && selectedGuestSeat
+                    ? `${guestMember?.name ?? guestQuery.trim()} va a ocupar ${selectedGuestSeat}.`
                     : "Escribí un nombre y después elegí un lugar disponible."}
               </p>
               <button
                 className="primaryButton"
-                disabled={!guestSeat || (!guestReservation && !guestQuery.trim()) || pending}
+                disabled={!selectedGuestSeat || (!guestReservation && !guestQuery.trim()) || pending}
                 type="submit"
               >
                 {reserveGuestPending
