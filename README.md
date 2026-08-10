@@ -4,7 +4,7 @@ Aplicación web privada y mobile-first para reservar lugares en las funciones de
 
 ## Estado
 
-Están implementados los **slices 1, 2, 3, 4, 5, 6, 7 y 8** del [PRD](./PRD.md):
+Están implementados los **slices 1 al 9** del [PRD](./PRD.md):
 
 - primer administrador mediante un email configurado;
 - acceso con Google usando Firebase Authentication;
@@ -45,6 +45,12 @@ Están implementados los **slices 1, 2, 3, 4, 5, 6, 7 y 8** del [PRD](./PRD.md):
 - chequeo de concurrencia contra Firestore real para reservas, espera, promociones y bloqueos.
 - interfaz revisada en Chrome para escritorio y pantallas mobile de 375 px;
 - recorrido automático en Chrome de un miembro normal: reserva propia, `+1` externo y cancelación conjunta.
+- cartelera administrativa de tres a cinco películas asociada a una función futura;
+- votación de aprobación: cada miembro puede elegir una, varias o todas las películas y cambiar su voto hasta el cierre;
+- resultados parciales anónimos visibles para el miembro después de votar;
+- cierre automático por fecha, cierre anticipado, cancelación y resolución administrativa de empates;
+- mapa bloqueado hasta votar, con excepciones individuales concedidas por un administrador;
+- asignación de la película ganadora a la misma función sin alterar sus reservas.
 
 ## Tecnología
 
@@ -91,7 +97,7 @@ No hay migraciones: las colecciones se crean al usar cada parte de la aplicació
 
 ## Primer ingreso
 
-El primer acceso con la cuenta indicada en `INITIAL_ADMIN_EMAIL` crea el administrador. Después puede entrar en `/admin/invitaciones`, generar enlaces y enviarlos a futuros miembros. Desde `/admin/funciones` puede crear la próxima función como borrador y abrir sus reservas.
+El primer acceso con la cuenta indicada en `INITIAL_ADMIN_EMAIL` crea el administrador. Después puede entrar en `/admin/invitaciones`, generar enlaces y enviarlos a futuros miembros. Desde `/admin/funciones` puede crear la próxima función como borrador. Si es una función especial, puede abrir las reservas directamente; si habrá votación, arma y abre la propuesta desde `/admin/cartelera`.
 
 Las principales colecciones son:
 
@@ -104,6 +110,10 @@ Las principales colecciones son:
 - `screenings/{id}/blocks`: lugares temporalmente no disponibles;
 - `screenings/{id}/state/waitlist`: contador transaccional que impide superar cinco personas;
 - `system/openScreening`: puntero único a la función visible, que impide abrir dos funciones simultáneas y conserva la última función cerrada en modo lectura.
+- `movieBallots/{screeningId}`: cartelera, opciones, conteos anónimos, estado y película ganadora;
+- `movieBallots/{screeningId}/votes`: selección modificable de cada miembro;
+- `movieBallots/{screeningId}/exemptions`: miembros autorizados por un administrador para reservar sin votar;
+- `system/openMovieBallot`: puntero a la única votación abierta.
 
 ## Verificación
 
@@ -142,6 +152,9 @@ Requiere una función abierta, P1 y P2 libres y una lista de espera vacía. Crea
 - Cada cancelación calcula y ejecuta toda su cadena de promociones dentro de una única transacción.
 - Los movimientos, bloqueos, desbloqueos y cambios de prioridad administrativos vuelven a validar la función y conservan la capacidad dentro de transacciones.
 - El cierre cambia el estado y conserva la función visible dentro de una única transacción; todas las mutaciones posteriores vuelven a rechazarla desde el servidor.
+- Cada cambio de voto actualiza la selección y todos los conteos dentro de una única transacción.
+- Reservar un lugar o entrar en espera vuelve a comprobar en el servidor que el miembro votó o tiene una excepción.
+- El cierre de una votación fija la ganadora en la misma función; en caso de empate solo permite elegir entre las finalistas.
 - Las reglas de Firestore niegan todo acceso directo desde el navegador; únicamente el servidor usa Firebase Admin.
 - Los Server Actions vuelven a leer el miembro y su rol desde Firestore.
 - La llave de Firebase Admin vive en `.secrets`, carpeta excluida de Git.

@@ -4,16 +4,28 @@ import Link from "next/link";
 import { SignOutButton } from "@/components/session-actions";
 import { requireMember } from "@/lib/authz";
 import { listActiveMembersForReservation } from "@/lib/members";
+import {
+  getLatestMovieWinner,
+  getMemberMovieBallot,
+} from "@/lib/movie-voting";
 import { CLUB_TIME_ZONE } from "@/lib/screening-policy";
 import { getOpenScreeningForMember } from "@/lib/screenings";
 
 import { SeatMap } from "./seat-map";
+import { LatestWinner, MovieBallotPanel } from "./movie-ballot";
 
 export const metadata: Metadata = { title: "El club" };
 
 export default async function ClubPage() {
   const member = await requireMember();
-  const screening = await getOpenScreeningForMember(member.id);
+  let screening = await getOpenScreeningForMember(member.id);
+  const ballot = screening
+    ? await getMemberMovieBallot(screening.id, member.id)
+    : null;
+  if (screening && ballot) {
+    screening = await getOpenScreeningForMember(member.id);
+  }
+  const latestWinner = await getLatestMovieWinner();
   const hasPersonalBooking =
     screening?.ownReservationKind === "self" ||
     screening?.ownWaitlistEntry?.kind === "self";
@@ -53,6 +65,8 @@ export default async function ClubPage() {
         <SignOutButton />
       </div>
 
+      {latestWinner ? <LatestWinner movie={latestWinner.movie} /> : null}
+
       {screening ? (
         <section className="screeningFeature">
           <div className="screeningIntro">
@@ -69,19 +83,31 @@ export default async function ClubPage() {
               lugares libres
             </span>
           </div>
-          <SeatMap
-            blockedPlaceCodes={screening.blockedPlaceCodes}
-            guestCandidates={guestCandidates}
-            guestReservation={screening.guestReservation}
-            guestWaitlistEntry={screening.guestWaitlistEntry}
-            occupancy={screening.occupancy}
-            ownPlaceCode={screening.ownPlaceCode}
-            ownReservationKind={screening.ownReservationKind}
-            ownWaitlistEntry={screening.ownWaitlistEntry}
-            readOnly={screening.status === "closed"}
-            screeningId={screening.id}
-            waitlist={screening.waitlist}
-          />
+          {ballot ? <MovieBallotPanel ballot={ballot} /> : null}
+          {!ballot || ballot.canAccessSeats ? (
+            <SeatMap
+              blockedPlaceCodes={screening.blockedPlaceCodes}
+              guestCandidates={guestCandidates}
+              guestReservation={screening.guestReservation}
+              guestWaitlistEntry={screening.guestWaitlistEntry}
+              occupancy={screening.occupancy}
+              ownPlaceCode={screening.ownPlaceCode}
+              ownReservationKind={screening.ownReservationKind}
+              ownWaitlistEntry={screening.ownWaitlistEntry}
+              readOnly={screening.status === "closed"}
+              screeningId={screening.id}
+              waitlist={screening.waitlist}
+            />
+          ) : (
+            <div className="seatGate">
+              <strong>El mapa todavía está bloqueado.</strong>
+              <p>
+                {ballot.status === "open"
+                  ? "Guardá tu voto arriba y se habilita enseguida."
+                  : "La votación cerró y no registramos tu voto. Pedile una excepción al administrador."}
+              </p>
+            </div>
+          )}
         </section>
       ) : (
         <section className="emptyFeature">
@@ -105,6 +131,9 @@ export default async function ClubPage() {
             </Link>
             <Link className="secondaryButton lightButton" href="/admin/funciones">
               Gestionar funciones
+            </Link>
+            <Link className="secondaryButton lightButton" href="/admin/cartelera">
+              La cartelera
             </Link>
             <Link className="secondaryButton lightButton" href="/admin/invitaciones">
               Invitaciones

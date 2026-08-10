@@ -211,7 +211,6 @@ La iteración estará terminada cuando:
 - Menú del día.
 - Confirmación de asistencia.
 - Recordatorios y notificaciones.
-- Votación de películas.
 - Ratings.
 - Catálogo histórico visible.
 - Configuración personalizada de la sala.
@@ -241,5 +240,45 @@ La iteración estará terminada cuando:
 6. **Promociones:** una cancelación ejecuta correctamente la cadena automática.
 7. **Administración:** mapa, movimientos, bloqueos, cancelaciones y orden de espera.
 8. **Cierre y robustez:** función cerrada, concurrencia, mobile y estados de error.
+9. **La cartelera:** el admin propone películas para una función, los miembros votan y el mapa se habilita después del voto.
 
 Este orden permite entregar y probar valor real en cada slice, sin tener que completar primero toda la infraestructura o todas las pantallas.
+
+## 15. Slice 9 — La cartelera
+
+Antes de seleccionar lugares, el club puede votar qué película verá en una función futura.
+
+### Configuración administrativa
+
+- Solo un administrador crea la cartelera.
+- Cada votación pertenece a una función concreta en estado borrador.
+- Se cargan manualmente entre tres y cinco películas.
+- Cada película incluye título, año, dirección y una breve sinopsis.
+- Solo puede haber una votación abierta al mismo tiempo.
+- El borrador se puede editar; una vez abierto queda inmutable.
+- Al abrir la votación también se abren las reservas de la función asociada.
+- La votación tiene una fecha y hora de cierre en `America/Argentina/Mendoza`, siempre anterior a la función.
+- El administrador puede cerrarla antes o cancelarla. Una cancelación convierte la función en especial y elimina la obligación de votar.
+- Una función especial puede abrirse directamente, sin cartelera.
+
+### Voto de miembros
+
+- Cada miembro, incluido el administrador, puede aprobar una, varias o todas las opciones.
+- Debe seleccionar por lo menos una película.
+- Puede cambiar su selección mientras la votación esté abierta.
+- Los invitados externos (`+1`) no votan.
+- Después del primer voto se muestran resultados parciales agregados, nunca nombres de votantes.
+- Un miembro nuevo puede votar mientras la cartelera siga abierta.
+- El mapa de lugares se habilita inmediatamente después de votar.
+- Quien no votó antes del cierre no puede reservar, salvo que un administrador le conceda una excepción individual.
+- Un miembro habilitado puede reservar su `+1` con las reglas normales.
+
+### Cierre y resultado
+
+- No existe un mínimo de votos.
+- Una ganadora única se asigna a la misma función y no crea otro borrador.
+- Si las opciones más votadas empatan, el administrador elige solamente entre ellas.
+- Si nadie votó, el administrador elige entre todas las opciones.
+- Las reservas hechas durante la votación se conservan y continúan siendo modificables o cancelables.
+- Por ahora se muestra únicamente la última película ganadora.
+- No se envían avisos por email ni WhatsApp.

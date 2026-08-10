@@ -385,6 +385,114 @@ td small { display: block; margin-top: 0.3rem; color: var(--muted); font-size: 0
 .openScreeningForm { display: grid; gap: 0.5rem; justify-items: start; }
 .openScreeningForm p { max-width: 22rem; font-size: 0.75rem; text-transform: none; }
 
+.ballotCreator {
+  display: grid;
+  gap: 2rem;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  border: 1px solid var(--line);
+  background: var(--cream);
+}
+.ballotCreator > div:first-child > p { max-width: 34rem; color: var(--muted); line-height: 1.5; }
+.ballotForm { display: grid; gap: 1.5rem; min-width: 0; }
+.ballotTiming { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.ballotTiming .wideField { grid-column: 1 / -1; }
+.ballotForm select, .tieBreaker select, .exemptionForm select {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 0.85rem;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: 0.4rem;
+  background: var(--paper);
+}
+.fixedField { min-height: 48px; display: flex; align-items: center; margin: 0; padding: 0.75rem 0.85rem; border: 1px solid var(--line); background: var(--paper); }
+.movieEditorGrid { display: grid; gap: 1rem; }
+.movieEditor {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 0.35fr 1fr;
+  gap: 0.9rem;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+.movieEditor legend { padding: 0 0.4rem; font-family: Georgia, serif; font-size: 1.15rem; }
+.movieEditor legend span { color: var(--muted); font-family: Arial, sans-serif; font-size: 0.58rem; font-weight: 800; text-transform: uppercase; }
+.ballotHistory { margin-bottom: 3rem; }
+.ballotList { display: grid; gap: 1.5rem; }
+.ballotCard { display: grid; gap: 1.25rem; padding: clamp(1rem, 3vw, 1.8rem); border: 1px solid var(--line); background: var(--cream); }
+.ballotCardHeader { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: 1.5rem; }
+.ballotCardHeader h3 { margin: 0.7rem 0 0.35rem; font-family: Georgia, serif; font-size: 1.7rem; font-weight: 400; }
+.ballotCardHeader p { margin: 0; color: var(--muted); line-height: 1.5; text-transform: capitalize; }
+.ballotStat { display: grid; color: var(--muted); font-size: 0.62rem; font-weight: 900; letter-spacing: 0.08em; text-align: center; text-transform: uppercase; }
+.ballotStat strong { color: var(--red); font-family: Georgia, serif; font-size: 2.6rem; font-weight: 400; line-height: 1; }
+.ballotEdit { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.ballotEdit summary { padding: 1rem 0; font-weight: 900; cursor: pointer; }
+.ballotEdit .ballotForm { padding: 0.5rem 0 1.5rem; }
+.adminBallotResults { display: grid; border-top: 2px solid var(--ink); }
+.adminResult { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.85rem 0.4rem; border-bottom: 1px solid var(--line); }
+.adminResult > div { display: grid; gap: 0.15rem; }
+.adminResult small { color: var(--muted); }
+.adminResult > span { font-weight: 900; }
+.winnerResult { background: rgba(240, 190, 61, 0.18); }
+.tieBreaker, .exemptionForm { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(160px, 1fr) auto; align-items: end; gap: 0.7rem; padding: 1rem; border: 1px solid var(--line); background: var(--paper); }
+.tieBreaker label, .exemptionForm label { grid-column: 1 / -1; font-size: 0.65rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+.tieBreaker .formError, .tieBreaker .formSuccess, .exemptionForm .formError, .exemptionForm .formSuccess { grid-column: 1 / -1; }
+.exemptionForm small { grid-column: 1 / -1; color: var(--muted); }
+.winnerNotice { margin: 0; padding: 0.9rem 1rem; border-left: 5px solid var(--yellow); background: rgba(240, 190, 61, 0.16); }
+
+.latestWinner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  color: var(--cream);
+  background: var(--green);
+}
+.latestWinner h2 { margin: 0.25rem 0 0; font-family: Georgia, serif; font-size: 1.8rem; font-weight: 400; }
+.latestWinner p { margin: 0; }
+.memberBallot { padding: clamp(1.25rem, 5vw, 3rem); border-bottom: 1px solid var(--line); background: var(--paper); }
+.memberBallotHeader { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+.memberBallotHeader h2 { margin: 0.35rem 0 0.6rem; font-family: Georgia, serif; font-size: clamp(1.8rem, 4vw, 2.7rem); font-weight: 400; }
+.memberBallotHeader p:last-child { max-width: 48rem; margin: 0; color: var(--muted); line-height: 1.5; }
+.votedBadge { padding: 0.55rem 0.8rem; color: var(--cream); border-radius: 999px; background: var(--green); font-size: 0.62rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+.memberVoteForm { display: grid; gap: 1.2rem; }
+.memberMovieGrid { display: grid; gap: 0.8rem; }
+.memberMovieOption { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 0.9rem; padding: 1rem; border: 1px solid var(--line); background: var(--cream); cursor: pointer; }
+.memberMovieOption input { position: absolute; opacity: 0; pointer-events: none; }
+.movieCheck { width: 1.8rem; height: 1.8rem; display: grid; place-items: center; color: transparent; border: 1px solid var(--ink); border-radius: 0.25rem; background: var(--paper); font-weight: 900; }
+.memberMovieOption:has(input:checked) { border-color: var(--green); box-shadow: inset 5px 0 0 var(--green); }
+.memberMovieOption input:checked + .movieCheck { color: var(--cream); background: var(--green); }
+.memberMovieOption:has(input:focus-visible) { outline: 3px solid var(--yellow); outline-offset: 2px; }
+.movieCopy { display: grid; gap: 0.25rem; }
+.movieCopy strong { font-family: Georgia, serif; font-size: 1.25rem; font-weight: 400; }
+.movieCopy small { color: var(--red); font-size: 0.68rem; font-weight: 800; }
+.movieCopy p { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.8rem; line-height: 1.45; }
+.voteControls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
+.voteControls p { margin: 0; color: var(--muted); font-size: 0.72rem; }
+.resultsLocked { margin: 1.2rem 0 0; padding: 0.8rem; color: var(--muted); border: 1px dashed var(--line); text-align: center; }
+.memberBallotResults { display: grid; gap: 0.7rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid var(--ink); }
+.ballotResultsHeading { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.ballotResultsHeading h3 { margin: 0; font-family: Georgia, serif; font-size: 1.8rem; font-weight: 400; }
+.ballotResultsHeading span { color: var(--muted); font-size: 0.7rem; font-weight: 900; text-transform: uppercase; }
+.memberResultBar { position: relative; overflow: hidden; min-height: 48px; padding: 0.75rem; border: 1px solid var(--line); background: var(--cream); }
+.memberResultBar > div { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.memberResultBar span { font-size: 0.66rem; font-weight: 900; }
+.memberResultBar i { position: absolute; inset: 0 auto 0 0; background: rgba(56, 119, 92, 0.2); }
+.closedMovieList { display: grid; gap: 0.7rem; }
+.closedMovieList article { padding: 1rem; border: 1px solid var(--line); background: var(--cream); }
+.closedMovieList h3 { margin: 0; font-family: Georgia, serif; font-size: 1.3rem; font-weight: 400; }
+.closedMovieList p { margin: 0.3rem 0; color: var(--red); font-size: 0.72rem; font-weight: 800; }
+.closedMovieList small { color: var(--muted); line-height: 1.4; }
+.exemptionNotice { margin: 1rem 0 0; padding: 0.8rem; border: 1px solid var(--green); background: rgba(56, 119, 92, 0.1); }
+.seatGate { padding: clamp(2rem, 7vw, 4rem); text-align: center; }
+.seatGate strong { font-family: Georgia, serif; font-size: 1.8rem; font-weight: 400; }
+.seatGate p { max-width: 36rem; margin: 0.7rem auto 0; color: var(--muted); line-height: 1.5; }
+
 .screeningFeature { border: 1px solid var(--line); background: var(--cream); }
 .screeningIntro {
   display: flex;
@@ -515,6 +623,8 @@ body::after { content: ""; position: fixed; z-index: -1; inset: 0; pointer-event
   .generatorForm label { grid-column: 1 / -1; }
   .generatorCard .freshLinks, .generatorCard .formError { grid-column: 1 / -1; }
   .screeningCreator { grid-template-columns: minmax(220px, 0.65fr) minmax(0, 1.35fr); align-items: start; }
+  .ballotCreator { grid-template-columns: minmax(220px, 0.5fr) minmax(0, 1.5fr); align-items: start; }
+  .memberMovieGrid { grid-template-columns: 1fr 1fr; }
   .guestSearch { grid-template-columns: minmax(190px, 0.75fr) minmax(0, 1.25fr); }
   .floorRow { grid-template-columns: 1fr 1fr 1fr; }
   .entrance { grid-column: 3; align-self: end; }
@@ -530,6 +640,10 @@ body::after { content: ""; position: fixed; z-index: -1; inset: 0; pointer-event
   .screeningForm { grid-template-columns: minmax(0, 1fr); }
   .screeningForm .wideField, .screeningForm > .primaryButton { grid-column: 1; }
   .fieldGroup, .fieldGroup input, .fieldGroup textarea { min-width: 0; }
+  .ballotTiming, .movieEditor { grid-template-columns: minmax(0, 1fr); }
+  .ballotTiming .wideField, .movieEditor .wideField { grid-column: 1; }
+  .tieBreaker, .exemptionForm { grid-template-columns: minmax(0, 1fr); align-items: stretch; }
+  .tieBreaker label, .exemptionForm label, .tieBreaker .formError, .tieBreaker .formSuccess, .exemptionForm .formError, .exemptionForm .formSuccess, .exemptionForm small { grid-column: 1; }
 
   .occupancySummary { align-items: stretch; }
   .occupancyStats { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
