@@ -7,6 +7,10 @@ import { getAdminFirestore } from "@/lib/firebase/admin";
 import { GuestNameError, parseGuestName } from "@/lib/guest-policy";
 import type { Member } from "@/lib/members";
 import {
+  memberCanAccessSeats,
+  type MovieBallotStatus,
+} from "@/lib/movie-voting-policy";
+import {
   planPromotions,
   type PromotionOccupant,
   type PromotionWaitEntry,
@@ -27,12 +31,20 @@ import {
 
 export type ScreeningStatus = "draft" | "open" | "closed";
 
+export type ScreeningMovie = {
+  title: string;
+  year: number;
+  director: string;
+  bio: string;
+};
+
 type ScreeningDocument = {
   startsAt: Timestamp;
   localDate: string;
   localTime: string;
   title: string | null;
   message: string | null;
+  movie?: ScreeningMovie | null;
   status: ScreeningStatus;
   createdByMemberId: string;
   createdAt: Timestamp;
@@ -92,6 +104,10 @@ type BlockDocument = {
   createdAt: Timestamp;
 };
 
+type MovieBallotGateDocument = {
+  status: MovieBallotStatus;
+};
+
 export type Screening = {
   id: string;
   startsAt: Date;
@@ -99,6 +115,7 @@ export type Screening = {
   localTime: string;
   title: string | null;
   message: string | null;
+  movie: ScreeningMovie | null;
   status: ScreeningStatus;
   createdAt: Date;
 };
@@ -151,6 +168,7 @@ export class ScreeningRuleError extends Error {
 }
 
 function screeningFromDocument(id: string, document: ScreeningDocument): Screening {
+  const movie = document.movie;
   return {
     id,
     startsAt: document.startsAt.toDate(),
@@ -158,6 +176,14 @@ function screeningFromDocument(id: string, document: ScreeningDocument): Screeni
     localTime: document.localTime,
     title: document.title,
     message: document.message,
+    movie:
+      movie &&
+      typeof movie.title === "string" &&
+      Number.isInteger(movie.year) &&
+      typeof movie.director === "string" &&
+      typeof movie.bio === "string"
+        ? movie
+        : null,
     status: document.status,
     createdAt: document.createdAt.toDate(),
   };
@@ -165,6 +191,42 @@ function screeningFromDocument(id: string, document: ScreeningDocument): Screeni
 
 function validDocumentId(value: string) {
   return value.length > 0 && value.length <= 100 && !value.includes("/");
+}
+
+function assertMemberCanAccessSeats({
+  ballotExists,
+  ballotStatus,
+  hasVote,
+  hasExemption,
+}: {
+  ballotExists: boolean;
+  ballotStatus: unknown;
+  hasVote: boolean;
+  hasExemption: boolean;
+}) {
+  const validStatuses: MovieBallotStatus[] = [
+    "draft",
+    "open",
+    "decision",
+    "closed",
+    "canceled",
+  ];
+  if (!ballotExists) return;
+  if (
+    typeof ballotStatus !== "string" ||
+    !validStatuses.includes(ballotStatus as MovieBallotStatus)
+  ) {
+    throw new ScreeningRuleError("No pudimos verificar la votación de esta función.");
+  }
+  if (
+    !memberCanAccessSeats({
+      ballotStatus: ballotStatus as MovieBallotStatus,
+      hasVote,
+      hasExemption,
+    })
+  ) {
+    throw new ScreeningRuleError("Primero tenés que votar en La cartelera.");
+  }
 }
 
 function plusOneReservationId(plusOne: PlusOneDocument) {
@@ -392,6 +454,7 @@ export async function createScreening(createdByMemberId: string, input: Screenin
     localTime: input.localTime,
     title: input.title,
     message: input.message,
+    movie: null,
     status: "draft",
     createdByMemberId,
     createdAt: now,
@@ -422,17 +485,27 @@ export async function openScreening(screeningId: string) {
   const firestore = getAdminFirestore();
   const screeningReference = firestore.collection("screenings").doc(screeningId);
   const pointerReference = firestore.collection("system").doc("openScreening");
+  const ballotReference = firestore.collection("movieBallots").doc(screeningId);
 
   return firestore.runTransaction(async (transaction) => {
-    const [screeningSnapshot, pointerSnapshot] = await Promise.all([
+    const [screeningSnapshot, pointerSnapshot, ballotSnapshot] = await Promise.all([
       transaction.get(screeningReference),
       transaction.get(pointerReference),
+      transaction.get(ballotReference),
     ]);
     if (!screeningSnapshot.exists) {
       throw new ScreeningRuleError("La función ya no existe.");
     }
 
     const screening = screeningSnapshot.data() as ScreeningDocument;
+    if (
+      ballotSnapshot.exists &&
+      (ballotSnapshot.data() as MovieBallotGateDocument).status !== "canceled"
+    ) {
+      throw new ScreeningRuleError(
+        "Esta función tiene una cartelera. Abrila desde la sección La cartelera.",
+      );
+    }
     const currentId = pointerSnapshot.exists
       ? (pointerSnapshot.data() as { screeningId?: unknown }).screeningId
       : null;
@@ -481,17 +554,27 @@ export async function closeScreening(screeningId: string) {
   const firestore = getAdminFirestore();
   const screeningReference = firestore.collection("screenings").doc(screeningId);
   const pointerReference = firestore.collection("system").doc("openScreening");
+  const ballotReference = firestore.collection("movieBallots").doc(screeningId);
 
   return firestore.runTransaction(async (transaction) => {
-    const [screeningSnapshot, pointerSnapshot] = await Promise.all([
+    const [screeningSnapshot, pointerSnapshot, ballotSnapshot] = await Promise.all([
       transaction.get(screeningReference),
       transaction.get(pointerReference),
+      transaction.get(ballotReference),
     ]);
     if (!screeningSnapshot.exists) {
       throw new ScreeningRuleError("La función ya no existe.");
     }
 
     const screening = screeningSnapshot.data() as ScreeningDocument;
+    if (ballotSnapshot.exists) {
+      const ballotStatus = (ballotSnapshot.data() as MovieBallotGateDocument).status;
+      if (["draft", "open", "decision"].includes(ballotStatus)) {
+        throw new ScreeningRuleError(
+          "Primero cerrá o cancelá la votación desde La cartelera.",
+        );
+      }
+    }
     const currentId = pointerSnapshot.exists
       ? (pointerSnapshot.data() as { screeningId?: unknown }).screeningId
       : null;
@@ -542,6 +625,9 @@ export async function reserveOwnSeat(
   const waitlistReference = screeningReference.collection("waitlist").doc(member.id);
   const placeReference = screeningReference.collection("places").doc(placeCode);
   const blockReference = screeningReference.collection("blocks").doc(placeCode);
+  const ballotReference = firestore.collection("movieBallots").doc(screeningId);
+  const voteReference = ballotReference.collection("votes").doc(member.id);
+  const exemptionReference = ballotReference.collection("exemptions").doc(member.id);
 
   return firestore.runTransaction(async (transaction) => {
     const [
@@ -551,6 +637,9 @@ export async function reserveOwnSeat(
       waitlistSnapshot,
       placeSnapshot,
       blockSnapshot,
+      ballotSnapshot,
+      voteSnapshot,
+      exemptionSnapshot,
     ] =
       await Promise.all([
         transaction.get(screeningReference),
@@ -559,6 +648,9 @@ export async function reserveOwnSeat(
         transaction.get(waitlistReference),
         transaction.get(placeReference),
         transaction.get(blockReference),
+        transaction.get(ballotReference),
+        transaction.get(voteReference),
+        transaction.get(exemptionReference),
       ]);
 
     if (!screeningSnapshot.exists) {
@@ -571,6 +663,14 @@ export async function reserveOwnSeat(
     if (screening.status !== "open" || currentId !== screeningId) {
       throw new ScreeningRuleError("Las reservas de esta función no están abiertas.");
     }
+    assertMemberCanAccessSeats({
+      ballotExists: ballotSnapshot.exists,
+      ballotStatus: ballotSnapshot.exists
+        ? (ballotSnapshot.data() as MovieBallotGateDocument).status
+        : null,
+      hasVote: voteSnapshot.exists,
+      hasExemption: exemptionSnapshot.exists,
+    });
     if (reservationSnapshot.exists) {
       throw new ScreeningRuleError("Ya tenés un lugar en esta función.");
     }
@@ -1431,6 +1531,9 @@ export async function joinOwnWaitlist(
   const blockReferences = ALL_PLACE_CODES.map((code) =>
     screeningReference.collection("blocks").doc(code),
   );
+  const ballotReference = firestore.collection("movieBallots").doc(screeningId);
+  const voteReference = ballotReference.collection("votes").doc(member.id);
+  const exemptionReference = ballotReference.collection("exemptions").doc(member.id);
 
   return firestore.runTransaction(async (transaction) => {
     const [
@@ -1439,6 +1542,9 @@ export async function joinOwnWaitlist(
       reservationSnapshot,
       waitlistSnapshot,
       stateSnapshot,
+      ballotSnapshot,
+      voteSnapshot,
+      exemptionSnapshot,
       ...capacitySnapshots
     ] = await Promise.all([
       transaction.get(screeningReference),
@@ -1446,6 +1552,9 @@ export async function joinOwnWaitlist(
       transaction.get(reservationReference),
       transaction.get(waitlistReference),
       transaction.get(stateReference),
+      transaction.get(ballotReference),
+      transaction.get(voteReference),
+      transaction.get(exemptionReference),
       ...placeReferences.map((reference) => transaction.get(reference)),
       ...blockReferences.map((reference) => transaction.get(reference)),
     ]);
@@ -1462,6 +1571,14 @@ export async function joinOwnWaitlist(
     if (screening.status !== "open" || currentId !== screeningId) {
       throw new ScreeningRuleError("Las reservas de esta función no están abiertas.");
     }
+    assertMemberCanAccessSeats({
+      ballotExists: ballotSnapshot.exists,
+      ballotStatus: ballotSnapshot.exists
+        ? (ballotSnapshot.data() as MovieBallotGateDocument).status
+        : null,
+      hasVote: voteSnapshot.exists,
+      hasExemption: exemptionSnapshot.exists,
+    });
     if (
       ALL_PLACE_CODES.some(
         (_code, index) => !placeSnapshots[index]?.exists && !blockSnapshots[index]?.exists,

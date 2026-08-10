@@ -43,6 +43,7 @@ export default async function ScreeningsPage() {
           <p className="kicker">Panel administrativo</p>
           <h1>Funciones</h1>
           <p className="pageIntro">Sesión de {admin.name}</p>
+          <Link className="backLink" href="/admin/cartelera">Ir a La cartelera →</Link>
         </div>
         <SignOutButton />
       </div>
