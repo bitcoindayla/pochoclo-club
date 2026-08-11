@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { startTransition, useActionState, useState } from "react";
 
 import type { MemberSearchItem } from "@/lib/members";
 import type { MovieBallot } from "@/lib/movie-voting";
@@ -32,21 +32,23 @@ export function BallotForm({ ballot, screenings }: BallotFormProps) {
 
   return (
     <form
-      action={action}
       className="ballotForm"
       encType="multipart/form-data"
       onSubmit={(event) => {
+        event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const images = [1, 2, 3, 4, 5]
           .map((position) => formData.get(`movieImage${position}`))
           .filter((value): value is File => value instanceof File && value.size > 0);
         const totalBytes = images.reduce((total, image) => total + image.size, 0);
         if (totalBytes > 3 * 1024 * 1024) {
-          event.preventDefault();
           setUploadError("Las imágenes superan 3 MB en total. Guardalas de a una.");
           return;
         }
         setUploadError(null);
+        startTransition(() => {
+          action(formData);
+        });
       }}
     >
       <div className="ballotTiming">
