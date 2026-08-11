@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import type { MemberSearchItem } from "@/lib/members";
 import type { MovieBallot } from "@/lib/movie-voting";
@@ -27,10 +27,28 @@ type BallotFormProps = {
 export function BallotForm({ ballot, screenings }: BallotFormProps) {
   const serverAction = ballot ? updateMovieBallotAction : createMovieBallotAction;
   const [state, action, pending] = useActionState(serverAction, initialState);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const options = ballot?.options ?? [];
 
   return (
-    <form action={action} className="ballotForm">
+    <form
+      action={action}
+      className="ballotForm"
+      encType="multipart/form-data"
+      onSubmit={(event) => {
+        const formData = new FormData(event.currentTarget);
+        const images = [1, 2, 3, 4, 5]
+          .map((position) => formData.get(`movieImage${position}`))
+          .filter((value): value is File => value instanceof File && value.size > 0);
+        const totalBytes = images.reduce((total, image) => total + image.size, 0);
+        if (totalBytes > 3 * 1024 * 1024) {
+          event.preventDefault();
+          setUploadError("Las imágenes superan 3 MB en total. Guardalas de a una.");
+          return;
+        }
+        setUploadError(null);
+      }}
+    >
       <div className="ballotTiming">
         <div className="fieldGroup wideField">
           <label htmlFor={`screening-${ballot?.id ?? "new"}`}>Función</label>
@@ -126,6 +144,31 @@ export function BallotForm({ ballot, screenings }: BallotFormProps) {
                   rows={4}
                 />
               </div>
+              <div className="fieldGroup wideField movieImageField">
+                <label htmlFor={`movieImage${position}-${ballot?.id ?? "new"}`}>
+                  Imagen de pantalla
+                </label>
+                {movie?.image ? (
+                  <div className="movieImagePreview">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      alt={`Vista previa de ${movie.title}`}
+                      src={`/api/movie-images/${ballot?.screeningId}/${movie.id}/landscape`}
+                    />
+                    <span>Imagen actual · {movie.image.sourceWidth} × {movie.image.sourceHeight} px</span>
+                  </div>
+                ) : null}
+                <input
+                  accept="image/jpeg,image/png,image/webp"
+                  id={`movieImage${position}-${ballot?.id ?? "new"}`}
+                  name={`movieImage${position}`}
+                  type="file"
+                />
+                <small>
+                  JPG, PNG o WebP · mínimo 1600 × 900 px.
+                  {movie?.image ? " Elegí otra solamente si querés reemplazarla." : " La podés agregar ahora o después."}
+                </small>
+              </div>
             </fieldset>
           );
         })}
@@ -134,6 +177,10 @@ export function BallotForm({ ballot, screenings }: BallotFormProps) {
       <button className="primaryButton" disabled={pending} type="submit">
         {pending ? "Guardando…" : ballot ? "Guardar cambios" : "Crear cartelera"}
       </button>
+      {uploadError ? <p className="formError" role="alert">{uploadError}</p> : null}
+      <small className="imageUploadLimit">
+        Podés subir varias juntas si pesan hasta 3 MB en total. Si no, guardalas de a una.
+      </small>
       {state.error ? <p className="formError" role="alert">{state.error}</p> : null}
       {state.message ? <p className="formSuccess" role="status">{state.message}</p> : null}
     </form>

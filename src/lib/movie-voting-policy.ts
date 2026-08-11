@@ -3,12 +3,21 @@ import { localScreeningDate } from "./screening-policy";
 export const MIN_MOVIE_OPTIONS = 3;
 export const MAX_MOVIE_OPTIONS = 5;
 
+export type MovieOptionImage = {
+  landscapePath: string;
+  portraitPath: string;
+  sourceWidth: number;
+  sourceHeight: number;
+  accent: string;
+};
+
 export type MovieOptionInput = {
   id: string;
   title: string;
   year: number;
   director: string;
   bio: string;
+  image?: MovieOptionImage | null;
 };
 
 export type MovieBallotInput = {

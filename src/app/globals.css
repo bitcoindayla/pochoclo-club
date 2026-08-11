@@ -419,6 +419,43 @@ td small { display: block; margin-top: 0.3rem; color: var(--muted); font-size: 0
 }
 .movieEditor legend { padding: 0 0.4rem; font-family: Georgia, serif; font-size: 1.15rem; }
 .movieEditor legend span { color: var(--muted); font-family: Arial, sans-serif; font-size: 0.58rem; font-weight: 800; text-transform: uppercase; }
+.movieImageField input[type="file"] {
+  min-height: 48px;
+  padding: 0.55rem;
+  border-style: dashed;
+  background: var(--cream);
+}
+.movieImageField input[type="file"]::file-selector-button {
+  min-height: 34px;
+  margin-right: 0.7rem;
+  padding: 0.45rem 0.75rem;
+  color: var(--cream);
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.movieImageField > small { color: var(--muted); font-size: 0.68rem; line-height: 1.45; }
+.imageUploadLimit { color: var(--muted); font-size: 0.68rem; line-height: 1.45; }
+.movieImagePreview {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+}
+.movieImagePreview img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.movieImagePreview span {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 0.55rem 0.7rem;
+  color: white;
+  background: linear-gradient(transparent, rgba(0,0,0,0.8));
+  font-size: 0.62rem;
+  font-weight: 800;
+}
 .ballotHistory { margin-bottom: 3rem; }
 .ballotList { display: grid; gap: 1.5rem; }
 .ballotCard { display: grid; gap: 1.25rem; padding: clamp(1rem, 3vw, 1.8rem); border: 1px solid var(--line); background: var(--cream); }
@@ -455,6 +492,208 @@ td small { display: block; margin-top: 0.3rem; color: var(--muted); font-size: 0
 }
 .latestWinner h2 { margin: 0.25rem 0 0; font-family: Georgia, serif; font-size: 1.8rem; font-weight: 400; }
 .latestWinner p { margin: 0; }
+.cinematicBallot {
+  --cinematic-accent: #ff5538;
+  position: relative;
+  left: 50%;
+  width: 100vw;
+  min-height: min(860px, calc(100svh - 24px));
+  margin-left: -50vw;
+  overflow: hidden;
+  isolation: isolate;
+  color: #f7f4ed;
+  background: #0c0c0c;
+}
+.cinematicBackdrops, .cinematicBackdrop, .cinematicBackdrop picture,
+.cinematicBackdrop img, .cinematicShade, .cinematicGrain {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.cinematicBackdrop {
+  opacity: 0;
+  transform: scale(1.025);
+  transition: opacity 900ms ease, transform 7s ease;
+}
+.cinematicBackdrop.isActive { opacity: 1; transform: scale(1); }
+.cinematicBackdrop img { display: block; object-fit: cover; object-position: center; }
+.cinematicFallback-1 { background: radial-gradient(circle at 65% 38%, #df633a, transparent 18%), linear-gradient(125deg, #1b0b08 10%, #8e2817 52%, #e5a45e); }
+.cinematicFallback-2 { background: radial-gradient(circle at 35% 62%, #67d4dc, transparent 13%), linear-gradient(145deg, #06191e, #0b5b67 55%, #db8d66); }
+.cinematicFallback-3 { background: radial-gradient(circle at 70% 30%, #edff64, transparent 12%), linear-gradient(120deg, #121711, #536422 52%, #b6a35a); }
+.cinematicFallback-4 { background: radial-gradient(circle at 45% 45%, #f670a8, transparent 14%), linear-gradient(135deg, #1d0b18, #6f173f 57%, #ae806a); }
+.cinematicFallback-5 { background: radial-gradient(circle at 68% 64%, #a28cff, transparent 14%), linear-gradient(120deg, #0d0b1c, #392d78 55%, #86645e); }
+.cinematicShade {
+  z-index: 2;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.2) 63%, rgba(0,0,0,0.5) 100%),
+    linear-gradient(0deg, rgba(0,0,0,0.76), transparent 42%, rgba(0,0,0,0.22));
+}
+.cinematicGrain {
+  z-index: 3;
+  opacity: 0.12;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+.cinematicContent {
+  position: relative;
+  z-index: 4;
+  min-height: inherit;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 2rem;
+  padding: clamp(1.25rem, 3vw, 2.5rem) clamp(1.25rem, 4vw, 4rem);
+}
+.cinematicTopline {
+  min-height: 44px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  gap: 1rem;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.cinematicMenu::before { content: "—"; margin-right: 0.65rem; }
+.cinematicWordmark {
+  justify-self: center;
+  font-size: clamp(0.95rem, 2vw, 1.35rem);
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+}
+.cinematicWordmark i { font-family: Georgia, serif; font-weight: 400; text-transform: none; }
+.cinematicStatus { justify-self: end; max-width: 25rem; text-align: right; line-height: 1.4; }
+.cinematicMain {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  align-items: end;
+  gap: clamp(2rem, 5vw, 6rem);
+  padding-top: clamp(2rem, 9vh, 7rem);
+}
+.cinematicMain:has(> div:only-child) { grid-template-columns: minmax(0, 1fr); }
+.cinematicInstruction {
+  margin: 0 0 1rem;
+  color: rgba(255,255,255,0.72);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.cinematicTitles { display: grid; justify-items: start; }
+.cinematicTitles label, .cinematicTitles button {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  padding: 0;
+  color: rgba(255,255,255,0.42);
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  text-shadow: 0 2px 22px rgba(0,0,0,0.42);
+  cursor: pointer;
+  transition: color 180ms ease, transform 180ms ease;
+}
+.cinematicTitles label:hover, .cinematicTitles label.isActive,
+.cinematicTitles button:hover, .cinematicTitles button.isActive,
+.cinematicTitles label:has(input:checked) { color: #fff; }
+.cinematicTitles label.isActive, .cinematicTitles button.isActive { transform: translateX(0.45rem); }
+.cinematicTitles input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.cinematicTitles label:has(input:focus-visible) { outline: 2px solid white; outline-offset: 5px; }
+.cinematicMovieTitle {
+  max-width: 80vw;
+  font-size: clamp(2.4rem, 5.3vw, 6.2rem);
+  font-weight: 800;
+  letter-spacing: -0.065em;
+  line-height: 0.92;
+  overflow-wrap: anywhere;
+}
+.cinematicTitles small {
+  font-size: clamp(0.58rem, 0.9vw, 0.82rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.cinematicTitles small i { margin-inline: 0.2rem; font-style: normal; opacity: 0.55; }
+.cinematicSelectionMark {
+  width: 0.55rem;
+  height: 0.55rem;
+  flex: 0 0 auto;
+  align-self: center;
+  margin-right: 0.1rem;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  transform: scale(0.7);
+}
+.cinematicTitles label:has(input:checked) .cinematicSelectionMark {
+  border-color: var(--cinematic-accent);
+  background: var(--cinematic-accent);
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.16);
+  transform: scale(1);
+}
+.cinematicResults {
+  align-self: end;
+  padding: 1.1rem;
+  border: 1px solid rgba(255,255,255,0.38);
+  background: rgba(7,7,7,0.42);
+  backdrop-filter: blur(18px);
+}
+.cinematicResultsHeading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.cinematicResultsHeading span { opacity: 0.65; }
+.cinematicResult { margin-top: 0.72rem; }
+.cinematicResult > div { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.72rem; }
+.cinematicResult b { font-variant-numeric: tabular-nums; }
+.cinematicResult > i { height: 3px; display: block; margin-top: 0.38rem; overflow: hidden; background: rgba(255,255,255,0.2); }
+.cinematicResult > i > span { height: 100%; display: block; background: var(--cinematic-accent); transition: width 500ms ease; }
+.cinematicResults > p { margin: 1rem 0 0; font-size: 0.72rem; line-height: 1.45; }
+.cinematicBottomline {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 2rem;
+}
+.cinematicSynopsis { max-width: 42rem; display: grid; grid-template-columns: auto 1fr; align-items: start; gap: 1rem; }
+.cinematicSynopsis > span { color: var(--cinematic-accent); font-size: 0.66rem; font-weight: 900; }
+.cinematicSynopsis p { margin: 0; color: rgba(255,255,255,0.76); font-size: 0.75rem; line-height: 1.5; }
+.cinematicVoteButton {
+  min-width: 230px;
+  min-height: 54px;
+  padding: 0.8rem 1.3rem;
+  color: #0b0b0b;
+  border: 1px solid white;
+  background: #f7f4ed;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.cinematicFeedback, .cinematicResultsLocked {
+  position: absolute;
+  z-index: 6;
+  right: clamp(1.25rem, 4vw, 4rem);
+  bottom: 6.8rem;
+  max-width: 32rem;
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  color: #101010;
+  background: #f7f4ed;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+.cinematicFeedback.isError { color: white; background: #b82c25; }
+.cinematicResultsLocked { color: rgba(255,255,255,0.76); border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.38); }
+.memberBallotCanceled h2 { margin: 0 0 0.6rem; font-family: Georgia, serif; font-size: 2rem; font-weight: 400; }
 .memberBallot { padding: clamp(1.25rem, 5vw, 3rem); border-bottom: 1px solid var(--line); background: var(--paper); }
 .memberBallotHeader { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
 .memberBallotHeader h2 { margin: 0.35rem 0 0.6rem; font-family: Georgia, serif; font-size: clamp(1.8rem, 4vw, 2.7rem); font-weight: 400; }
@@ -645,6 +884,24 @@ body::after { content: ""; position: fixed; z-index: -1; inset: 0; pointer-event
   .tieBreaker, .exemptionForm { grid-template-columns: minmax(0, 1fr); align-items: stretch; }
   .tieBreaker label, .exemptionForm label, .tieBreaker .formError, .tieBreaker .formSuccess, .exemptionForm .formError, .exemptionForm .formSuccess, .exemptionForm small { grid-column: 1; }
 
+  .cinematicBallot { min-height: 100svh; }
+  .cinematicContent { gap: 1.35rem; padding-block: 1.15rem; }
+  .cinematicTopline { grid-template-columns: 1fr auto; }
+  .cinematicWordmark { grid-column: 2; grid-row: 1; }
+  .cinematicStatus { grid-column: 1 / -1; justify-self: start; text-align: left; }
+  .cinematicMain { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; padding-top: 1rem; }
+  .cinematicInstruction { margin-bottom: 0.8rem; }
+  .cinematicTitles { gap: 0.2rem; }
+  .cinematicTitles label, .cinematicTitles button { flex-wrap: wrap; gap: 0.2rem 0.45rem; }
+  .cinematicMovieTitle { max-width: calc(100vw - 4.2rem); font-size: clamp(2.15rem, 11vw, 4.4rem); }
+  .cinematicTitles small { width: 100%; padding-left: 1.15rem; }
+  .cinematicResults { width: 100%; padding: 0.85rem; }
+  .cinematicBottomline { flex-direction: column; align-items: stretch; gap: 1rem; }
+  .cinematicSynopsis { grid-template-columns: auto minmax(0, 1fr); gap: 0.7rem; }
+  .cinematicSynopsis p { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+  .cinematicVoteButton { width: 100%; min-width: 0; }
+  .cinematicFeedback, .cinematicResultsLocked { right: 1.25rem; bottom: 6.4rem; left: 1.25rem; text-align: center; }
+
   .occupancySummary { align-items: stretch; }
   .occupancyStats { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
   .occupancyStats span { min-width: 0; }
@@ -709,4 +966,9 @@ body::after { content: ""; position: fixed; z-index: -1; inset: 0; pointer-event
 @media (prefers-reduced-motion: no-preference) {
   .primaryButton, .secondaryButton, .googleButton, .copyButton, .seat, .floorPlace { transition: transform 160ms ease, box-shadow 160ms ease; }
   .primaryButton:hover, .secondaryButton:hover, .googleButton:hover, .copyButton:hover { transform: translateY(-2px); box-shadow: 0 5px 0 rgba(23,23,20,0.22); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cinematicBackdrop, .cinematicResult > i > span,
+  .cinematicTitles label, .cinematicTitles button { transition: none; }
 }
