@@ -29,11 +29,28 @@ describe("movie image processing", () => {
     expect(result.accent).toMatch(/^rgb\(\d+ \d+ \d+\)$/);
   });
 
-  it("rejects tiny, mislabeled and malformed files", async () => {
-    const tiny = await sharp({
+  it("accepts a low-resolution image and enlarges it without changing its proportions", async () => {
+    const lowResolution = await sharp({
       create: {
         width: 800,
         height: 450,
+        channels: 3,
+        background: "black",
+      },
+    }).png().toBuffer();
+
+    const result = await processMovieImageSource({
+      source: lowResolution,
+      mimeType: "image/png",
+    });
+    expect(result).toMatchObject({ sourceWidth: 800, sourceHeight: 450 });
+  });
+
+  it("rejects tiny, mislabeled and malformed files", async () => {
+    const tiny = await sharp({
+      create: {
+        width: 320,
+        height: 180,
         channels: 3,
         background: "black",
       },
