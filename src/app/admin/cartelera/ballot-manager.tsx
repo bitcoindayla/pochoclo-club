@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useActionState, useState } from "react";
+import { startTransition, useActionState, useEffect, useState } from "react";
 
 import type { MemberSearchItem } from "@/lib/members";
 import type { MovieBallot } from "@/lib/movie-voting";
@@ -18,37 +18,171 @@ import {
 } from "./actions";
 
 const initialState: MovieBallotActionState = { error: null, message: null };
+const MAX_ORIGINAL_IMAGE_BYTES = 20 * 1024 * 1024;
+const MAX_PREPARED_IMAGE_BYTES = 500 * 1024;
+const MAX_PREPARED_BATCH_BYTES = 3 * 1024 * 1024;
+const MAX_PREVIEW_EDGE = 1_920;
+
+function canvasBlob(canvas: HTMLCanvasElement, quality: number) {
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => blob ? resolve(blob) : reject(new Error("No pudimos optimizar la imagen.")),
+      "image/webp",
+      quality,
+    );
+  });
+}
+
+async function prepareImageForUpload(file: File) {
+  if (file.size > MAX_ORIGINAL_IMAGE_BYTES) {
+    throw new Error(`${file.name} pesa más de 20 MB.`);
+  }
+
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  } catch {
+    throw new Error(`No pudimos leer ${file.name}. Probá con otra imagen.`);
+  }
+
+  const scale = Math.min(1, MAX_PREVIEW_EDGE / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  const context = canvas.getContext("2d");
+  if (!context) {
+    bitmap.close();
+    throw new Error("No pudimos optimizar la imagen.");
+  }
+  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+
+  let blob = await canvasBlob(canvas, 0.86);
+  for (const quality of [0.78, 0.7, 0.62, 0.54]) {
+    if (blob.size <= MAX_PREPARED_IMAGE_BYTES) break;
+    blob = await canvasBlob(canvas, quality);
+  }
+  if (blob.size > MAX_PREPARED_IMAGE_BYTES) {
+    const secondScale = Math.min(1, 1_600 / Math.max(canvas.width, canvas.height));
+    const smaller = document.createElement("canvas");
+    smaller.width = Math.max(1, Math.round(canvas.width * secondScale));
+    smaller.height = Math.max(1, Math.round(canvas.height * secondScale));
+    smaller.getContext("2d")?.drawImage(canvas, 0, 0, smaller.width, smaller.height);
+    blob = await canvasBlob(smaller, 0.68);
+  }
+  if (blob.size > MAX_PREPARED_IMAGE_BYTES) {
+    throw new Error(`No pudimos reducir ${file.name}. Probá guardándola como JPG o WebP.`);
+  }
+
+  return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".webp", {
+    type: "image/webp",
+  });
+}
 
 type BallotFormProps = {
   ballot?: MovieBallot;
   screenings: Screening[];
 };
 
+function MovieImageInput({
+  ballot,
+  movie,
+  position,
+}: {
+  ballot?: MovieBallot;
+  movie?: MovieBallot["options"][number];
+  position: number;
+}) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewName, setPreviewName] = useState<string | null>(null);
+
+  useEffect(() => () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
+
+  const currentUrl = movie?.image && ballot
+    ? `/api/movie-images/${ballot.screeningId}/${movie.id}/landscape?v=${encodeURIComponent(movie.image.landscapePath)}`
+    : null;
+
+  return (
+    <div className="fieldGroup wideField movieImageField">
+      <label htmlFor={`movieImage${position}-${ballot?.id ?? "new"}`}>
+        Imagen de pantalla
+      </label>
+      {previewUrl || currentUrl ? (
+        <div className="movieImagePreview">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            alt={`Vista previa de ${movie?.title || `película ${position}`}`}
+            src={previewUrl || currentUrl || ""}
+          />
+          <span>
+            {previewUrl
+              ? `Nueva imagen seleccionada · ${previewName}`
+              : `Imagen actual · ${movie?.image?.sourceWidth} × ${movie?.image?.sourceHeight} px`}
+          </span>
+        </div>
+      ) : null}
+      <input
+        accept="image/jpeg,image/png,image/webp"
+        id={`movieImage${position}-${ballot?.id ?? "new"}`}
+        name={`movieImage${position}`}
+        onChange={(event) => {
+          const file = event.currentTarget.files?.[0] ?? null;
+          setPreviewName(file?.name ?? null);
+          setPreviewUrl(file ? URL.createObjectURL(file) : null);
+        }}
+        type="file"
+      />
+      <small>
+        JPG, PNG o WebP · hasta 20 MB. Recomendado 1600 × 900 px; mínimo 640 × 360 px.
+        {movie?.image ? " Elegí otra solamente si querés reemplazarla." : " La podés agregar ahora o después."}
+      </small>
+    </div>
+  );
+}
+
 export function BallotForm({ ballot, screenings }: BallotFormProps) {
   const serverAction = ballot ? updateMovieBallotAction : createMovieBallotAction;
   const [state, action, pending] = useActionState(serverAction, initialState);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [preparing, setPreparing] = useState(false);
   const options = ballot?.options ?? [];
 
   return (
     <form
       className="ballotForm"
       encType="multipart/form-data"
-      onSubmit={(event) => {
+      onSubmit={async (event) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const images = [1, 2, 3, 4, 5]
-          .map((position) => formData.get(`movieImage${position}`))
-          .filter((value): value is File => value instanceof File && value.size > 0);
-        const totalBytes = images.reduce((total, image) => total + image.size, 0);
-        if (totalBytes > 3 * 1024 * 1024) {
-          setUploadError("Las imágenes superan 3 MB en total. Guardalas de a una.");
-          return;
-        }
+          .map((position) => ({ position, file: formData.get(`movieImage${position}`) }))
+          .filter(
+            (entry): entry is { position: number; file: File } =>
+              entry.file instanceof File && entry.file.size > 0,
+          );
+        setPreparing(true);
         setUploadError(null);
-        startTransition(() => {
-          action(formData);
-        });
+        try {
+          for (const { position, file } of images) {
+            formData.set(`movieImage${position}`, await prepareImageForUpload(file));
+          }
+          const preparedBytes = [1, 2, 3, 4, 5].reduce((total, position) => {
+            const image = formData.get(`movieImage${position}`);
+            return total + (image instanceof File ? image.size : 0);
+          }, 0);
+          if (preparedBytes > MAX_PREPARED_BATCH_BYTES) {
+            throw new Error("No pudimos optimizar todas las imágenes. Probá guardándolas de a una.");
+          }
+          startTransition(() => {
+            action(formData);
+          });
+        } catch (error) {
+          setUploadError(error instanceof Error ? error.message : "No pudimos preparar las imágenes.");
+        } finally {
+          setPreparing(false);
+        }
       }}
     >
       <div className="ballotTiming">
@@ -146,42 +280,18 @@ export function BallotForm({ ballot, screenings }: BallotFormProps) {
                   rows={4}
                 />
               </div>
-              <div className="fieldGroup wideField movieImageField">
-                <label htmlFor={`movieImage${position}-${ballot?.id ?? "new"}`}>
-                  Imagen de pantalla
-                </label>
-                {movie?.image ? (
-                  <div className="movieImagePreview">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      alt={`Vista previa de ${movie.title}`}
-                      src={`/api/movie-images/${ballot?.screeningId}/${movie.id}/landscape`}
-                    />
-                    <span>Imagen actual · {movie.image.sourceWidth} × {movie.image.sourceHeight} px</span>
-                  </div>
-                ) : null}
-                <input
-                  accept="image/jpeg,image/png,image/webp"
-                  id={`movieImage${position}-${ballot?.id ?? "new"}`}
-                  name={`movieImage${position}`}
-                  type="file"
-                />
-                <small>
-                  JPG, PNG o WebP · mínimo 1600 × 900 px.
-                  {movie?.image ? " Elegí otra solamente si querés reemplazarla." : " La podés agregar ahora o después."}
-                </small>
-              </div>
+              <MovieImageInput ballot={ballot} movie={movie} position={position} />
             </fieldset>
           );
         })}
       </div>
 
-      <button className="primaryButton" disabled={pending} type="submit">
-        {pending ? "Guardando…" : ballot ? "Guardar cambios" : "Crear cartelera"}
+      <button className="primaryButton" disabled={pending || preparing} type="submit">
+        {preparing ? "Preparando imágenes…" : pending ? "Guardando…" : ballot ? "Guardar cambios" : "Crear cartelera"}
       </button>
       {uploadError ? <p className="formError" role="alert">{uploadError}</p> : null}
       <small className="imageUploadLimit">
-        Podés subir varias juntas si pesan hasta 3 MB en total. Si no, guardalas de a una.
+        Podés subir las cinco juntas: las optimizamos automáticamente sin deformarlas.
       </small>
       {state.error ? <p className="formError" role="alert">{state.error}</p> : null}
       {state.message ? <p className="formSuccess" role="status">{state.message}</p> : null}

@@ -4,8 +4,8 @@ const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const ALLOWED_FORMATS = new Set(["jpeg", "png", "webp"]);
 export const MAX_MOVIE_IMAGE_BYTES = 3 * 1024 * 1024;
 const MAX_SOURCE_PIXELS = 40_000_000;
-const MIN_LONG_EDGE = 1_600;
-const MIN_SHORT_EDGE = 900;
+const MIN_LONG_EDGE = 640;
+const MIN_SHORT_EDGE = 360;
 
 export class MovieImageProcessingError extends Error {
   constructor(message: string) {
@@ -69,7 +69,7 @@ export async function processMovieImageSource({
   const shortEdge = Math.min(width, height);
   if (longEdge < MIN_LONG_EDGE || shortEdge < MIN_SHORT_EDGE) {
     throw new MovieImageProcessingError(
-      "La imagen es muy chica. Usá una de al menos 1600 × 900 px.",
+      "La imagen es muy chica. Usá una de al menos 640 × 360 px.",
     );
   }
 

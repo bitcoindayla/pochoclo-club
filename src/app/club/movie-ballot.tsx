@@ -25,7 +25,11 @@ function formatClose(date: Date) {
 }
 
 function imageUrl(ballot: MemberMovieBallot, movie: MovieOption, variant: "landscape" | "portrait") {
-  return `/api/movie-images/${ballot.screeningId}/${movie.id}/${variant}`;
+  const version = variant === "portrait"
+    ? movie.image?.portraitPath
+    : movie.image?.landscapePath;
+  const suffix = version ? `?v=${encodeURIComponent(version)}` : "";
+  return `/api/movie-images/${ballot.screeningId}/${movie.id}/${variant}${suffix}`;
 }
 
 function BallotBackdrop({
