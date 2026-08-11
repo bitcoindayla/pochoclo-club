@@ -3,12 +3,14 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/authz";
+import { prepareMovieBallotImages } from "@/lib/movie-images";
 import {
   cancelMovieBallot,
   chooseMovieWinner,
   closeMovieBallot,
   createMovieBallot,
   grantMovieBallotExemption,
+  getMovieBallot,
   MovieBallotRuleError,
   openMovieBallot,
   updateMovieBallot,
@@ -56,7 +58,19 @@ export async function createMovieBallotAction(
 ): Promise<MovieBallotActionState> {
   const admin = await requireAdmin();
   try {
-    await createMovieBallot(admin.id, screeningIdFrom(formData), parseMovieBallotInput(formData));
+    const screeningId = screeningIdFrom(formData);
+    const prepared = await prepareMovieBallotImages({
+      screeningId,
+      input: parseMovieBallotInput(formData),
+      formData,
+    });
+    try {
+      await createMovieBallot(admin.id, screeningId, prepared.input);
+    } catch (error) {
+      await prepared.rollback();
+      throw error;
+    }
+    await prepared.cleanup();
     refreshBallotPages();
     return { error: null, message: "Cartelera guardada como borrador." };
   } catch (error) {
@@ -70,7 +84,24 @@ export async function updateMovieBallotAction(
 ): Promise<MovieBallotActionState> {
   const admin = await requireAdmin();
   try {
-    await updateMovieBallot(admin.id, screeningIdFrom(formData), parseMovieBallotInput(formData));
+    const screeningId = screeningIdFrom(formData);
+    const ballot = await getMovieBallot(screeningId);
+    if (!ballot || ballot.status !== "draft") {
+      throw new MovieBallotRuleError("Una votación abierta ya no se puede editar.");
+    }
+    const prepared = await prepareMovieBallotImages({
+      screeningId,
+      input: parseMovieBallotInput(formData),
+      formData,
+      previousOptions: ballot.options,
+    });
+    try {
+      await updateMovieBallot(admin.id, screeningId, prepared.input);
+    } catch (error) {
+      await prepared.rollback();
+      throw error;
+    }
+    await prepared.cleanup();
     refreshBallotPages();
     return { error: null, message: "Borrador actualizado." };
   } catch (error) {
