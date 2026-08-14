@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AdminNav } from "@/components/admin-nav";
 import { SignOutButton } from "@/components/session-actions";
 import { requireAdmin } from "@/lib/authz";
 import { listInvitations } from "@/lib/invitations";
@@ -38,6 +39,7 @@ export default async function InvitationsPage() {
           <p className="kicker">Panel administrativo</p>
           <h1>Invitaciones</h1>
           <p className="pageIntro">Sesión de {admin.name}</p>
+          <AdminNav current="/admin/invitaciones" />
         </div>
         <SignOutButton />
       </div>

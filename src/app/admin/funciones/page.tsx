@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AdminNav } from "@/components/admin-nav";
 import { SignOutButton } from "@/components/session-actions";
 import { requireAdmin } from "@/lib/authz";
 import { CLUB_TIME_ZONE } from "@/lib/screening-policy";
@@ -43,7 +44,7 @@ export default async function ScreeningsPage() {
           <p className="kicker">Panel administrativo</p>
           <h1>Funciones</h1>
           <p className="pageIntro">Sesión de {admin.name}</p>
-          <Link className="backLink" href="/admin/cartelera">Ir a La cartelera →</Link>
+          <AdminNav current="/admin/funciones" />
         </div>
         <SignOutButton />
       </div>

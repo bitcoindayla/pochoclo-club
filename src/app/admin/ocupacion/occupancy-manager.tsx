@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 
-import { ALL_PLACE_CODES, FLOOR_PLACES, ROOM_ROWS, type PlaceCode } from "@/lib/room";
+import { AISLE_FLOOR_BY_ROW, ALL_PLACE_CODES, placeDisplayLabel, ROOM_ROWS, type PlaceCode } from "@/lib/room";
 import type { ScreeningOccupancy, WaitlistEntry } from "@/lib/screenings";
 
 import {
@@ -104,7 +104,7 @@ export function OccupancyManager({
         role="img"
         title={`${placeCode} · ${stateLabel}`}
       >
-        <strong>{placeCode}</strong>
+        <strong>{placeDisplayLabel(placeCode)}</strong>
         {occupant ? <small>{occupant.memberName}</small> : null}
       </span>
     );
@@ -121,12 +121,7 @@ export function OccupancyManager({
           <div className="adminMiniScreen">Pantalla</div>
           <div className="adminMiniRows">
             {ROOM_ROWS.map((row, rowIndex) => {
-              const floorPlace =
-                rowIndex === 1
-                  ? FLOOR_PLACES[0]
-                  : rowIndex === 2
-                    ? FLOOR_PLACES[1]
-                    : null;
+              const floorPlace = AISLE_FLOOR_BY_ROW[rowIndex];
 
               return (
                 <div className="adminMiniRow" key={row[0].code}>
@@ -176,7 +171,7 @@ export function OccupancyManager({
                 return (
                   <tr key={placeCode}>
                     <td data-label="Lugar">
-                      <strong>{placeCode}</strong>
+                      <strong>{placeDisplayLabel(placeCode)}</strong>
                       <small>{placeNames[placeCode]}</small>
                     </td>
                     <td data-label="Estado">

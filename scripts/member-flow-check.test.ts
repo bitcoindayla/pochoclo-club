@@ -106,7 +106,7 @@ async function clickButtonByText(currentPage: Page, text: string) {
 async function clickPlace(currentPage: Page, placeCode: string) {
   await currentPage.evaluate((expectedCode) => {
     const button = [...document.querySelectorAll("button.seat, button.floorPlace")].find(
-      (candidate) => candidate.querySelector("strong")?.textContent === expectedCode,
+      (candidate) => candidate.getAttribute("data-place-code") === expectedCode,
     );
     if (!(button instanceof HTMLButtonElement)) {
       throw new Error(`No se encontró el lugar ${expectedCode}.`);
@@ -115,10 +115,12 @@ async function clickPlace(currentPage: Page, placeCode: string) {
     button.click();
   }, placeCode);
   await currentPage.waitForFunction(
-    (expectedCode) =>
-      [...document.querySelectorAll<HTMLInputElement>('input[name="placeCode"]')].some(
-        (input) => input.value === expectedCode,
-      ),
+    (expectedCode) => {
+      const button = [...document.querySelectorAll("button.seat, button.floorPlace")].find(
+        (candidate) => candidate.getAttribute("data-place-code") === expectedCode,
+      );
+      return button?.getAttribute("aria-pressed") === "true";
+    },
     {},
     placeCode,
   );
@@ -255,30 +257,22 @@ describe("normal member browser flow", () => {
     expect(await page.evaluate(() => document.body.innerText)).toContain("Hola, Miembro.");
 
     await clickPlace(page, ownPlaceCode);
-    await clickButtonByText(page, "Confirmar mi lugar");
+    await clickPlace(page, guestPlaceCode);
+    await page.waitForSelector("#guest-search");
+    await page.type("#guest-search", guestName);
+    await clickButtonByText(page, "Confirmar mis lugares");
     await page.waitForFunction(
-      (placeCode) =>
-        [...document.querySelectorAll("button")].some(
-          (button) => button.textContent?.includes(`Mi lugar · ${placeCode}`),
-        ),
+      (ownCode, guestCode) => {
+        const buttons = [...document.querySelectorAll("button.seat, button.floorPlace")];
+        const own = buttons.find((button) => button.getAttribute("data-place-code") === ownCode);
+        const guest = buttons.find((button) => button.getAttribute("data-place-code") === guestCode);
+        return Boolean(own?.textContent?.includes("Tu lugar") && guest?.textContent?.includes("+1"));
+      },
       {},
       ownPlaceCode,
-    );
-    expect((await screeningReference.collection("reservations").doc(uid).get()).exists).toBe(true);
-
-    await clickButtonByText(page, "Agregar un +1");
-    await page.waitForSelector("#guest-search");
-    await clickPlace(page, guestPlaceCode);
-    await page.type("#guest-search", guestName);
-    await clickButtonByText(page, "Confirmar reserva del +1");
-    await page.waitForFunction(
-      (placeCode) =>
-        [...document.querySelectorAll("button")].some(
-          (button) => button.textContent?.includes(`Mi +1 · ${placeCode}`),
-        ),
-      {},
       guestPlaceCode,
     );
+    expect((await screeningReference.collection("reservations").doc(uid).get()).exists).toBe(true);
 
     const [plusOne, guestReservation] = await Promise.all([
       screeningReference.collection("plusOnes").doc(uid).get(),
@@ -296,7 +290,6 @@ describe("normal member browser flow", () => {
       await page.waitForSelector(".roomMap");
     }
 
-    await clickButtonByText(page, `Mi lugar · ${ownPlaceCode}`);
     await clickButtonByText(page, "Cancelar mi reserva");
     await page.waitForFunction(
       () => document.body.innerText.includes("Tu reserva fue cancelada."),

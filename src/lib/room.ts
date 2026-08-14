@@ -24,6 +24,8 @@ export const FLOOR_PLACES = [
   { code: "P2", name: "Céline Sciamma" },
 ] as const;
 
+export const AISLE_FLOOR_BY_ROW = [null, FLOOR_PLACES[0], FLOOR_PLACES[1]] as const;
+
 export const SEAT_CODES = ROOM_ROWS.flat().map((place) => place.code);
 export const FLOOR_CODES = FLOOR_PLACES.map((place) => place.code);
 export const ALL_PLACE_CODES = [...SEAT_CODES, ...FLOOR_CODES];
@@ -37,4 +39,10 @@ export function isSeatCode(value: unknown): value is SeatCode {
 
 export function isPlaceCode(value: unknown): value is PlaceCode {
   return typeof value === "string" && ALL_PLACE_CODES.includes(value as PlaceCode);
+}
+
+export function placeDisplayLabel(code: string) {
+  if (code === "P1") return "PISO 1";
+  if (code === "P2") return "PISO 2";
+  return code;
 }

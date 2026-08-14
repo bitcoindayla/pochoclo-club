@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AdminNav } from "@/components/admin-nav";
 import { SignOutButton } from "@/components/session-actions";
 import { requireAdmin } from "@/lib/authz";
 import { listActiveMembersForReservation } from "@/lib/members";
@@ -68,6 +69,7 @@ export default async function MovieBallotsPage() {
           <p className="kicker">Panel administrativo</p>
           <h1>La cartelera</h1>
           <p className="pageIntro">Armá la votación de películas. Sesión de {admin.name}.</p>
+          <AdminNav current="/admin/cartelera" />
         </div>
         <SignOutButton />
       </div>

@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 
 import type { MemberSearchItem } from "@/lib/members";
-import { FLOOR_PLACES, ROOM_ROWS } from "@/lib/room";
+import { AISLE_FLOOR_BY_ROW, placeDisplayLabel, ROOM_ROWS, type PlaceCode } from "@/lib/room";
 import type {
   GuestReservation,
   ScreeningOccupancy,
@@ -20,7 +20,7 @@ import {
   joinGuestWaitlistAction,
   joinOwnWaitlistAction,
   reserveGuestSeatAction,
-  reserveOwnSeatAction,
+  reservePartyAction,
   type ReservationActionState,
 } from "./actions";
 
@@ -58,13 +58,12 @@ export function SeatMap({
   blockedPlaceCodes: string[];
   readOnly: boolean;
 }) {
-  const [mode, setMode] = useState<"self" | "guest">("self");
   const [selected, setSelected] = useState<string | null>(null);
   const [guestSeat, setGuestSeat] = useState<string | null>(null);
   const [guestQuery, setGuestQuery] = useState("");
   const [guestMember, setGuestMember] = useState<MemberSearchItem | null>(null);
   const [reserveState, reserveAction, reservePending] = useActionState(
-    reserveOwnSeatAction,
+    reservePartyAction,
     initialState,
   );
   const [changeState, changeAction, changePending] = useActionState(
@@ -116,279 +115,203 @@ export function SeatMap({
     cancelGuestWaitPending;
   const blockedPlaces = new Set(blockedPlaceCodes);
   const roomIsFull = occupancy.length + blockedPlaces.size >= 14;
-  const hasPersonalBooking =
-    ownReservationKind === "self" || ownWaitlistEntry?.kind === "self";
   const hasGuestBooking = Boolean(guestReservation || guestWaitlistEntry);
+  const movingOwn = Boolean(ownPlaceCode && selected && selected !== ownPlaceCode);
+  const addingOrMovingGuest = Boolean(
+    guestSeat && guestSeat !== guestReservation?.placeCode,
+  );
+  const guestNameValue = guestMember?.name ?? guestQuery.trim();
   const seatState = ownPlaceCode ? changeState : reserveState;
   const guestState = guestReservation ? changeGuestState : reserveGuestState;
   const occupancyByPlace = new Map(occupancy.map((place) => [place.placeCode, place]));
   const normalizedQuery = searchableName(guestQuery.trim());
+
+  useEffect(() => {
+    const justBooked =
+      reserveState.message ||
+      reserveGuestState.message ||
+      changeState.message ||
+      changeGuestState.message;
+    if (!justBooked) return;
+    document.getElementById("tickets")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [
+    reserveState.message,
+    reserveGuestState.message,
+    changeState.message,
+    changeGuestState.message,
+  ]);
   const matchingMembers = normalizedQuery
     ? guestCandidates
         .filter((candidate) => searchableName(candidate.name).includes(normalizedQuery))
         .slice(0, 8)
     : [];
 
-  function chooseMode(nextMode: "self" | "guest") {
-    setMode(nextMode);
-    setSelected(null);
-    setGuestSeat(null);
+  function pickPlace(code: PlaceCode) {
+    if (readOnly || pending) return;
+
+    if (ownPlaceCode === code) {
+      setSelected((current) => (current === ownPlaceCode ? null : ownPlaceCode));
+      setGuestSeat(null);
+      return;
+    }
+    if (guestReservation?.placeCode === code) {
+      setGuestSeat((current) => (current === code ? null : code));
+      return;
+    }
+
+    if (selected === code) {
+      setSelected(guestSeat);
+      setGuestSeat(null);
+      return;
+    }
+    if (guestSeat === code) {
+      setGuestSeat(null);
+      return;
+    }
+
+    if (!ownPlaceCode) {
+      if (!selected) setSelected(code);
+      else setGuestSeat(code);
+      return;
+    }
+
+    if (selected === ownPlaceCode) {
+      setSelected(code);
+      return;
+    }
+
+    setGuestSeat(code);
+  }
+
+  function renderPlace(place: { code: PlaceCode; name: string }, kind: "seat" | "floor") {
+    const occupied = occupancyByPlace.get(place.code);
+    const blocked = blockedPlaces.has(place.code);
+    const mine = occupied?.isMine || ownPlaceCode === place.code;
+    const myGuest = occupied?.isMyGuest;
+    const isOwnPick = selected === place.code;
+    const isGuestPick = guestSeat === place.code;
+    const prefix = kind === "floor" ? "floorPlace" : "seat";
+    const className = mine && !isOwnPick
+      ? `${prefix} ${kind === "floor" ? "floorMine" : "seatMine"}`
+      : myGuest && !isGuestPick
+        ? `${prefix} ${kind === "floor" ? "floorGuest" : "seatGuest"}`
+        : occupied && !mine && !myGuest
+          ? `${prefix} ${kind === "floor" ? "floorOccupied" : "seatOccupied"}`
+          : blocked
+            ? `${prefix} ${kind === "floor" ? "floorBlocked" : "seatBlocked"}`
+            : isGuestPick
+              ? `${prefix} ${kind === "floor" ? "floorGuest" : "seatGuest"}`
+              : isOwnPick
+                ? `${prefix} ${kind === "floor" ? "floorSelected" : "seatSelected"}`
+                : `${prefix} ${kind === "floor" ? "floorAvailable" : "seatAvailable"}`;
+    const lockedForOthers = Boolean(occupied && !mine && !myGuest);
+
+    return (
+      <button
+        aria-label={
+          mine
+            ? `${place.code}, reservado por mí`
+            : myGuest
+              ? `${place.code}, reservado para mi +1, ${occupied.memberName}`
+              : occupied
+                ? `${place.code}, ocupado por ${occupied.memberName}`
+                : blocked
+                  ? `${place.code}, bloqueado por administración`
+                  : isGuestPick
+                    ? `${place.code}, ${place.name}, elegido para tu +1`
+                    : isOwnPick
+                      ? `${place.code}, ${place.name}, tu lugar`
+                      : kind === "floor"
+                        ? `${place.code}, ${place.name}, disponible en el pasillo`
+                        : `${place.code}, ${place.name}, disponible`
+        }
+        aria-pressed={isOwnPick || isGuestPick || mine || Boolean(myGuest)}
+        className={className}
+        data-place-code={place.code}
+        disabled={lockedForOthers || blocked || pending || readOnly}
+        key={place.code}
+        onClick={() => pickPlace(place.code)}
+        type="button"
+      >
+        <strong data-place-code={place.code}>{placeDisplayLabel(place.code)}</strong>
+        <span>
+          {blocked
+            ? "Bloqueado"
+            : occupied
+              ? mine
+                ? "Tu lugar"
+                : myGuest
+                  ? `${occupied.memberName} · +1`
+                  : occupied.memberName
+              : isGuestPick
+                ? "Tu +1"
+                : isOwnPick
+                  ? "Tu lugar"
+                  : place.name}
+        </span>
+        {kind === "floor" ? <small>Pasillo</small> : null}
+      </button>
+    );
   }
 
   return (
     <div className="reservationForm">
-      {!readOnly && hasPersonalBooking ? (
-        <div className="reservationMode" aria-label="Qué reserva querés gestionar">
-          <button
-            aria-pressed={mode === "self"}
-            className={mode === "self" ? "modeButton modeButtonActive" : "modeButton"}
-            onClick={() => chooseMode("self")}
-            type="button"
-          >
-            {ownPlaceCode
-              ? `Mi lugar · ${ownPlaceCode}`
-              : `Mi espera · #${ownWaitlistEntry?.position}`}
-          </button>
-          <button
-            aria-pressed={mode === "guest"}
-            className={mode === "guest" ? "modeButton modeButtonActive" : "modeButton"}
-            onClick={() => chooseMode("guest")}
-            type="button"
-          >
-            {guestReservation
-              ? `Mi +1 · ${guestReservation.placeCode}`
-              : guestWaitlistEntry
-                ? `Mi +1 · espera #${guestWaitlistEntry.position}`
-                : "Agregar un +1"}
-          </button>
-        </div>
-      ) : null}
-
       {readOnly ? (
         <p className="closedNotice">
           Las reservas están cerradas. Podés consultar la distribución final, pero ya no modificarla.
         </p>
-      ) : null}
-
-      {ownReservationKind === "guest" ? (
+      ) : ownReservationKind === "guest" ? (
         <p className="guestNotice">
-          Este lugar fue reservado para vos como +1.{readOnly ? "" : " Podés cambiarlo o cancelarlo."}
+          Este lugar fue reservado para vos como +1. Podés cambiarlo o cancelarlo.
         </p>
-      ) : null}
-
-      {ownWaitlistEntry?.kind === "guest" ? (
-        <p className="guestNotice">Otra persona te agregó como +1. Estás en la posición {ownWaitlistEntry.position} de la lista de espera.</p>
-      ) : null}
-
-      {!readOnly && mode === "guest" && hasPersonalBooking && !hasGuestBooking ? (
-        <section className="guestSearch">
-          <div>
-            <p className="kicker">Nombre obligatorio</p>
-            <h3>¿Quién es tu +1?</h3>
-            <p>Puede ser cualquier persona. Si ya es miembro, vas a poder elegirla de las sugerencias.</p>
-          </div>
-          <div className="guestSearchControl">
-            <label htmlFor="guest-search">Nombre</label>
-            <input
-              autoComplete="off"
-              id="guest-search"
-              onChange={(event) => {
-                setGuestQuery(event.target.value);
-                setGuestMember(null);
-              }}
-              placeholder="Por ejemplo: Mauro"
-              type="search"
-              value={guestQuery}
-            />
-            {normalizedQuery ? (
-              <div className="memberResults">
-                {matchingMembers.length ? (
-                  matchingMembers.map((candidate) => (
-                    <button
-                      className={
-                        guestMember?.id === candidate.id
-                          ? "memberResult memberResultSelected"
-                          : "memberResult"
-                      }
-                      key={candidate.id}
-                      onClick={() => {
-                        setGuestMember(candidate);
-                        setGuestQuery(candidate.name);
-                      }}
-                      type="button"
-                    >
-                      {candidate.name}
-                    </button>
-                  ))
-                ) : (
-                  <p>No hay coincidencias. Podés usar igualmente el nombre que escribiste.</p>
-                )}
-              </div>
-            ) : null}
-          </div>
-          {guestMember ? (
-            <p className="guestSelection">Vinculaste a <strong>{guestMember.name}</strong>, que ya es miembro. Ahora elegile un asiento.</p>
-          ) : guestQuery.trim() ? (
-            <p className="guestSelection">Se guardará a <strong>{guestQuery.trim()}</strong> como invitado externo. Ahora elegile un asiento.</p>
-          ) : null}
-        </section>
-      ) : null}
-
-      {mode === "guest" && guestReservation ? (
+      ) : ownWaitlistEntry?.kind === "guest" ? (
         <p className="guestNotice">
-          Tu +1 es <strong>{guestReservation.memberName}</strong> y su asiento actual es <strong>{guestReservation.placeCode}</strong>.
+          Otra persona te agregó como +1. Estás en la posición {ownWaitlistEntry.position} de la lista de espera.
         </p>
-      ) : null}
-
-      {mode === "guest" && guestWaitlistEntry ? (
-        <p className="guestNotice">
-          Tu +1 es <strong>{guestWaitlistEntry.displayName}</strong> y está en la posición <strong>{guestWaitlistEntry.position}</strong> de la lista de espera.
+      ) : !ownPlaceCode ? (
+        <p className="bookingHint">
+          Tocá tu lugar. Si venís con alguien, tocá el segundo y escribí su nombre.
         </p>
       ) : null}
 
       <div className="roomMap">
-        <div className="cinemaScreen"><span>Pantalla</span></div>
-
-        <div className="seatRows">
-          {ROOM_ROWS.map((row, rowIndex) => (
-            <div className="seatRow" key={row[0].code}>
-              <span className="rowLabel">{String.fromCharCode(65 + rowIndex)}</span>
-              {row.map((place) => {
-                const occupied = occupancyByPlace.get(place.code);
-                const blocked = blockedPlaces.has(place.code);
-                const mine = occupied?.isMine || ownPlaceCode === place.code;
-                const myGuest = occupied?.isMyGuest;
-                const isSelected =
-                  mode === "guest" ? guestSeat === place.code : selected === place.code;
-                const className = mine
-                  ? "seat seatMine"
-                  : myGuest
-                    ? "seat seatGuest"
-                    : occupied
-                      ? "seat seatOccupied"
-                      : blocked
-                        ? "seat seatBlocked"
-                      : isSelected
-                        ? "seat seatSelected"
-                        : "seat seatAvailable";
-
-                return (
-                  <button
-                    aria-label={
-                      mine
-                        ? `${place.code}, reservado por mí`
-                        : myGuest
-                          ? `${place.code}, reservado para mi +1, ${occupied.memberName}`
-                          : occupied
-                            ? `${place.code}, ocupado por ${occupied.memberName}`
-                            : blocked
-                              ? `${place.code}, bloqueado por administración`
-                            : `${place.code}, ${place.name}, disponible`
-                    }
-                    aria-pressed={isSelected}
-                    className={className}
-                    disabled={Boolean(occupied) || blocked || pending || readOnly}
-                    key={place.code}
-                    onClick={() => {
-                      if (mode === "guest") setGuestSeat(place.code);
-                      else setSelected(place.code);
-                    }}
-                    type="button"
-                  >
-                    <strong>{place.code}</strong>
-                    <span>
-                      {blocked
-                        ? "Bloqueado"
-                        : occupied
-                        ? mine
-                          ? "Tu lugar"
-                          : myGuest
-                            ? `${occupied.memberName} · +1`
-                            : occupied.memberName
-                        : place.name}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          ))}
+        <div className="cinemaHeader">
+          <div className="cinemaScreen"><span>Pantalla</span></div>
+          <span className="entrance">Ingreso ↗</span>
         </div>
 
-        <div className="aisle"><span>Pasillo</span></div>
-        <div className="floorRow">
-          {FLOOR_PLACES.map((place) => {
-            const occupied = occupancyByPlace.get(place.code);
-            const blocked = blockedPlaces.has(place.code);
-            const mine = occupied?.isMine || ownPlaceCode === place.code;
-            const myGuest = occupied?.isMyGuest;
-            const isSelected =
-              mode === "guest" ? guestSeat === place.code : selected === place.code;
-            const className = mine
-              ? "floorPlace floorMine"
-              : myGuest
-                ? "floorPlace floorGuest"
-                : occupied
-                  ? "floorPlace floorOccupied"
-                  : blocked
-                    ? "floorPlace floorBlocked"
-                  : isSelected
-                    ? "floorPlace floorSelected"
-                    : "floorPlace floorAvailable";
-
+        <div className="seatRows">
+          {ROOM_ROWS.map((row, rowIndex) => {
+            const aislePlace = AISLE_FLOOR_BY_ROW[rowIndex];
             return (
-              <button
-                aria-label={
-                  mine
-                    ? `${place.code}, reservado por mí`
-                    : myGuest
-                      ? `${place.code}, reservado para mi +1, ${occupied.memberName}`
-                      : occupied
-                        ? `${place.code}, ocupado por ${occupied.memberName}`
-                        : blocked
-                          ? `${place.code}, bloqueado por administración`
-                        : `${place.code}, ${place.name}, disponible en el piso`
-                }
-                aria-pressed={isSelected}
-                className={className}
-                disabled={Boolean(occupied) || blocked || pending || readOnly}
-                key={place.code}
-                onClick={() => {
-                  if (mode === "guest") setGuestSeat(place.code);
-                  else setSelected(place.code);
-                }}
-                type="button"
-              >
-                <strong>{place.code}</strong>
-                <span>
-                  {blocked
-                    ? "Bloqueado"
-                    : occupied
-                    ? mine
-                      ? "Tu lugar"
-                      : myGuest
-                        ? `${occupied.memberName} · +1`
-                        : occupied.memberName
-                    : place.name}
-                </span>
-                <small>Espacio de piso</small>
-              </button>
+              <div className="seatRow" key={row[0].code}>
+                <span className="rowLabel">{String.fromCharCode(65 + rowIndex)}</span>
+                {row.slice(0, 2).map((place) => renderPlace(place, "seat"))}
+                <div className="aisleSlot">
+                  {aislePlace ? (
+                    renderPlace(aislePlace, "floor")
+                  ) : (
+                    <span className="aisleGap" aria-hidden="true">
+                      <span>Pasillo</span>
+                    </span>
+                  )}
+                </div>
+                {row.slice(2).map((place) => renderPlace(place, "seat"))}
+              </div>
             );
           })}
-          <div className="entrance">Puerta de ingreso ↗</div>
         </div>
       </div>
 
       <div className="mapLegend" aria-label="Referencias">
         <span><i className="legendAvailable" /> Disponible</span>
-        <span><i className="legendSelected" /> Seleccionado</span>
+        <span><i className="legendSelected" /> Tu lugar</span>
+        <span><i className="legendGuest" /> Tu +1</span>
         <span><i className="legendOccupied" /> Ocupado</span>
         {blockedPlaces.size ? <span><i className="legendBlocked" /> Bloqueado</span> : null}
-        <span><i className="legendMine" /> Tu lugar</span>
-        <span><i className="legendGuest" /> Tu +1</span>
       </div>
 
       {!readOnly ? (
-        mode === "self" || !hasPersonalBooking ? (
         <div className="reservationControls">
           {ownWaitlistEntry ? (
             <div className="waitlistControl">
@@ -403,6 +326,19 @@ export function SeatMap({
                 ) : null}
               </form>
             </div>
+          ) : guestWaitlistEntry && !addingOrMovingGuest ? (
+            <div className="waitlistControl">
+              <p>
+                <strong>{guestWaitlistEntry.displayName}</strong> está en la posición{" "}
+                <strong>{guestWaitlistEntry.position}</strong>.
+              </p>
+              <form action={cancelGuestWaitAction} className="cancelReservationForm">
+                <input name="screeningId" type="hidden" value={screeningId} />
+                <button className="dangerButton" disabled={pending} type="submit">
+                  {cancelGuestWaitPending ? "Sacando…" : "Sacar a mi +1 de la espera"}
+                </button>
+              </form>
+            </div>
           ) : roomIsFull && !ownPlaceCode ? (
             <form action={joinWaitAction} className="reservationSubmit">
               <input name="screeningId" type="hidden" value={screeningId} />
@@ -411,132 +347,187 @@ export function SeatMap({
                 {joinWaitPending ? "Anotando…" : "Anotarme en lista de espera"}
               </button>
             </form>
-          ) : (
-            <form action={ownPlaceCode ? changeAction : reserveAction} className="reservationSubmit">
-              <input name="screeningId" type="hidden" value={screeningId} />
-              <input name="placeCode" type="hidden" value={selected ?? ""} />
-              <p>
-                {ownPlaceCode
-                  ? selected
-                    ? `Vas a cambiar ${ownPlaceCode} por ${selected}.`
-                    : `Tu lugar actual es ${ownPlaceCode}. Elegí otro lugar para cambiarlo.`
-                  : selected
-                    ? `Elegiste ${selected}.`
-                    : "Tocá un lugar disponible para elegirlo."}
-              </p>
-              <button className="primaryButton" disabled={!selected || pending} type="submit">
-                {reservePending
-                  ? "Reservando…"
-                  : changePending
-                    ? "Cambiando…"
-                    : ownPlaceCode
-                      ? "Confirmar cambio"
-                      : "Confirmar mi lugar"}
-              </button>
-            </form>
-          )}
-
-          {ownPlaceCode ? (
-            <form action={cancelAction} className="cancelReservationForm">
-              <input name="screeningId" type="hidden" value={screeningId} />
-              <button className="dangerButton" disabled={pending} type="submit">
-                {cancelPending ? "Cancelando…" : "Cancelar mi reserva"}
-              </button>
-              {ownReservationKind === "self" && hasGuestBooking ? (
-                <small>También cancela la reserva o espera de tu +1.</small>
-              ) : null}
-            </form>
-          ) : null}
-        </div>
-      ) : (
-        <div className="reservationControls">
-          {guestWaitlistEntry ? (
-            <div className="waitlistControl">
-              <p><strong>{guestWaitlistEntry.displayName}</strong> está en la posición <strong>{guestWaitlistEntry.position}</strong>.</p>
-              <form action={cancelGuestWaitAction} className="cancelReservationForm">
-                <input name="screeningId" type="hidden" value={screeningId} />
-                <button className="dangerButton" disabled={pending} type="submit">
-                  {cancelGuestWaitPending ? "Sacando…" : "Sacar a mi +1 de la espera"}
-                </button>
-              </form>
-            </div>
-          ) : roomIsFull && !guestReservation ? (
+          ) : roomIsFull && ownPlaceCode && !guestReservation && guestNameValue ? (
             <form action={joinGuestWaitAction} className="reservationSubmit">
               <input name="screeningId" type="hidden" value={screeningId} />
               <input name="guestMemberId" type="hidden" value={guestMember?.id ?? ""} />
-              <input name="guestName" type="hidden" value={guestMember?.name ?? guestQuery.trim()} />
+              <input name="guestName" type="hidden" value={guestNameValue} />
               <p>La sala está completa. Tu +1 puede entrar en la lista de espera.</p>
-              <button
-                className="primaryButton"
-                disabled={!guestQuery.trim() || pending || waitlist.length >= 5}
-                type="submit"
-              >
+              <button className="primaryButton" disabled={pending || waitlist.length >= 5} type="submit">
                 {joinGuestWaitPending ? "Anotando…" : "Anotar a mi +1 en espera"}
               </button>
             </form>
           ) : (
-            <form
-              action={guestReservation ? changeGuestAction : reserveGuestAction}
-              className="reservationSubmit"
-            >
-              <input name="screeningId" type="hidden" value={screeningId} />
-              <input name="guestMemberId" type="hidden" value={guestMember?.id ?? ""} />
-              <input name="guestName" type="hidden" value={guestMember?.name ?? guestQuery.trim()} />
-              <input name="placeCode" type="hidden" value={guestSeat ?? ""} />
-              <p>
-                {guestReservation
-                  ? guestSeat
-                    ? `Vas a cambiar ${guestReservation.placeCode} por ${guestSeat}.`
-                    : "Elegí otro lugar disponible para tu +1."
-                  : guestQuery.trim() && guestSeat
-                    ? `${guestMember?.name ?? guestQuery.trim()} va a ocupar ${guestSeat}.`
-                    : "Escribí un nombre y después elegí un lugar disponible."}
-              </p>
-              <button
-                className="primaryButton"
-                disabled={!guestSeat || (!guestReservation && !guestQuery.trim()) || pending}
-                type="submit"
-              >
-                {reserveGuestPending
-                  ? "Reservando…"
-                  : changeGuestPending
-                    ? "Cambiando…"
-                    : guestReservation
-                      ? "Confirmar cambio del +1"
-                      : "Confirmar reserva del +1"}
-              </button>
-            </form>
+            <>
+              {addingOrMovingGuest && !guestReservation ? (
+                <div className="guestNameField">
+                  <label htmlFor="guest-search">Nombre de tu +1</label>
+                  <input
+                    autoComplete="off"
+                    id="guest-search"
+                    onChange={(event) => {
+                      setGuestQuery(event.target.value);
+                      setGuestMember(null);
+                    }}
+                    placeholder="Cómo se llama"
+                    type="text"
+                    value={guestQuery}
+                  />
+                  {normalizedQuery ? (
+                    <div className="memberResults">
+                      {matchingMembers.length ? (
+                        matchingMembers.map((candidate) => (
+                          <button
+                            className={
+                              guestMember?.id === candidate.id
+                                ? "memberResult memberResultSelected"
+                                : "memberResult"
+                            }
+                            key={candidate.id}
+                            onClick={() => {
+                              setGuestMember(candidate);
+                              setGuestQuery(candidate.name);
+                            }}
+                            type="button"
+                          >
+                            {candidate.name}
+                          </button>
+                        ))
+                      ) : (
+                        <p>No hay un miembro con ese nombre. Se guarda como está.</p>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {!ownPlaceCode && selected ? (
+                <form action={reserveAction} className="reservationSubmit">
+                  <input name="screeningId" type="hidden" value={screeningId} />
+                  <input name="placeCode" type="hidden" value={selected} />
+                  <input name="guestPlaceCode" type="hidden" value={guestSeat ?? ""} />
+                  <input name="guestMemberId" type="hidden" value={guestMember?.id ?? ""} />
+                  <input name="guestName" type="hidden" value={guestNameValue} />
+                  <p>
+                    {guestSeat
+                      ? guestNameValue
+                        ? `Vos en ${selected}, ${guestNameValue} en ${guestSeat}.`
+                        : `Vos en ${selected}. Escribí el nombre de quien usa ${guestSeat}.`
+                      : `Elegiste ${selected}. Tocá otro lugar si venís con +1.`}
+                  </p>
+                  <button
+                    className="primaryButton"
+                    disabled={pending || Boolean(guestSeat && !guestNameValue)}
+                    type="submit"
+                  >
+                    {reservePending
+                      ? "Reservando…"
+                      : guestSeat
+                        ? "Confirmar mis lugares"
+                        : "Confirmar mi lugar"}
+                  </button>
+                </form>
+              ) : movingOwn ? (
+                <form action={changeAction} className="reservationSubmit">
+                  <input name="screeningId" type="hidden" value={screeningId} />
+                  <input name="placeCode" type="hidden" value={selected ?? ""} />
+                  <p>Vas a cambiar {ownPlaceCode} por {selected}.</p>
+                  <button className="primaryButton" disabled={pending} type="submit">
+                    {changePending ? "Cambiando…" : "Confirmar cambio"}
+                  </button>
+                </form>
+              ) : ownPlaceCode && addingOrMovingGuest && !guestReservation ? (
+                <form action={reserveGuestAction} className="reservationSubmit">
+                  <input name="screeningId" type="hidden" value={screeningId} />
+                  <input name="placeCode" type="hidden" value={guestSeat ?? ""} />
+                  <input name="guestMemberId" type="hidden" value={guestMember?.id ?? ""} />
+                  <input name="guestName" type="hidden" value={guestNameValue} />
+                  <p>
+                    {guestNameValue
+                      ? `${guestNameValue} va a ocupar ${guestSeat}.`
+                      : `Escribí el nombre de quien usa ${guestSeat}.`}
+                  </p>
+                  <button className="primaryButton" disabled={pending || !guestNameValue} type="submit">
+                    {reserveGuestPending ? "Reservando…" : "Confirmar el +1"}
+                  </button>
+                </form>
+              ) : guestReservation && addingOrMovingGuest ? (
+                <form action={changeGuestAction} className="reservationSubmit">
+                  <input name="screeningId" type="hidden" value={screeningId} />
+                  <input name="placeCode" type="hidden" value={guestSeat ?? ""} />
+                  <p>
+                    Vas a cambiar {guestReservation.placeCode} por {guestSeat} para{" "}
+                    {guestReservation.memberName}.
+                  </p>
+                  <button className="primaryButton" disabled={pending} type="submit">
+                    {changeGuestPending ? "Cambiando…" : "Confirmar cambio del +1"}
+                  </button>
+                </form>
+              ) : (
+                <p className={ownPlaceCode ? "formSuccess bookingStatus" : "bookingStatus"}>
+                  {ownPlaceCode && guestReservation
+                    ? `Selección completada. Vos en ${ownPlaceCode} y ${guestReservation.memberName} en ${guestReservation.placeCode}. Los dos lugares quedaron confirmados.`
+                    : ownPlaceCode
+                      ? `Selección completada. Reservaste el lugar ${ownPlaceCode}. Ya tenés tu butaca para la función.`
+                      : "Tocá un lugar disponible para elegirlo."}
+                </p>
+              )}
+            </>
           )}
 
-          {guestReservation ? (
-            <form action={cancelGuestAction} className="cancelReservationForm">
-              <input name="screeningId" type="hidden" value={screeningId} />
-              <button className="dangerButton" disabled={pending} type="submit">
-                {cancelGuestPending ? "Cancelando…" : "Cancelar solamente el +1"}
+          <div className="bookingCancels">
+            {ownPlaceCode ? (
+              <form action={cancelAction} className="cancelReservationForm">
+                <input name="screeningId" type="hidden" value={screeningId} />
+                <button className="dangerButton" disabled={pending} type="submit">
+                  {cancelPending ? "Cancelando…" : "Cancelar mi reserva"}
+                </button>
+                {ownReservationKind === "self" && hasGuestBooking ? (
+                  <small>También cancela el lugar o la espera de tu +1.</small>
+                ) : null}
+              </form>
+            ) : null}
+            {guestReservation ? (
+              <form action={cancelGuestAction} className="cancelReservationForm">
+                <input name="screeningId" type="hidden" value={screeningId} />
+                <button className="dangerButton" disabled={pending} type="submit">
+                  {cancelGuestPending ? "Cancelando…" : "Cancelar solo el +1"}
+                </button>
+              </form>
+            ) : null}
+            {selected || guestSeat ? (
+              <button
+                className="dangerButton"
+                disabled={pending}
+                onClick={() => {
+                  setSelected(null);
+                  setGuestSeat(null);
+                }}
+                type="button"
+              >
+                Deshacer selección
               </button>
-            </form>
-          ) : null}
+            ) : null}
+          </div>
         </div>
-        )
       ) : null}
 
-      {!readOnly && mode === "self" ? (
+      {!readOnly ? (
         <>
           {seatState.error ? <p className="formError" role="alert">{seatState.error}</p> : null}
-          {seatState.message ? <p className="formSuccess" role="status">{seatState.message}</p> : null}
+          {reserveState.message ? <p className="formSuccess" role="status">{reserveState.message}</p> : null}
+          {changeState.message ? <p className="formSuccess" role="status">{changeState.message}</p> : null}
+          {guestState.error ? <p className="formError" role="alert">{guestState.error}</p> : null}
+          {reserveGuestState.message ? <p className="formSuccess" role="status">{reserveGuestState.message}</p> : null}
+          {changeGuestState.message ? <p className="formSuccess" role="status">{changeGuestState.message}</p> : null}
           {cancelState.error ? <p className="formError" role="alert">{cancelState.error}</p> : null}
-          {cancelState.message ? <p className="formSuccess" role="status">{cancelState.message}</p> : null}
+          {cancelState.message ? <p className="formCancel" role="status">{cancelState.message}</p> : null}
+          {cancelGuestState.error ? <p className="formError" role="alert">{cancelGuestState.error}</p> : null}
+          {cancelGuestState.message ? <p className="formCancel" role="status">{cancelGuestState.message}</p> : null}
           {joinWaitState.error ? <p className="formError" role="alert">{joinWaitState.error}</p> : null}
           {joinWaitState.message ? <p className="formSuccess" role="status">{joinWaitState.message}</p> : null}
           {cancelWaitState.error ? <p className="formError" role="alert">{cancelWaitState.error}</p> : null}
           {cancelWaitState.message ? <p className="formSuccess" role="status">{cancelWaitState.message}</p> : null}
-        </>
-      ) : !readOnly ? (
-        <>
-          {guestState.error ? <p className="formError" role="alert">{guestState.error}</p> : null}
-          {guestState.message ? <p className="formSuccess" role="status">{guestState.message}</p> : null}
-          {cancelGuestState.error ? <p className="formError" role="alert">{cancelGuestState.error}</p> : null}
-          {cancelGuestState.message ? <p className="formSuccess" role="status">{cancelGuestState.message}</p> : null}
           {joinGuestWaitState.error ? <p className="formError" role="alert">{joinGuestWaitState.error}</p> : null}
           {joinGuestWaitState.message ? <p className="formSuccess" role="status">{joinGuestWaitState.message}</p> : null}
           {cancelGuestWaitState.error ? <p className="formError" role="alert">{cancelGuestWaitState.error}</p> : null}

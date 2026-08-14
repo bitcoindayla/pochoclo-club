@@ -37,13 +37,80 @@ export async function reserveOwnSeatAction(
     const reservedPlace = await reserveOwnSeat(screeningId, member, placeCode);
     revalidatePath("/club");
     revalidatePath("/admin/funciones");
-    return { error: null, message: `Listo: reservaste ${reservedPlace}.` };
+    return {
+      error: null,
+      message: `Selección completada. Reservaste el lugar ${reservedPlace}. Ya tenés tu butaca para la función.`,
+    };
   } catch (error) {
     return {
       error:
         error instanceof ScreeningRuleError
           ? error.message
           : "No pudimos guardar tu reserva. Probá otra vez.",
+      message: null,
+    };
+  }
+}
+
+export async function reservePartyAction(
+  _previousState: ReservationActionState,
+  formData: FormData,
+): Promise<ReservationActionState> {
+  const member = await requireMember();
+  const screeningId = formData.get("screeningId");
+  const placeCode = formData.get("placeCode");
+  const guestPlaceCode = formData.get("guestPlaceCode");
+  const hasGuest = typeof guestPlaceCode === "string" && guestPlaceCode.length > 0;
+  if (typeof screeningId !== "string") {
+    return { error: "La función no es válida.", message: null };
+  }
+
+  try {
+    const reservedPlace = await reserveOwnSeat(screeningId, member, placeCode);
+    if (!hasGuest) {
+      revalidatePath("/club");
+      revalidatePath("/admin/funciones");
+      return {
+        error: null,
+        message: `Selección completada. Reservaste el lugar ${reservedPlace}. Ya tenés tu butaca para la función.`,
+      };
+    }
+
+    try {
+      const guestPlace = await reserveGuestSeat(
+        screeningId,
+        member,
+        formData.get("guestMemberId"),
+        formData.get("guestName"),
+        guestPlaceCode,
+      );
+      const guestLabel =
+        typeof formData.get("guestName") === "string" && formData.get("guestName")?.toString().trim()
+          ? formData.get("guestName")?.toString().trim()
+          : "tu +1";
+      revalidatePath("/club");
+      revalidatePath("/admin/funciones");
+      return {
+        error: null,
+        message: `Selección completada. Vos en ${reservedPlace} y ${guestLabel} en ${guestPlace}. Los dos lugares quedaron confirmados.`,
+      };
+    } catch (error) {
+      revalidatePath("/club");
+      revalidatePath("/admin/funciones");
+      return {
+        error:
+          error instanceof ScreeningRuleError
+            ? `Reservaste ${reservedPlace}. El +1 no se guardó: ${error.message}`
+            : `Reservaste ${reservedPlace}. No pudimos guardar el lugar del +1.`,
+        message: null,
+      };
+    }
+  } catch (error) {
+    return {
+      error:
+        error instanceof ScreeningRuleError
+          ? error.message
+          : "No pudimos guardar tus lugares. Probá otra vez.",
       message: null,
     };
   }
@@ -176,7 +243,10 @@ export async function reserveGuestSeatAction(
       placeCode,
     );
     revalidatePath("/club");
-    return { error: null, message: `Listo: reservaste ${reservedPlace} para tu +1.` };
+    return {
+      error: null,
+      message: `Selección completada. El lugar ${reservedPlace} quedó reservado para tu +1.`,
+    };
   } catch (error) {
     return {
       error:
@@ -202,7 +272,10 @@ export async function changeGuestSeatAction(
   try {
     const reservedPlace = await changeGuestSeat(screeningId, member, placeCode);
     revalidatePath("/club");
-    return { error: null, message: `El asiento de tu +1 ahora es ${reservedPlace}.` };
+    return {
+      error: null,
+      message: `Cambio confirmado. El lugar de tu +1 ahora es ${reservedPlace}.`,
+    };
   } catch (error) {
     return {
       error:
@@ -254,7 +327,10 @@ export async function changeOwnSeatAction(
     const reservedPlace = await changeOwnSeat(screeningId, member, placeCode);
     revalidatePath("/club");
     revalidatePath("/admin/funciones");
-    return { error: null, message: `Listo: cambiaste tu lugar a ${reservedPlace}.` };
+    return {
+      error: null,
+      message: `Cambio confirmado. Tu lugar ahora es ${reservedPlace}.`,
+    };
   } catch (error) {
     return {
       error:

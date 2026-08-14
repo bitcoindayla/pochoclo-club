@@ -13,6 +13,7 @@ import { getClientAuth } from "@/lib/firebase/client";
 type Props = {
   invitationToken?: string;
   label?: string;
+  hint?: string;
   dark?: boolean;
 };
 
@@ -26,6 +27,7 @@ const errorMessages: Record<string, string> = {
 export function GoogleSignInButton({
   invitationToken,
   label = "Continuar con Google",
+  hint,
   dark = false,
 }: Props) {
   const [pending, setPending] = useState(false);
@@ -80,7 +82,10 @@ export function GoogleSignInButton({
         type="button"
       >
         <span className="googleGlyph" aria-hidden="true">G</span>
-        {pending ? "Abriendo Google…" : label}
+        <span className="googleButtonText">
+          {pending ? "Abriendo Google…" : label}
+          {!pending && hint ? <span className="googleButtonHint"> ({hint})</span> : null}
+        </span>
       </button>
       {error ? <p className="signInError" role="alert">{error}</p> : null}
     </div>

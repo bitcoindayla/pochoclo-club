@@ -25,11 +25,6 @@ export default async function InvitationPage({
   return (
     <div className="centeredPage shell narrowShell">
       <section className="ticket">
-        <div className="ticketStub">
-          <span>POCHOCLO</span>
-          <b>01</b>
-          <span>MENDOZA</span>
-        </div>
         <div className="ticketBody">
           <p className="kicker">Invitación personal</p>
           <h1>{available ? "Hay un lugar para vos." : "Este pase no está disponible."}</h1>

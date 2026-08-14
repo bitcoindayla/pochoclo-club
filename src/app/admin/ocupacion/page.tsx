@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AdminNav } from "@/components/admin-nav";
 import { SignOutButton } from "@/components/session-actions";
 import { requireAdmin } from "@/lib/authz";
 import { ALL_PLACE_CODES, FLOOR_PLACES, ROOM_ROWS, type PlaceCode } from "@/lib/room";
@@ -38,6 +39,7 @@ export default async function OccupancyPage() {
           <p className="kicker">Panel administrativo</p>
           <h1>Ocupación</h1>
           <p className="pageIntro">Sesión de {admin.name}</p>
+          <AdminNav current="/admin/ocupacion" />
         </div>
         <SignOutButton />
       </div>
