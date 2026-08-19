@@ -1,3 +1,12 @@
+export type LandingImageRecord = {
+  landscapePath: string;
+  portraitPath: string;
+  version: string;
+  accent: string;
+  sourceWidth: number;
+  sourceHeight: number;
+};
+
 export const LANDING_IMAGE_PATH =
   /^landing\/[A-Za-z0-9-]{8,80}-(landscape|portrait)\.webp$/;
 

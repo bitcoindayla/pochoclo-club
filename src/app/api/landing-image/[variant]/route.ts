@@ -1,6 +1,6 @@
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import { downloadLandingImage } from "@/lib/landing-images";
-import type { LandingImageRecord } from "@/lib/landing-images";
+import type { LandingImageRecord } from "@/lib/landing-policy";
 
 export const runtime = "nodejs";
 

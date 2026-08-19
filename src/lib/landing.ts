@@ -3,12 +3,7 @@ import "server-only";
 import { FieldValue } from "firebase-admin/firestore";
 
 import { getAdminFirestore } from "@/lib/firebase/admin";
-import {
-  deleteLandingImages,
-  type LandingImageRecord,
-  uploadLandingImage,
-} from "@/lib/landing-images";
-import { landingImageUrls } from "@/lib/landing-policy";
+import { landingImageUrls, type LandingImageRecord } from "@/lib/landing-policy";
 
 const LANDING_DOC = ["system", "landing"] as const;
 
@@ -53,6 +48,7 @@ export async function getLandingVisual(): Promise<LandingVisual | null> {
 }
 
 export async function saveLandingImage(adminId: string, file: File) {
+  const { deleteLandingImages, uploadLandingImage } = await import("@/lib/landing-images");
   const uploaded = await uploadLandingImage(file);
   const reference = getAdminFirestore().doc(LANDING_DOC.join("/"));
   const previous = await reference.get();
@@ -77,6 +73,7 @@ export async function saveLandingImage(adminId: string, file: File) {
 }
 
 export async function clearLandingImage() {
+  const { deleteLandingImages } = await import("@/lib/landing-images");
   const reference = getAdminFirestore().doc(LANDING_DOC.join("/"));
   const previous = await reference.get();
   const previousData = previous.exists ? (previous.data() as Partial<LandingDocument>) : null;

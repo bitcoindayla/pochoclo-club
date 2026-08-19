@@ -3,11 +3,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 
 import { getAdminStorageBucket } from "@/lib/firebase/admin";
-import { isLandingImagePath } from "@/lib/landing-policy";
-import {
-  MovieImageProcessingError,
-  processMovieImageSource,
-} from "@/lib/movie-image-processing";
+import { isLandingImagePath, type LandingImageRecord } from "@/lib/landing-policy";
 
 export class LandingImageError extends Error {
   constructor(message: string) {
@@ -16,14 +12,7 @@ export class LandingImageError extends Error {
   }
 }
 
-export type LandingImageRecord = {
-  landscapePath: string;
-  portraitPath: string;
-  version: string;
-  accent: string;
-  sourceWidth: number;
-  sourceHeight: number;
-};
+export type { LandingImageRecord };
 
 async function deletePaths(paths: string[]) {
   const bucket = getAdminStorageBucket();
@@ -40,14 +29,13 @@ async function deletePaths(paths: string[]) {
 
 export async function uploadLandingImage(file: File): Promise<LandingImageRecord> {
   const source = Buffer.from(await file.arrayBuffer());
+  const { processMovieImageSource } = await import("@/lib/movie-image-processing");
   let processed: Awaited<ReturnType<typeof processMovieImageSource>>;
   try {
     processed = await processMovieImageSource({ source, mimeType: file.type });
   } catch (error) {
     throw new LandingImageError(
-      error instanceof MovieImageProcessingError
-        ? error.message
-        : "No pudimos preparar esa imagen.",
+      error instanceof Error ? error.message : "No pudimos preparar esa imagen.",
     );
   }
 
