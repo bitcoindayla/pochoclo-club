@@ -441,9 +441,23 @@ export function MovieBallotPanel({
       </div>
 
       <div className="cinematicBottomline">
-        <div className="cinematicSynopsis">
-          <span>{String(activeIndex + 1).padStart(2, "0")} / {String(ballot.options.length).padStart(2, "0")}</span>
-          <p>{activeMovie?.bio}</p>
+        <div className="cinematicBottomCopy">
+          <div className="cinematicSynopsis">
+            <span>{String(activeIndex + 1).padStart(2, "0")} / {String(ballot.options.length).padStart(2, "0")}</span>
+            <p>{activeMovie?.bio}</p>
+          </div>
+          {!ballot.showResults ? (
+            <p className="cinematicResultsLocked">Los resultados aparecen después de guardar tu voto.</p>
+          ) : null}
+          {state.error ? <p className="cinematicFeedback isError" role="alert">{state.error}</p> : null}
+          {state.message ? (
+            <p className={showSeatCue ? "srOnly" : "cinematicFeedback"} role="status">
+              {state.message}
+            </p>
+          ) : null}
+          {ballot.hasExemption && !ballot.hasVoted ? (
+            <p className="cinematicFeedback">Tenés una excepción y podés reservar sin votar.</p>
+          ) : null}
         </div>
         <SeatAccessCue
           canAccessSeats={ballot.canAccessSeats}
@@ -458,18 +472,6 @@ export function MovieBallotPanel({
           </button>
         ) : null}
       </div>
-      {state.error ? <p className="cinematicFeedback isError" role="alert">{state.error}</p> : null}
-      {state.message ? (
-        <p className={showSeatCue ? "srOnly" : "cinematicFeedback"} role="status">
-          {state.message}
-        </p>
-      ) : null}
-      {!ballot.showResults ? (
-        <p className="cinematicResultsLocked">Los resultados aparecen después de guardar tu voto.</p>
-      ) : null}
-      {ballot.hasExemption && !ballot.hasVoted ? (
-        <p className="cinematicFeedback">Tenés una excepción y podés reservar sin votar.</p>
-      ) : null}
     </>
   );
 
