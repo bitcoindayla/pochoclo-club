@@ -1421,37 +1421,20 @@ body:has(.cinematicBallot) .siteHeader { display: none; }
 .guestSelection { grid-column: 1 / -1; margin: 0; padding: 0.8rem 0; color: #f4f1ea; font-size: 0.8rem; text-align: center; }
 .roomMap { max-width: 860px; margin-inline: auto; overflow: visible; }
 .cinemaHeader {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-  gap: 0.45rem 0.6rem;
   margin: 0 0 clamp(1.8rem, 5vw, 2.8rem);
 }
 .cinemaScreen {
-  grid-column: 2;
-  width: min(18rem, 100%);
+  width: 68%;
   height: 1.85rem;
   display: grid;
   place-items: center;
+  margin: 0 auto;
   color: #f4f1ea;
   background: #111;
   border: 2px solid #f4f1ea;
   border-radius: 50% 50% 0.2rem 0.2rem / 70% 70% 0.2rem 0.2rem;
 }
 .cinemaScreen span { font-size: 0.52rem; font-weight: 800; letter-spacing: 0.22em; text-transform: uppercase; }
-.entrance {
-  grid-column: 3;
-  justify-self: start;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  color: rgba(244, 241, 234, 0.42);
-  font-size: 0.5rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
 .seatRows { display: grid; gap: 1.15rem; padding-inline: 0.55rem; }
 .seatRow {
   display: grid;
@@ -1759,12 +1742,6 @@ body:has(.cinematicBallot) .siteHeader { display: none; }
   .cinematicSynopsis { grid-template-columns: auto minmax(0, 1fr); gap: 0.7rem; }
   .cinematicSynopsis p { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
   .cinematicVoteButton { width: 100%; min-width: 0; }
-  .cinemaHeader {
-    grid-template-columns: minmax(0, 1fr) auto;
-    margin-bottom: 1.4rem;
-  }
-  .cinemaScreen { grid-column: 1; width: 100%; }
-  .entrance { grid-column: 2; justify-self: end; }
   .cinematicSeatCue {
     position: static;
     left: auto;

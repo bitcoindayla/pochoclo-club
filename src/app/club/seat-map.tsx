@@ -277,7 +277,6 @@ export function SeatMap({
       <div className="roomMap">
         <div className="cinemaHeader">
           <div className="cinemaScreen"><span>Pantalla</span></div>
-          <span className="entrance">Ingreso ↗</span>
         </div>
 
         <div className="seatRows">
