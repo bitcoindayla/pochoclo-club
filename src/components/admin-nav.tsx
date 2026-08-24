@@ -6,6 +6,7 @@ const links = [
   { href: "/admin/funciones", label: "Funciones" },
   { href: "/admin/cartelera", label: "Cartelera" },
   { href: "/admin/invitaciones", label: "Invitaciones" },
+  { href: "/admin/critica", label: "Crítica" },
 ] as const;
 
 export function AdminNav({ current }: { current?: string } = {}) {

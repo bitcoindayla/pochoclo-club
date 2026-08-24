@@ -7,7 +7,10 @@ export function menuLinksFor(member: Member | null) {
     return [{ href: "/", label: "Inicio" }];
   }
 
-  const links = [{ href: "/club", label: "El club" }];
+  const links = [
+    { href: "/club", label: "El club" },
+    { href: "/historial", label: "Historial" },
+  ];
   if (member.role === "admin") {
     links.push(
       { href: "/", label: "Portada" },
@@ -15,6 +18,8 @@ export function menuLinksFor(member: Member | null) {
       { href: "/admin/funciones", label: "Funciones" },
       { href: "/admin/ocupacion", label: "Sala" },
       { href: "/admin/invitaciones", label: "Invitaciones" },
+      { href: "/admin/critica", label: "Crítica" },
+      { href: "/historial", label: "Historial" },
     );
   }
   return links;
