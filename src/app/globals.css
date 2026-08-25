@@ -615,6 +615,49 @@ body:has(.critiquePhone) .siteFooter { display: none; }
 .freshLinks code { display: block; overflow: hidden; color: var(--ink); font-size: 0.72rem; text-overflow: ellipsis; white-space: nowrap; }
 .freshLinks li span { display: block; margin-top: 0.3rem; color: var(--muted); font-size: 0.68rem; }
 
+.historyHead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2rem 3rem;
+  align-items: end;
+  margin-bottom: 2.4rem;
+}
+.historyHead h1 { margin: 0; }
+.historyHead .pageIntro { margin: 0.7rem 0 0; }
+.historyStats {
+  display: grid;
+  grid-auto-flow: column;
+  gap: clamp(1.4rem, 3vw, 2.4rem);
+  margin: 0;
+}
+.historyStats div { min-width: 0; }
+.historyStats dt {
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.historyStats dd {
+  margin: 0.25rem 0 0;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: -0.06em;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+}
+.historyStats small {
+  display: block;
+  max-width: 12rem;
+  margin-top: 0.4rem;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .invitationHistory { margin-top: 3rem; }
 .sectionHeading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1.2rem; }
 .sectionHeading > span { color: var(--muted); font-size: 0.75rem; }
@@ -1760,6 +1803,8 @@ body:has(.cinematicBallot) .siteHeader { display: none; }
   .cinematicBallot.hasSeatHint .cinematicContent { padding-bottom: 4.2rem; }
   .cinematicScrollHint { bottom: 0.85rem; }
 
+  .historyHead { grid-template-columns: 1fr; align-items: start; }
+  .historyStats { justify-content: start; }
   .occupancySummary { align-items: stretch; }
   .occupancyStats { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
   .occupancyStats span { min-width: 0; }
