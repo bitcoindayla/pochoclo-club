@@ -17,6 +17,14 @@ import {
   type CritiqueStatus,
   CritiquePolicyError,
 } from "@/lib/critique-policy";
+import {
+  applyAttendanceStatus,
+  attendanceCounts,
+  parseAttendanceStatus,
+  snapshotAttendance,
+  type AttendanceRecord,
+  AttendanceError,
+} from "@/lib/attendance-policy";
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import { isPlaceCode, type PlaceCode } from "@/lib/room";
 
@@ -73,6 +81,9 @@ type FilmHistoryDocument = {
   voterCount: number;
   categoryAverages: CritiqueScores | null;
   source: "legacy" | "critique";
+  attendees?: AttendanceRecord[];
+  presentCount?: number;
+  absentCount?: number;
   createdAt: Timestamp;
 };
 
@@ -82,6 +93,8 @@ export type CritiqueOccupant = {
   placeCode: PlaceCode;
   kind: "self" | "guest";
   memberId: string | null;
+  hostMemberId: string | null;
+  hostName: string | null;
 };
 
 export type CritiqueAudience = CritiqueOccupant & {
@@ -116,6 +129,9 @@ export type FilmHistoryEntry = {
   voterCount: number;
   categoryAverages: CritiqueScores | null;
   source: "legacy" | "critique";
+  attendees: AttendanceRecord[];
+  presentCount: number;
+  absentCount: number;
 };
 
 export function parseCritiqueCookie(value: string | undefined, screeningId: string) {
@@ -127,6 +143,43 @@ export function parseCritiqueCookie(value: string | undefined, screeningId: stri
 
 function validId(value: string) {
   return value.length > 0 && value.length <= 100 && !value.includes("/");
+}
+
+function isRegisteredMemberId(value: string) {
+  return validId(value) && !value.startsWith("external-");
+}
+
+function readAttendees(data: FilmHistoryDocument): AttendanceRecord[] {
+  if (!Array.isArray(data.attendees)) return [];
+  return data.attendees.filter((row): row is AttendanceRecord => {
+    return (
+      Boolean(row) &&
+      typeof row === "object" &&
+      typeof row.personId === "string" &&
+      typeof row.name === "string" &&
+      (row.kind === "self" || row.kind === "guest") &&
+      (row.status === "presente" || row.status === "ausente")
+    );
+  });
+}
+
+function historyFrom(id: string, data: FilmHistoryDocument): FilmHistoryEntry {
+  const attendees = readAttendees(data);
+  const counts = attendanceCounts(attendees);
+  return {
+    id,
+    watchedAt: data.watchedAt.toDate(),
+    title: data.title,
+    year: data.year,
+    director: data.director,
+    score: data.score,
+    voterCount: data.voterCount,
+    categoryAverages: data.categoryAverages,
+    source: data.source,
+    attendees,
+    presentCount: data.presentCount ?? counts.present,
+    absentCount: data.absentCount ?? counts.absent,
+  };
 }
 
 function textField(value: unknown, label: string, maximum: number) {
@@ -165,9 +218,11 @@ export async function listScreeningOccupants(screeningId: string): Promise<Criti
 
   const memberIds = [
     ...new Set(
-      places
-        .map((place) => (place.data.kind === "guest" ? null : place.data.memberId))
-        .filter((id): id is string => typeof id === "string" && validId(id)),
+      places.flatMap((place) =>
+        [place.data.memberId, place.data.bookedByMemberId].filter(
+          (id): id is string => typeof id === "string" && isRegisteredMemberId(id),
+        ),
+      ),
     ),
   ];
   const memberSnapshots = memberIds.length
@@ -184,6 +239,10 @@ export async function listScreeningOccupants(screeningId: string): Promise<Criti
   return places.map((place) => {
     const placeCode = place.id as PlaceCode;
     const kind = place.data.kind === "guest" ? "guest" : "self";
+    const hostMemberId =
+      kind === "guest" && typeof place.data.bookedByMemberId === "string"
+        ? place.data.bookedByMemberId
+        : null;
     const name =
       typeof place.data.displayName === "string" && place.data.displayName.trim()
         ? place.data.displayName.trim()
@@ -193,7 +252,9 @@ export async function listScreeningOccupants(screeningId: string): Promise<Criti
       name,
       placeCode,
       kind,
-      memberId: kind === "self" ? place.data.memberId : null,
+      memberId: isRegisteredMemberId(place.data.memberId) ? place.data.memberId : null,
+      hostMemberId,
+      hostName: hostMemberId ? memberNames.get(hostMemberId) ?? null : null,
     };
   });
 }
@@ -449,6 +510,15 @@ export async function closeCritiqueSession(screeningId: string) {
     throw new CritiqueError("Nadie puntuó todavía.");
   }
 
+  const occupants = await listScreeningOccupants(screeningId);
+  const audience = await readAudience(screeningId);
+  const scores = [...audience.entries()].flatMap(([personId, row]) => {
+    if (!row.scores || typeof row.average !== "number") return [];
+    return [{ personId, scores: row.scores, average: row.average }];
+  });
+  const attendees = snapshotAttendance(occupants, scores);
+  const counts = attendanceCounts(attendees);
+
   const firestore = getAdminFirestore();
   const now = Timestamp.now();
   await firestore.collection("critiques").doc(screeningId).update({
@@ -465,6 +535,9 @@ export async function closeCritiqueSession(screeningId: string) {
     voterCount: session.submittedCount,
     categoryAverages: session.categoryAverages,
     source: "critique",
+    attendees,
+    presentCount: counts.present,
+    absentCount: counts.absent,
     createdAt: now,
   });
   return getCritiqueSession(screeningId);
@@ -475,20 +548,37 @@ export async function listFilmHistory(): Promise<FilmHistoryEntry[]> {
     .collection("filmHistory")
     .orderBy("watchedAt", "desc")
     .get();
-  return snapshot.docs.map((doc) => {
-    const data = doc.data() as FilmHistoryDocument;
-    return {
-      id: doc.id,
-      watchedAt: data.watchedAt.toDate(),
-      title: data.title,
-      year: data.year,
-      director: data.director,
-      score: data.score,
-      voterCount: data.voterCount,
-      categoryAverages: data.categoryAverages,
-      source: data.source,
-    };
-  });
+  return snapshot.docs.map((doc) => historyFrom(doc.id, doc.data() as FilmHistoryDocument));
+}
+
+export async function updateFilmAttendance(
+  filmId: string,
+  personId: string,
+  status: unknown,
+) {
+  if (!validId(filmId) || !validId(personId)) {
+    throw new CritiqueError("La asistencia no es válida.");
+  }
+  try {
+    const parsed = parseAttendanceStatus(status);
+    const firestore = getAdminFirestore();
+    const reference = firestore.collection("filmHistory").doc(filmId);
+    await firestore.runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(reference);
+      if (!snapshot.exists) throw new CritiqueError("No encontramos esa película.");
+      const data = snapshot.data() as FilmHistoryDocument;
+      const attendees = applyAttendanceStatus(readAttendees(data), personId, parsed);
+      const counts = attendanceCounts(attendees);
+      transaction.update(reference, {
+        attendees,
+        presentCount: counts.present,
+        absentCount: counts.absent,
+      });
+    });
+  } catch (error) {
+    if (error instanceof AttendanceError) throw new CritiqueError(error.message);
+    throw error;
+  }
 }
 
 export async function addLegacyFilm(input: {
@@ -514,6 +604,9 @@ export async function addLegacyFilm(input: {
       voterCount: 0,
       categoryAverages: null,
       source: "legacy",
+      attendees: [],
+      presentCount: 0,
+      absentCount: 0,
       createdAt: FieldValue.serverTimestamp(),
     });
   } catch (error) {

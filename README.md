@@ -97,7 +97,7 @@ No hay migraciones: las colecciones se crean al usar cada parte de la aplicació
 
 ## Primer ingreso
 
-El primer acceso con la cuenta indicada en `INITIAL_ADMIN_EMAIL` crea el administrador. Después puede entrar en `/admin/invitaciones`, generar enlaces y enviarlos a futuros miembros. Desde `/admin/funciones` puede crear la próxima función como borrador. Si es una función especial, puede abrir las reservas directamente; si habrá votación, arma y abre la propuesta desde `/admin/cartelera`.
+El primer acceso con la cuenta indicada en `INITIAL_ADMIN_EMAIL` crea el administrador. Después puede entrar en `/admin/miembros`, generar enlaces y enviarlos a futuros miembros. Desde `/admin/funciones` puede crear la próxima función como borrador. Si es una función especial, puede abrir las reservas directamente; si habrá votación, arma y abre la propuesta desde `/admin/cartelera`.
 
 Las principales colecciones son:
 

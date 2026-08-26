@@ -17,7 +17,7 @@ export function menuLinksFor(member: Member | null) {
       { href: "/admin/cartelera", label: "Cartelera" },
       { href: "/admin/funciones", label: "Funciones" },
       { href: "/admin/ocupacion", label: "Sala" },
-      { href: "/admin/invitaciones", label: "Invitaciones" },
+      { href: "/admin/miembros", label: "Miembros" },
       { href: "/admin/critica", label: "Crítica" },
       { href: "/historial", label: "Historial" },
     );

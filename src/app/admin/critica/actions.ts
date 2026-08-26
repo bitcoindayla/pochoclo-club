@@ -20,6 +20,7 @@ export type CritiqueActionState = {
 function refresh() {
   revalidatePath("/admin/critica");
   revalidatePath("/admin/critica/sala");
+  revalidatePath("/admin/miembros");
   revalidatePath("/historial");
 }
 

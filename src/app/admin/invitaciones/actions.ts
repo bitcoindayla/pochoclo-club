@@ -36,6 +36,7 @@ export async function generateInvitationsAction(
     const baseUrl = applicationUrl();
 
     revalidatePath("/admin/invitaciones");
+    revalidatePath("/admin/miembros");
     return {
       error: null,
       links: invitations.map((invitation) => ({
@@ -59,4 +60,5 @@ export async function revokeInvitationAction(formData: FormData) {
 
   await revokeInvitation(id);
   revalidatePath("/admin/invitaciones");
+  revalidatePath("/admin/miembros");
 }

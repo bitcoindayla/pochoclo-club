@@ -8,6 +8,11 @@ import {
   hashInvitationToken,
   isInvitationToken,
 } from "@/lib/invitation-policy";
+import {
+  canDeactivateMember,
+  parseDisplayName,
+  MemberAdminError,
+} from "@/lib/member-admin-policy";
 
 export type MemberRole = "member" | "admin";
 
@@ -19,6 +24,13 @@ export type Member = {
   role: MemberRole;
   active: boolean;
 };
+
+export type MemberAdminItem = Member & {
+  createdAt: Date;
+  lastSignedInAt: Date | null;
+};
+
+export { MemberAdminError };
 
 type MemberDocument = {
   email: string;
@@ -104,14 +116,12 @@ export async function authorizeFirebaseIdentity(
       }
 
       transaction.update(memberReference, {
-        name: displayName(identity),
         imageUrl: identity.imageUrl,
         updatedAt: FieldValue.serverTimestamp(),
         lastSignedInAt: FieldValue.serverTimestamp(),
       });
       return toMember(identity.uid, {
         ...member,
-        name: displayName(identity),
         imageUrl: identity.imageUrl,
       });
     }
@@ -175,6 +185,68 @@ export async function authorizeFirebaseIdentity(
 export async function getMemberById(id: string) {
   const snapshot = await getAdminFirestore().collection("members").doc(id).get();
   return snapshot.exists ? toMember(snapshot.id, snapshot.data() as MemberDocument) : null;
+}
+
+function toAdminItem(id: string, document: MemberDocument): MemberAdminItem {
+  return {
+    ...toMember(id, document),
+    createdAt: document.createdAt?.toDate() ?? new Date(0),
+    lastSignedInAt: document.lastSignedInAt?.toDate() ?? null,
+  };
+}
+
+export async function listMembers(): Promise<MemberAdminItem[]> {
+  const snapshot = await getAdminFirestore().collection("members").limit(500).get();
+  return snapshot.docs
+    .map((document) => toAdminItem(document.id, document.data() as MemberDocument))
+    .sort((left, right) => {
+      if (left.active !== right.active) return left.active ? -1 : 1;
+      return left.name.localeCompare(right.name, "es");
+    });
+}
+
+export async function updateMemberName(id: string, name: unknown) {
+  if (!id || id.includes("/")) throw new MemberAdminError("Esa persona no es válida.");
+  const parsed = parseDisplayName(name);
+  const reference = getAdminFirestore().collection("members").doc(id);
+  const snapshot = await reference.get();
+  if (!snapshot.exists) throw new MemberAdminError("No encontramos a esa persona.");
+  await reference.update({
+    name: parsed,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+}
+
+export async function setMemberActive(id: string, active: boolean) {
+  if (!id || id.includes("/")) throw new MemberAdminError("Esa persona no es válida.");
+  const firestore = getAdminFirestore();
+  const reference = firestore.collection("members").doc(id);
+
+  await firestore.runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(reference);
+    if (!snapshot.exists) throw new MemberAdminError("No encontramos a esa persona.");
+    const member = snapshot.data() as MemberDocument;
+    if (member.active === active) return;
+
+    if (!active && member.role === "admin") {
+      const admins = await transaction.get(
+        firestore.collection("members").where("role", "==", "admin"),
+      );
+      const decision = canDeactivateMember(
+        admins.docs.map((document) => {
+          const data = document.data() as MemberDocument;
+          return { id: document.id, role: data.role, active: data.active };
+        }),
+        id,
+      );
+      if (!decision.ok) throw new MemberAdminError(decision.reason);
+    }
+
+    transaction.update(reference, {
+      active,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  });
 }
 
 export type MemberSearchItem = {
