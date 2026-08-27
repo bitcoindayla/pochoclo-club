@@ -1,6 +1,8 @@
+import { ReputationMark } from "@/components/reputation-mark";
 import { presentAttendees, type AttendanceRecord } from "@/lib/attendance-policy";
 import { CRITIQUE_CATEGORIES, type CritiqueScores } from "@/lib/critique-policy";
 import type { FilmHistoryEntry } from "@/lib/critiques";
+import type { Reputation } from "@/lib/reputation-policy";
 import { CLUB_TIME_ZONE } from "@/lib/screening-policy";
 
 function formatDate(date: Date) {
@@ -28,12 +30,20 @@ function CategoryBars({ scores }: { scores: CritiqueScores }) {
   );
 }
 
-function PersonBreakdown({ person }: { person: AttendanceRecord }) {
+function PersonBreakdown({
+  person,
+  reputation,
+}: {
+  person: AttendanceRecord;
+  reputation: Reputation | null;
+}) {
+  const mark = reputation ? <ReputationMark reputation={reputation} /> : null;
   if (!person.scores) {
     return (
       <li className="historyPerson">
         <div className="historyPersonHead">
           <strong>{person.name}</strong>
+          {mark}
           <span>—</span>
         </div>
         {person.kind === "guest" && person.hostName ? (
@@ -48,6 +58,7 @@ function PersonBreakdown({ person }: { person: AttendanceRecord }) {
       <details>
         <summary className="historyPersonHead">
           <strong>{person.name}</strong>
+          {mark}
           <span>{person.average?.toFixed(1)}</span>
         </summary>
         {person.kind === "guest" && person.hostName ? (
@@ -59,7 +70,13 @@ function PersonBreakdown({ person }: { person: AttendanceRecord }) {
   );
 }
 
-function FilmRow({ film }: { film: FilmHistoryEntry }) {
+function FilmRow({
+  film,
+  reputations,
+}: {
+  film: FilmHistoryEntry;
+  reputations: Record<string, Reputation>;
+}) {
   const present = presentAttendees(film.attendees);
   const canOpen = film.source === "critique" && (present.length > 0 || Boolean(film.categoryAverages));
 
@@ -100,7 +117,11 @@ function FilmRow({ film }: { film: FilmHistoryEntry }) {
             <p className="kicker">Por participante</p>
             <ul className="historyPeople">
               {present.map((person) => (
-                <PersonBreakdown key={person.personId} person={person} />
+                <PersonBreakdown
+                  key={person.personId}
+                  person={person}
+                  reputation={person.memberId ? reputations[person.memberId] ?? null : null}
+                />
               ))}
             </ul>
           </div>
@@ -110,7 +131,13 @@ function FilmRow({ film }: { film: FilmHistoryEntry }) {
   );
 }
 
-export function HistoryFilms({ films }: { films: FilmHistoryEntry[] }) {
+export function HistoryFilms({
+  films,
+  reputations,
+}: {
+  films: FilmHistoryEntry[];
+  reputations: Record<string, Reputation>;
+}) {
   return (
     <div className="historyList">
       <div className="historyListHead" aria-hidden="true">
@@ -119,7 +146,7 @@ export function HistoryFilms({ films }: { films: FilmHistoryEntry[] }) {
         <span>Puntaje</span>
       </div>
       {films.map((film) => (
-        <FilmRow film={film} key={film.id} />
+        <FilmRow film={film} key={film.id} reputations={reputations} />
       ))}
     </div>
   );

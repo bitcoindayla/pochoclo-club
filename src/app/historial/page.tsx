@@ -4,6 +4,7 @@ import Link from "next/link";
 import { requireMember } from "@/lib/authz";
 import { roundScore } from "@/lib/critique-policy";
 import { listFilmHistory } from "@/lib/critiques";
+import { listMemberReputations } from "@/lib/reputation";
 
 import { HistoryFilms } from "./history-films";
 
@@ -11,7 +12,11 @@ export const metadata: Metadata = { title: "Historial" };
 
 export default async function HistoryPage() {
   await requireMember();
-  const history = await listFilmHistory();
+  const [history, reputationList] = await Promise.all([
+    listFilmHistory(),
+    listMemberReputations(),
+  ]);
+  const reputations = Object.fromEntries(reputationList);
   const average =
     history.length > 0
       ? roundScore(history.reduce((sum, film) => sum + film.score, 0) / history.length)
@@ -56,7 +61,7 @@ export default async function HistoryPage() {
       {history.length === 0 ? (
         <p className="emptyList">Todavía no hay películas en el historial.</p>
       ) : (
-        <HistoryFilms films={history} />
+        <HistoryFilms films={history} reputations={reputations} />
       )}
 
       <p>

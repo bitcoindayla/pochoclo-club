@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { AdminNav } from "@/components/admin-nav";
+import { ReputationMark } from "@/components/reputation-mark";
 import { SignOutButton } from "@/components/session-actions";
-import { sumMemberAttendance } from "@/lib/attendance-policy";
 import { requireAdmin } from "@/lib/authz";
-import { listFilmHistory } from "@/lib/critiques";
 import { listInvitations } from "@/lib/invitations";
 import { listMembers } from "@/lib/members";
+import { listMemberReputations } from "@/lib/reputation";
 
 import { InvitationManager } from "../invitaciones/invitation-manager";
 import { revokeInvitationAction } from "../invitaciones/actions";
@@ -33,11 +33,12 @@ function formatDate(date: Date) {
 
 export default async function MembersPage() {
   const admin = await requireAdmin();
-  const [members, invitations, history] = await Promise.all([
+  const [members, invitations, reputationList] = await Promise.all([
     listMembers(),
     listInvitations(),
-    listFilmHistory(),
+    listMemberReputations(),
   ]);
+  const reputations = Object.fromEntries(reputationList);
   const activeAdmins = members.filter((member) => member.role === "admin" && member.active).length;
 
   return (
@@ -77,7 +78,7 @@ export default async function MembersPage() {
                 <tr>
                   <th>Nombre</th>
                   <th>Estado</th>
-                  <th>Asistencia</th>
+                  <th>Reputación</th>
                   <th>
                     <span className="srOnly">Acciones</span>
                   </th>
@@ -85,7 +86,7 @@ export default async function MembersPage() {
               </thead>
               <tbody>
                 {members.map((member) => {
-                  const nights = sumMemberAttendance(history, member.id);
+                  const reputation = reputations[member.id];
                   const lastAdmin = member.role === "admin" && member.active && activeAdmins <= 1;
                   return (
                     <tr key={member.id}>
@@ -101,17 +102,8 @@ export default async function MembersPage() {
                           {member.active ? "Activo" : "Inactivo"}
                         </span>
                       </td>
-                      <td data-label="Asistencia">
-                        {nights.present + nights.absent > 0 ? (
-                          <>
-                            {nights.present} presente{nights.present === 1 ? "" : "s"}
-                            <small>
-                              {nights.absent} ausente{nights.absent === 1 ? "" : "s"}
-                            </small>
-                          </>
-                        ) : (
-                          <span className="mutedText">—</span>
-                        )}
+                      <td data-label="Reputación">
+                        {reputation ? <ReputationMark reputation={reputation} /> : "—"}
                       </td>
                       <td data-label="Acciones">
                         <div className="compactActions">

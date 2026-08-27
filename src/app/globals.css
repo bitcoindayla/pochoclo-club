@@ -739,6 +739,7 @@ body:has(.critiquePhone) .siteFooter { display: none; }
 summary.historyPersonHead { cursor: pointer; }
 .historyPersonHead::-webkit-details-marker { display: none; }
 .historyPersonHead span { font-variant-numeric: tabular-nums; font-weight: 800; }
+.historyPersonHead .repMark { min-width: 6.4rem; }
 .historyPerson small { display: block; margin-top: -0.4rem; padding-bottom: 0.6rem; color: var(--muted); }
 .historyPersonBars { margin: 0 0 1rem; max-width: 28rem; }
 .memberFicha {
@@ -909,6 +910,54 @@ td small { display: block; margin-top: 0.3rem; color: var(--muted); font-size: 0
 }
 .screeningCreator > div > p:last-child,
 .ballotCreator > div:first-child > p { max-width: 34rem; color: var(--muted); line-height: 1.5; }
+.roomRoster {
+  max-width: 860px;
+  margin: 2.2rem auto 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.roomRoster ul { margin: 0; padding: 0; list-style: none; }
+.roomRoster li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.roomRoster small { display: block; margin-top: 0.2rem; color: var(--muted); }
+.repMark {
+  display: inline-grid;
+  gap: 0.28rem;
+  min-width: 7.2rem;
+  color: var(--rep);
+  text-align: right;
+}
+.repMark small {
+  display: block;
+  margin: 0;
+  color: inherit;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+.repStars {
+  display: block;
+  height: 0.28rem;
+  overflow: hidden;
+  background: rgba(244, 241, 234, 0.12);
+}
+.repStars i {
+  display: block;
+  height: 100%;
+  background: currentColor;
+}
+.tone-seed { --rep: rgba(244, 241, 234, 0.32); }
+.tone-member { --rep: rgba(244, 241, 234, 0.7); }
+.tone-host { --rep: #e8c36a; }
+.tone-pillar { --rep: #f4f1ea; }
+.tone-drift { --rep: rgba(255, 122, 110, 0.72); }
 .scoreSheet { display: grid; gap: 1.3rem; }
 .scorePeople { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
 .scorePerson {
