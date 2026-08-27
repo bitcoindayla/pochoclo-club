@@ -37,7 +37,7 @@ function PersonBreakdown({
   person: AttendanceRecord;
   reputation: Reputation | null;
 }) {
-  const mark = reputation ? <ReputationMark reputation={reputation} /> : null;
+  const mark = reputation ? <ReputationMark compact reputation={reputation} /> : null;
   if (!person.scores) {
     return (
       <li className="historyPerson">

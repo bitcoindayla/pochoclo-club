@@ -103,7 +103,7 @@ export default async function MembersPage() {
                         </span>
                       </td>
                       <td data-label="Reputación">
-                        {reputation ? <ReputationMark reputation={reputation} /> : "—"}
+                        {reputation ? <ReputationMark compact reputation={reputation} /> : "—"}
                       </td>
                       <td data-label="Acciones">
                         <div className="compactActions">

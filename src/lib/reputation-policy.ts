@@ -7,6 +7,14 @@ export const FOUNDING_MEMBER_EMAILS = [
 
 export type ReputationTone = "seed" | "member" | "host" | "pillar" | "drift";
 
+export const REPUTATION_TONE_LABEL: Record<ReputationTone, string> = {
+  seed: "Nuevo",
+  member: "En el club",
+  host: "Anfitrión",
+  pillar: "Pilar",
+  drift: "Intermitente",
+};
+
 export type Reputation = {
   memberId: string;
   nights: number;
