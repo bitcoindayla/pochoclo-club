@@ -6,6 +6,7 @@ import {
   isCritiqueToken,
   parseCritiqueScores,
   parseLegacyFilmScore,
+  parseOptionalCritiqueScores,
   roomAverages,
   spectatorAverage,
 } from "./critique-policy";
@@ -33,6 +34,14 @@ describe("scores", () => {
 
   it("rejects scores outside 0-10", () => {
     expect(() => parseCritiqueScores({ fotografia: 11 })).toThrow(/0 a 10/);
+  });
+
+  it("treats a fully empty ballot as absent", () => {
+    expect(parseOptionalCritiqueScores({})).toBeNull();
+  });
+
+  it("rejects a partial ballot", () => {
+    expect(() => parseOptionalCritiqueScores({ fotografia: 8, sonido: 7 })).toThrow(/cinco notas/);
   });
 
   it("computes the room average from spectators", () => {

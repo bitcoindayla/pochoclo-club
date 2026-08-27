@@ -49,6 +49,21 @@ export function parseCritiqueScores(input: Partial<Record<CritiqueCategoryId, un
   return scores;
 }
 
+function isBlankScore(value: unknown) {
+  return value == null || value === "";
+}
+
+export function parseOptionalCritiqueScores(
+  input: Partial<Record<CritiqueCategoryId, unknown>>,
+) {
+  const filled = CRITIQUE_CATEGORIES.filter((category) => !isBlankScore(input[category.id]));
+  if (filled.length === 0) return null;
+  if (filled.length !== CRITIQUE_CATEGORIES.length) {
+    throw new CritiquePolicyError("Completá las cinco notas o dejá a esa persona vacía si no estuvo.");
+  }
+  return parseCritiqueScores(input);
+}
+
 export function spectatorAverage(scores: CritiqueScores) {
   const total = CRITIQUE_CATEGORIES.reduce((sum, category) => sum + scores[category.id], 0);
   return roundScore(total / CRITIQUE_CATEGORIES.length);

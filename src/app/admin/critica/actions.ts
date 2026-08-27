@@ -4,11 +4,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireAdmin } from "@/lib/authz";
+import type { CritiqueCategoryId } from "@/lib/critique-policy";
 import {
   addLegacyFilm,
   closeCritiqueSession,
   CritiqueError,
   openCritiqueSession,
+  publishOccupancyScores,
   startCritiqueScoring,
 } from "@/lib/critiques";
 
@@ -86,6 +88,38 @@ export async function closeCritiqueAction(
   } catch (error) {
     return {
       error: error instanceof CritiqueError || error instanceof Error ? error.message : "No se pudo cerrar.",
+      message: null,
+    };
+  }
+}
+
+export async function publishOccupancyScoresAction(
+  _previous: CritiqueActionState,
+  formData: FormData,
+): Promise<CritiqueActionState> {
+  await requireAdmin();
+  const screeningId = formData.get("screeningId");
+  if (typeof screeningId !== "string") {
+    return { error: "La función no es válida.", message: null };
+  }
+  try {
+    await publishOccupancyScores(
+      screeningId,
+      {
+        title: formData.get("title"),
+        year: formData.get("year"),
+        director: formData.get("director"),
+      },
+      (personId, category: CritiqueCategoryId) => formData.get(`score:${personId}:${category}`),
+    );
+    refresh();
+    return { error: null, message: "Puntajes publicados en el historial." };
+  } catch (error) {
+    return {
+      error:
+        error instanceof CritiqueError || error instanceof Error
+          ? error.message
+          : "No se pudieron guardar los puntajes.",
       message: null,
     };
   }

@@ -10,6 +10,7 @@ import {
   parseCritiqueScores,
   parseFilmYear,
   parseLegacyFilmScore,
+  parseOptionalCritiqueScores,
   roomAverages,
   spectatorAverage,
   type CritiqueCategoryId,
@@ -121,6 +122,7 @@ export type CritiqueSession = {
 
 export type FilmHistoryEntry = {
   id: string;
+  screeningId: string | null;
   watchedAt: Date;
   title: string;
   year: number;
@@ -168,6 +170,7 @@ function historyFrom(id: string, data: FilmHistoryDocument): FilmHistoryEntry {
   const counts = attendanceCounts(attendees);
   return {
     id,
+    screeningId: typeof data.screeningId === "string" ? data.screeningId : null,
     watchedAt: data.watchedAt.toDate(),
     title: data.title,
     year: data.year,
@@ -541,6 +544,112 @@ export async function closeCritiqueSession(screeningId: string) {
     createdAt: now,
   });
   return getCritiqueSession(screeningId);
+}
+
+function collectOccupantScores(
+  occupants: Array<{ personId: string; name: string }>,
+  read: (personId: string, category: CritiqueCategoryId) => unknown,
+) {
+  const scores: Array<{ personId: string; scores: CritiqueScores; average: number }> = [];
+  for (const occupant of occupants) {
+    const input = Object.fromEntries(
+      CRITIQUE_CATEGORIES.map((category) => [category.id, read(occupant.personId, category.id)]),
+    ) as Partial<Record<CritiqueCategoryId, unknown>>;
+    try {
+      const parsed = parseOptionalCritiqueScores(input);
+      if (!parsed) continue;
+      scores.push({
+        personId: occupant.personId,
+        scores: parsed,
+        average: spectatorAverage(parsed),
+      });
+    } catch (error) {
+      if (error instanceof CritiquePolicyError) {
+        throw new CritiqueError(`${occupant.name}: ${error.message}`);
+      }
+      throw error;
+    }
+  }
+  return scores;
+}
+
+export async function publishOccupancyScores(
+  screeningId: string,
+  movie: { title: unknown; year: unknown; director: unknown },
+  readScore: (personId: string, category: CritiqueCategoryId) => unknown,
+) {
+  const occupants = await listScreeningOccupants(screeningId);
+  if (occupants.length === 0) {
+    throw new CritiqueError("No hay nadie sentado. Primero ocupá la sala.");
+  }
+
+  const scores = collectOccupantScores(occupants, readScore);
+  if (scores.length === 0) {
+    throw new CritiqueError("Cargá las cinco notas de al menos una persona.");
+  }
+
+  const firestore = getAdminFirestore();
+  const existingHistory = await firestore
+    .collection("filmHistory")
+    .where("screeningId", "==", screeningId)
+    .limit(1)
+    .get();
+  if (!existingHistory.empty) {
+    throw new CritiqueError("Esta función ya tiene un puntaje publicado.");
+  }
+
+  const session = await getCritiqueSession(screeningId);
+  if (session && session.status !== "closed") {
+    throw new CritiqueError("Hay una crítica en curso en la sala. Cerrala ahí o cancelala antes de cargar las notas acá.");
+  }
+  if (session?.status === "closed") {
+    throw new CritiqueError("Esta función ya tiene una crítica publicada.");
+  }
+
+  const attendees = snapshotAttendance(occupants, scores);
+  const counts = attendanceCounts(attendees);
+  const totals = roomAverages(
+    scores.map((row) => row.average),
+    scores.map((row) => row.scores),
+  );
+  if (totals.room == null || !totals.categories) {
+    throw new CritiqueError("Cargá las cinco notas de al menos una persona.");
+  }
+
+  const screeningSnapshot = await firestore.collection("screenings").doc(screeningId).get();
+  if (!screeningSnapshot.exists) throw new CritiqueError("No encontramos esa función.");
+  const screening = screeningSnapshot.data() as {
+    startsAt?: Timestamp;
+    movie?: { title?: string; year?: number; director?: string };
+  };
+  let title: string;
+  let director: string;
+  let year: number;
+  try {
+    title = textField(movie.title || screening.movie?.title, "El título", 120);
+    director = textField(movie.director || screening.movie?.director, "La dirección", 80);
+    year = parseFilmYear(movie.year || screening.movie?.year);
+  } catch (error) {
+    if (error instanceof CritiquePolicyError) throw new CritiqueError(error.message);
+    throw error;
+  }
+  const now = Timestamp.now();
+
+  await firestore.collection("filmHistory").add({
+    screeningId,
+    watchedAt: screening.startsAt ?? now,
+    title,
+    year,
+    director,
+    score: totals.room,
+    voterCount: scores.length,
+    categoryAverages: totals.categories,
+    source: "critique",
+    attendees,
+    presentCount: counts.present,
+    absentCount: counts.absent,
+    createdAt: now,
+  });
 }
 
 export async function listFilmHistory(): Promise<FilmHistoryEntry[]> {

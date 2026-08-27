@@ -909,6 +909,37 @@ td small { display: block; margin-top: 0.3rem; color: var(--muted); font-size: 0
 }
 .screeningCreator > div > p:last-child,
 .ballotCreator > div:first-child > p { max-width: 34rem; color: var(--muted); line-height: 1.5; }
+.scoreSheet { display: grid; gap: 1.3rem; }
+.scorePeople { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.scorePerson {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.1rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.scorePerson small { display: block; margin-top: 0.25rem; color: var(--muted); }
+.scoreCats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+.scoreCats label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.scoreCats select {
+  min-height: 44px;
+  padding: 0 0.55rem;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--bg);
+}
 .screeningForm { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: end; }
 .fieldGroup { display: grid; gap: 0.45rem; }
 .fieldGroup label { font-size: 0.62rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
@@ -1863,6 +1894,7 @@ body:has(.cinematicBallot) .siteHeader { display: none; }
   .dashboardHeader .textButton { min-height: 44px; margin-left: auto; }
   .adminCallout .adminNav, .adminCallout .buttonRow { width: 100%; }
 
+  .scoreCats { grid-template-columns: 1fr 1fr; }
   .screeningForm { grid-template-columns: minmax(0, 1fr); }
   .screeningForm .wideField, .screeningForm > .primaryButton { grid-column: 1; }
   .fieldGroup, .fieldGroup input, .fieldGroup textarea { min-width: 0; }
