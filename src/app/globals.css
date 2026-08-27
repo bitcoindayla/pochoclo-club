@@ -2018,14 +2018,20 @@ body:has(.cinematicBallot) .siteHeader { display: none; }
   --tilt-x: 0deg;
   --tilt-y: 0deg;
   position: relative;
+  isolation: isolate;
   min-height: min(72vw, 540px);
   max-width: 920px;
   margin: 0 auto;
   transform-style: preserve-3d;
   transform: perspective(1400px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
-  transition: transform 220ms ease;
+  transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .ticketCard {
+  --fan: calc((var(--ticket-index) - (var(--ticket-count) - 1) / 2) * 9deg);
+  --stack: calc(var(--ticket-index) * 8px);
+  --lift: 0px;
+  --depth: 0px;
+  --zoom: 1;
   position: absolute;
   inset: 0 auto auto 50%;
   width: min(360px, 86vw);
@@ -2034,9 +2040,12 @@ body:has(.cinematicBallot) .siteHeader { display: none; }
   border: 1px solid rgba(255,255,255,0.12);
   background: #111;
   box-shadow: 0 24px 50px rgba(0,0,0,0.45);
-  transform-origin: center 120%;
-  transform: translateX(-50%) rotate(calc((var(--ticket-index) - (var(--ticket-count) - 1) / 2) * 9deg)) translateY(calc(var(--ticket-index) * 8px));
-  transition: transform 280ms ease, z-index 280ms ease;
+  transform-origin: center 110%;
+  transform: translateX(-50%) rotate(var(--fan)) translateY(calc(var(--stack) + var(--lift))) translateZ(var(--depth)) scale(var(--zoom));
+  transition:
+    transform 560ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 420ms ease,
+    box-shadow 420ms ease;
   z-index: var(--ticket-index);
 }
 .ticketStill, .ticketStillFallback {
@@ -2045,6 +2054,7 @@ body:has(.cinematicBallot) .siteHeader { display: none; }
   width: 100%;
   height: 100%;
   object-fit: cover;
+  pointer-events: none;
 }
 .ticketStillFallback {
   background:
@@ -2114,9 +2124,21 @@ body:has(.cinematicBallot) .siteHeader { display: none; }
 #tickets { scroll-margin-top: 0.5rem; }
 
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .ticketDeck:hover {
+    --tilt-x: 0deg;
+    --tilt-y: 0deg;
+  }
+  .ticketDeck:hover .ticketCard {
+    filter: brightness(0.66);
+  }
+  .ticketDeck:hover .ticketCard:hover,
   .ticketCard:hover {
-    z-index: 20;
-    transform: translateX(-50%) rotate(0deg) translateY(-18px) scale(1.03);
+    --lift: -38px;
+    --depth: 42px;
+    --zoom: 1.03;
+    z-index: 40;
+    filter: none;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.58);
   }
 }
 

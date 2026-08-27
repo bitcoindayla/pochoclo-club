@@ -78,9 +78,14 @@ export function ReservationTickets({
     function onMove(event: PointerEvent) {
       const node = deckRef.current;
       if (!node) return;
+      if (event.target instanceof Element && event.target.closest(".ticketCard")) {
+        node.style.setProperty("--tilt-x", "0deg");
+        node.style.setProperty("--tilt-y", "0deg");
+        return;
+      }
       const box = node.getBoundingClientRect();
-      const x = ((event.clientX - box.left) / box.width - 0.5) * 10;
-      const y = ((event.clientY - box.top) / box.height - 0.5) * -8;
+      const x = ((event.clientX - box.left) / box.width - 0.5) * 5;
+      const y = ((event.clientY - box.top) / box.height - 0.5) * -4;
       node.style.setProperty("--tilt-x", `${y}deg`);
       node.style.setProperty("--tilt-y", `${x}deg`);
     }
