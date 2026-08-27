@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 
+import { PopcornMark } from "@/components/popcorn-mark";
 import type { MemberSearchItem } from "@/lib/members";
 import {
   REPUTATION_TONE_LABEL,
@@ -57,10 +58,12 @@ function SeatMedal({
 }) {
   return (
     <div className={`seatMedal tone-${reputation?.tone ?? "seed"}`} aria-hidden="true">
-      <span className="seatMedalPip">{reputation ? reputation.stars : "—"}</span>
       <div className="seatMedalTag">
         <strong>{name}</strong>
-        <b>{reputation ? reputation.stars : "—"}</b>
+        <span className="seatMedalScore">
+          <b>{reputation ? reputation.stars : "—"}</b>
+          <PopcornMark className="seatMedalPopcorn" />
+        </span>
         <em>{reputation ? REPUTATION_TONE_LABEL[reputation.tone] : "Invitado"}</em>
         {reputation ? (
           <dl>

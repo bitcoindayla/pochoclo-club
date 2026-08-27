@@ -1699,22 +1699,6 @@ body:has(.cinematicBallot) .siteHeader { display: none; }
   pointer-events: none;
   z-index: 2;
 }
-.seatMedalPip {
-  position: absolute;
-  top: 0.32rem;
-  right: 0.32rem;
-  width: 1.05rem;
-  height: 1.05rem;
-  display: grid;
-  place-items: center;
-  color: var(--rep, #f4f1ea);
-  border: 1px solid var(--rep, #f4f1ea);
-  background: #070707;
-  font-size: 0.52rem;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  font-variant-numeric: tabular-nums;
-}
 .seatMedalTag {
   position: absolute;
   left: 50%;
@@ -1755,15 +1739,25 @@ body:has(.cinematicBallot) .siteHeader { display: none; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.seatMedalTag b {
-  display: block;
+.seatMedalScore {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   margin-top: 0.15rem;
+}
+.seatMedalTag b {
   color: var(--rep, #f4f1ea);
   font-size: 1.7rem;
   font-weight: 800;
   letter-spacing: -0.07em;
   line-height: 0.9;
   font-variant-numeric: tabular-nums;
+}
+.seatMedalPopcorn {
+  display: block;
+  width: 1.35rem;
+  height: 1.5rem;
+  flex: 0 0 auto;
 }
 .seatMedalTag em {
   display: block;
