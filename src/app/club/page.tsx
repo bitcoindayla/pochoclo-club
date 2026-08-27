@@ -13,7 +13,6 @@ import { CLUB_TIME_ZONE } from "@/lib/screening-policy";
 import { getOpenScreeningForMember } from "@/lib/screenings";
 
 import { ReservationTickets } from "./reservation-tickets";
-import { RoomRoster } from "./room-roster";
 import { SeatMap } from "./seat-map";
 import { LatestWinner, MovieBallotPanel } from "./movie-ballot";
 
@@ -107,22 +106,20 @@ export default async function ClubPage() {
               </span>
             </div>
             {!ballot || ballot.canAccessSeats ? (
-              <>
-                <SeatMap
-                  blockedPlaceCodes={screening.blockedPlaceCodes}
-                  guestCandidates={guestCandidates}
-                  guestReservation={screening.guestReservation}
-                  guestWaitlistEntry={screening.guestWaitlistEntry}
-                  occupancy={screening.occupancy}
-                  ownPlaceCode={screening.ownPlaceCode}
-                  ownReservationKind={screening.ownReservationKind}
-                  ownWaitlistEntry={screening.ownWaitlistEntry}
-                  readOnly={screening.status === "closed"}
-                  screeningId={screening.id}
-                  waitlist={screening.waitlist}
-                />
-                <RoomRoster occupancy={screening.occupancy} reputations={reputations} />
-              </>
+              <SeatMap
+                blockedPlaceCodes={screening.blockedPlaceCodes}
+                guestCandidates={guestCandidates}
+                guestReservation={screening.guestReservation}
+                guestWaitlistEntry={screening.guestWaitlistEntry}
+                occupancy={screening.occupancy}
+                ownPlaceCode={screening.ownPlaceCode}
+                ownReservationKind={screening.ownReservationKind}
+                ownWaitlistEntry={screening.ownWaitlistEntry}
+                readOnly={screening.status === "closed"}
+                reputations={reputations}
+                screeningId={screening.id}
+                waitlist={screening.waitlist}
+              />
             ) : (
               <div className="seatGate">
                 <strong>El mapa todavía está bloqueado.</strong>

@@ -3,6 +3,10 @@
 import { useActionState, useEffect, useState } from "react";
 
 import type { MemberSearchItem } from "@/lib/members";
+import {
+  REPUTATION_TONE_LABEL,
+  type Reputation,
+} from "@/lib/reputation-policy";
 import { AISLE_FLOOR_BY_ROW, placeDisplayLabel, ROOM_ROWS, type PlaceCode } from "@/lib/room";
 import type {
   GuestReservation,
@@ -33,9 +37,58 @@ function searchableName(value: string) {
     .toLocaleLowerCase("es");
 }
 
+function occupantReputation(
+  occupied: ScreeningOccupancy | undefined,
+  reputations: Record<string, Reputation>,
+) {
+  if (!occupied) return null;
+  if (occupied.memberId.startsWith("external-")) return null;
+  return reputations[occupied.memberId] ?? null;
+}
+
+function SeatMedal({
+  name,
+  guest,
+  reputation,
+}: {
+  name: string;
+  guest: boolean;
+  reputation: Reputation | null;
+}) {
+  return (
+    <div className={`seatMedal tone-${reputation?.tone ?? "seed"}`} aria-hidden="true">
+      <span className="seatMedalPip">{reputation ? reputation.stars : "—"}</span>
+      <div className="seatMedalTag">
+        <strong>{name}</strong>
+        <b>{reputation ? reputation.stars : "—"}</b>
+        <em>{reputation ? REPUTATION_TONE_LABEL[reputation.tone] : "Invitado"}</em>
+        {reputation ? (
+          <dl>
+            <div>
+              <dt>Funciones</dt>
+              <dd>{reputation.nights}</dd>
+            </div>
+            <div>
+              <dt>Invitados</dt>
+              <dd>{reputation.guests}</dd>
+            </div>
+            <div>
+              <dt>Promedio</dt>
+              <dd>{reputation.average == null ? "—" : reputation.average.toFixed(1)}</dd>
+            </div>
+          </dl>
+        ) : guest ? (
+          <small>+1 de la función</small>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 export function SeatMap({
   screeningId,
   occupancy,
+  reputations = {},
   ownPlaceCode,
   ownReservationKind,
   guestReservation,
@@ -48,6 +101,7 @@ export function SeatMap({
 }: {
   screeningId: string;
   occupancy: ScreeningOccupancy[];
+  reputations?: Record<string, Reputation>;
   ownPlaceCode: string | null;
   ownReservationKind: "self" | "guest" | null;
   guestReservation: GuestReservation | null;
@@ -205,52 +259,64 @@ export function SeatMap({
                 ? `${prefix} ${kind === "floor" ? "floorSelected" : "seatSelected"}`
                 : `${prefix} ${kind === "floor" ? "floorAvailable" : "seatAvailable"}`;
     const lockedForOthers = Boolean(occupied && !mine && !myGuest);
+    const reputation = occupantReputation(occupied, reputations);
 
     return (
-      <button
-        aria-label={
-          mine
-            ? `${place.code}, reservado por mí`
-            : myGuest
-              ? `${place.code}, reservado para mi +1, ${occupied.memberName}`
-              : occupied
-                ? `${place.code}, ocupado por ${occupied.memberName}`
-                : blocked
-                  ? `${place.code}, bloqueado por administración`
-                  : isGuestPick
-                    ? `${place.code}, ${place.name}, elegido para tu +1`
-                    : isOwnPick
-                      ? `${place.code}, ${place.name}, tu lugar`
-                      : kind === "floor"
-                        ? `${place.code}, ${place.name}, disponible en el pasillo`
-                        : `${place.code}, ${place.name}, disponible`
-        }
-        aria-pressed={isOwnPick || isGuestPick || mine || Boolean(myGuest)}
-        className={className}
-        data-place-code={place.code}
-        disabled={lockedForOthers || blocked || pending || readOnly}
+      <div
+        className={`seatWrap${occupied ? " isTaken" : ""}${reputation ? ` tone-${reputation.tone}` : occupied ? " tone-seed" : ""}`}
         key={place.code}
-        onClick={() => pickPlace(place.code)}
-        type="button"
       >
-        <strong data-place-code={place.code}>{placeDisplayLabel(place.code)}</strong>
-        <span>
-          {blocked
-            ? "Bloqueado"
-            : occupied
-              ? mine
-                ? "Tu lugar"
-                : myGuest
-                  ? `${occupied.memberName} · +1`
-                  : occupied.memberName
-              : isGuestPick
-                ? "Tu +1"
-                : isOwnPick
+        <button
+          aria-label={
+            mine
+              ? `${place.code}, reservado por mí`
+              : myGuest
+                ? `${place.code}, reservado para mi +1, ${occupied.memberName}`
+                : occupied
+                  ? `${place.code}, ocupado por ${occupied.memberName}`
+                  : blocked
+                    ? `${place.code}, bloqueado por administración`
+                    : isGuestPick
+                      ? `${place.code}, ${place.name}, elegido para tu +1`
+                      : isOwnPick
+                        ? `${place.code}, ${place.name}, tu lugar`
+                        : kind === "floor"
+                          ? `${place.code}, ${place.name}, disponible en el pasillo`
+                          : `${place.code}, ${place.name}, disponible`
+          }
+          aria-pressed={isOwnPick || isGuestPick || mine || Boolean(myGuest)}
+          className={className}
+          data-place-code={place.code}
+          disabled={lockedForOthers || blocked || pending || readOnly}
+          onClick={() => pickPlace(place.code)}
+          type="button"
+        >
+          <strong data-place-code={place.code}>{placeDisplayLabel(place.code)}</strong>
+          <span>
+            {blocked
+              ? "Bloqueado"
+              : occupied
+                ? mine
                   ? "Tu lugar"
-                  : place.name}
-        </span>
-        {kind === "floor" ? <small>Pasillo</small> : null}
-      </button>
+                  : myGuest
+                    ? `${occupied.memberName} · +1`
+                    : occupied.memberName
+                : isGuestPick
+                  ? "Tu +1"
+                  : isOwnPick
+                    ? "Tu lugar"
+                    : place.name}
+          </span>
+          {kind === "floor" ? <small>Pasillo</small> : null}
+        </button>
+        {occupied ? (
+          <SeatMedal
+            guest={occupied.kind === "guest"}
+            name={occupied.memberName}
+            reputation={reputation}
+          />
+        ) : null}
+      </div>
     );
   }
 

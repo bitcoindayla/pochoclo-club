@@ -910,88 +910,6 @@ td small { display: block; margin-top: 0.3rem; color: var(--muted); font-size: 0
 }
 .screeningCreator > div > p:last-child,
 .ballotCreator > div:first-child > p { max-width: 34rem; color: var(--muted); line-height: 1.5; }
-.roomRoster {
-  max-width: 860px;
-  margin: 2.6rem auto 0;
-  padding-top: 1.8rem;
-  border-top: 1px solid var(--line);
-}
-.roomRosterHead {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.4rem;
-}
-.roomRosterHead h3 {
-  margin: 0;
-  font-size: clamp(1.7rem, 4vw, 2.6rem);
-  font-weight: 800;
-  letter-spacing: -0.05em;
-}
-.roomRosterHead > span {
-  color: var(--muted);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-.roomRoster ol { margin: 0; padding: 0; list-style: none; }
-.roomRosterRow {
-  display: grid;
-  grid-template-columns: 2.2rem minmax(0, 1fr) auto;
-  gap: 0.45rem 1rem;
-  align-items: start;
-  padding: 1.15rem 0 1.15rem 0.85rem;
-  border-bottom: 1px solid var(--line);
-  border-left: 2px solid var(--rep, var(--line));
-}
-.repIndex {
-  padding-top: 0.55rem;
-  color: var(--rep, var(--muted));
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-}
-.roomRosterWho { min-width: 0; }
-.roomRosterWho strong {
-  display: block;
-  color: var(--rep, var(--ink));
-  font-size: clamp(1.2rem, 3vw, 1.7rem);
-  font-weight: 800;
-  letter-spacing: -0.045em;
-  line-height: 1;
-}
-.roomRosterWho small {
-  display: block;
-  margin-top: 0.4rem;
-  color: var(--muted);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-.repFacts {
-  display: grid;
-  grid-auto-flow: column;
-  justify-content: start;
-  gap: 1.1rem 1.5rem;
-  margin: 0.85rem 0 0;
-}
-.repFacts dt {
-  color: var(--muted);
-  font-size: 0.58rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-.repFacts dd {
-  margin: 0.15rem 0 0;
-  font-size: 1.15rem;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  font-variant-numeric: tabular-nums;
-}
 .repMark {
   display: grid;
   justify-items: end;
@@ -1769,6 +1687,127 @@ body:has(.cinematicBallot) .siteHeader { display: none; }
 }
 .aisleGap span { writing-mode: vertical-rl; transform: rotate(180deg); }
 .rowLabel { color: rgba(244, 241, 234, 0.55); font-size: 0.85rem; }
+.seatWrap {
+  position: relative;
+  min-width: 0;
+}
+.seatWrap .seat,
+.seatWrap .floorPlace { width: 100%; height: 100%; }
+.seatMedal {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.seatMedalPip {
+  position: absolute;
+  top: 0.32rem;
+  right: 0.32rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  display: grid;
+  place-items: center;
+  color: var(--rep, #f4f1ea);
+  border: 1px solid var(--rep, #f4f1ea);
+  background: #070707;
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.seatMedalTag {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.55rem);
+  width: max-content;
+  min-width: 9.2rem;
+  max-width: min(14rem, 70vw);
+  padding: 0.7rem 0.8rem 0.75rem;
+  color: #f4f1ea;
+  border: 1px solid var(--rep, var(--line));
+  background: #070707;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transform: translateX(-50%) translateY(8px);
+  transition: opacity 180ms ease, transform 180ms ease;
+  z-index: 5;
+}
+.seatMedalTag::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-left: -0.25rem;
+  border-right: 1px solid var(--rep, var(--line));
+  border-bottom: 1px solid var(--rep, var(--line));
+  background: #070707;
+  transform: rotate(45deg) translateY(-0.28rem);
+}
+.seatMedalTag strong {
+  display: block;
+  max-width: 12rem;
+  overflow: hidden;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.seatMedalTag b {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--rep, #f4f1ea);
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: -0.07em;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+}
+.seatMedalTag em {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  font-style: normal;
+  text-transform: uppercase;
+}
+.seatMedalTag dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin: 0.65rem 0 0;
+}
+.seatMedalTag dt {
+  color: var(--muted);
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.seatMedalTag dd {
+  margin: 0.12rem 0 0;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.seatMedalTag small {
+  display: block;
+  margin-top: 0.45rem;
+  color: var(--muted);
+  font-size: 0.62rem;
+}
+.seatWrap.isTaken:hover,
+.seatWrap.isTaken:focus-within { z-index: 12; }
+.seatWrap.isTaken:hover .seatMedalTag,
+.seatWrap.isTaken:focus-within .seatMedalTag {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
 .seat {
   position: relative;
   isolation: isolate;
@@ -2065,11 +2104,6 @@ body:has(.cinematicBallot) .siteHeader { display: none; }
   .cinematicScrollHint { bottom: 0.85rem; }
 
   .historyHead { grid-template-columns: 1fr; align-items: start; }
-  .roomRosterRow {
-    grid-template-columns: 1.6rem minmax(0, 1fr);
-  }
-  .roomRosterRow .repMark { grid-column: 2; justify-items: start; text-align: left; }
-  .repFacts { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .historyStats { justify-content: start; }
   .historyListHead { display: none; }
   .historyListHead,
@@ -2554,4 +2588,5 @@ body:has(.cinematicBallot) .siteHeader { display: none; }
   .cinematicScrollHint i, .cinematicSeatCue, .cinematicSeatCue strong span, .cinematicSeatCue i { animation: none; }
   .ticketDeck { animation: none; transform: none; }
   .ticketCard { transition: none; }
+  .seatMedalTag { transition: none; transform: translateX(-50%); }
 }
