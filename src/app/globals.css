@@ -467,6 +467,7 @@ body:has(.critiquePhone) .siteFooter { display: none; }
 .signInControl { min-width: min(100%, 230px); }
 .signInControl .googleButton { width: 100%; }
 .signInError { max-width: 25rem; margin: 0.65rem 0 0; color: var(--danger); font-size: 0.75rem; line-height: 1.4; }
+.authReturnError { margin: 0.8rem auto; padding: 0 1rem; text-align: center; }
 
 .buttonRow { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 

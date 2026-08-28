@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Archivo } from "next/font/google";
 
 import { Brand } from "@/components/brand";
+import { GoogleAuthReturn } from "@/components/google-auth-return";
 import { SiteMenu } from "@/components/site-menu";
 import { getCurrentMember } from "@/lib/authz";
 import { getLandingVisual } from "@/lib/landing";
@@ -30,6 +31,7 @@ export default async function RootLayout({
   return (
     <html lang="es">
       <body className={archivo.className}>
+        <GoogleAuthReturn />
         <header className="siteHeader">
           <SiteMenu links={menuLinksFor(member)} visual={visual} />
           <Brand />
