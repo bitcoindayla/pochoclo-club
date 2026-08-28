@@ -2,5 +2,13 @@
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
+  },
+  "hosting": {
+    "public": "auth-host",
+    "ignore": ["**/.*"],
+    "rewrites": [
+      { "source": "/ingreso", "destination": "/ingreso/index.html" },
+      { "source": "/ingreso/**", "destination": "/ingreso/index.html" }
+    ]
   }
 }
