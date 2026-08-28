@@ -4,8 +4,8 @@ import { FirebaseError } from "firebase/app";
 import {
   GoogleAuthProvider,
   getRedirectResult,
+  signInWithCredential,
   signInWithPopup,
-  signInWithRedirect,
   signOut,
   type UserCredential,
 } from "firebase/auth";
@@ -13,6 +13,31 @@ import {
 import { getClientAuth } from "@/lib/firebase/client";
 
 const INVITE_KEY = "pochoclo.invite";
+const GOOGLE_WEB_CLIENT_ID =
+  "274140905514-stf3bujnl25rglqnp86n5j0ng0ulgtlv.apps.googleusercontent.com";
+
+type GoogleTokenResponse = {
+  access_token?: string;
+  error?: string;
+  error_description?: string;
+};
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        oauth2: {
+          initTokenClient: (config: {
+            client_id: string;
+            scope: string;
+            callback: (response: GoogleTokenResponse) => void;
+            error_callback?: (error: { type?: string; message?: string }) => void;
+          }) => { requestAccessToken: (opts?: { prompt?: string }) => void };
+        };
+      };
+    };
+  }
+}
 
 export const googleAuthErrors: Record<string, string> = {
   "auth/popup-blocked":
@@ -39,6 +64,27 @@ export function shouldUseGoogleRedirect() {
     /iPad|iPhone|iPod/i.test(ua) ||
     (window.navigator.platform === "MacIntel" && window.navigator.maxTouchPoints > 1)
   );
+}
+
+function loadGoogleIdentity() {
+  if (window.google?.accounts?.oauth2) return Promise.resolve();
+  return new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>("script[data-pochoclo-gsi]");
+    if (existing) {
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", () => reject(new Error("No se pudo cargar Google.")), {
+        once: true,
+      });
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.dataset.pochocloGsi = "true";
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("No se pudo cargar Google."));
+    document.head.appendChild(script);
+  });
 }
 
 async function exchangeSession(credential: UserCredential, invitationToken?: string | null) {
@@ -69,18 +115,55 @@ async function exchangeSession(credential: UserCredential, invitationToken?: str
   window.location.assign("/club");
 }
 
-export async function startGoogleSignIn(invitationToken?: string) {
-  const auth = await getClientAuth();
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: "select_account" });
+async function signInWithGoogleOnThisPage(invitationToken?: string) {
+  await loadGoogleIdentity();
+  if (!window.google?.accounts.oauth2) {
+    throw new Error("Google no pudo completar el acceso.");
+  }
 
+  await new Promise<void>((resolve, reject) => {
+    const tokenClient = window.google!.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_WEB_CLIENT_ID,
+      scope: "openid email profile",
+      callback: (response) => {
+        void (async () => {
+          try {
+            if (response.error || !response.access_token) {
+              throw new Error(
+                response.error_description || "Google no pudo completar el acceso.",
+              );
+            }
+            const auth = await getClientAuth();
+            const credential = GoogleAuthProvider.credential(null, response.access_token);
+            const result = await signInWithCredential(auth, credential);
+            await exchangeSession(result, invitationToken);
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
+        })();
+      },
+      error_callback: (error) => {
+        reject(
+          new Error(
+            error.message || "Se canceló el acceso con Google. Intentá otra vez.",
+          ),
+        );
+      },
+    });
+    tokenClient.requestAccessToken({ prompt: "select_account" });
+  });
+}
+
+export async function startGoogleSignIn(invitationToken?: string) {
   if (shouldUseGoogleRedirect()) {
-    if (invitationToken) sessionStorage.setItem(INVITE_KEY, invitationToken);
-    else sessionStorage.removeItem(INVITE_KEY);
-    await signInWithRedirect(auth, provider);
+    await signInWithGoogleOnThisPage(invitationToken);
     return;
   }
 
+  const auth = await getClientAuth();
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
   const result = await signInWithPopup(auth, provider);
   await exchangeSession(result, invitationToken);
 }
