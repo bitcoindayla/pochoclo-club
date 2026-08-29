@@ -87,18 +87,35 @@ export function reputationTone(input: {
   return "member";
 }
 
+export function normalizePersonName(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLocaleLowerCase("es");
+}
+
+export function guestReputationId(name: string) {
+  return `guest:${normalizePersonName(name)}`;
+}
+
 export function buildMemberReputation({
   memberId,
   founding,
   filmCount,
   nights,
   films,
+  archiveNights = 0,
+  archiveGuests = 0,
 }: {
   memberId: string;
   founding: boolean;
   filmCount: number;
   nights: ReputationNight[];
   films: ReputationFilm[];
+  archiveNights?: number;
+  archiveGuests?: number;
 }): Reputation {
   const occupied = new Set<number>();
   let guests = 0;
@@ -123,7 +140,8 @@ export function buildMemberReputation({
     }
   }
 
-  let present = occupied.size;
+  let present = Math.max(occupied.size, archiveNights);
+  guests = Math.max(guests, archiveGuests);
   if (founding) {
     present = Math.max(present, filmCount);
     absences = 0;

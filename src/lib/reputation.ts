@@ -5,6 +5,7 @@ import { getAdminFirestore } from "@/lib/firebase/admin";
 import { listMembers } from "@/lib/members";
 import {
   buildMemberReputation,
+  guestReputationId,
   isFoundingEmail,
   type Reputation,
 } from "@/lib/reputation-policy";
@@ -13,10 +14,11 @@ export type { Reputation } from "@/lib/reputation-policy";
 
 export async function listMemberReputations(): Promise<Map<string, Reputation>> {
   const firestore = getAdminFirestore();
-  const [members, films, screenings] = await Promise.all([
+  const [members, films, screenings, guestArchives] = await Promise.all([
     listMembers(),
     listFilmHistory(),
     firestore.collection("screenings").get(),
+    firestore.collection("guestArchives").limit(500).get(),
   ]);
 
   const nights = await Promise.all(
@@ -53,6 +55,32 @@ export async function listMemberReputations(): Promise<Map<string, Reputation>> 
         filmCount: films.length,
         nights: closedNights,
         films,
+        archiveNights: member.archiveNights,
+        archiveGuests: member.archiveGuests,
+      }),
+    );
+  }
+  for (const document of guestArchives.docs) {
+    const data = document.data() as {
+      name?: unknown;
+      archiveNights?: unknown;
+      archiveGuests?: unknown;
+    };
+    const name = typeof data.name === "string" ? data.name.trim() : "";
+    if (!name) continue;
+    const archiveNights = typeof data.archiveNights === "number" ? data.archiveNights : 0;
+    const archiveGuests = typeof data.archiveGuests === "number" ? data.archiveGuests : 0;
+    const id = guestReputationId(name);
+    reputations.set(
+      id,
+      buildMemberReputation({
+        memberId: id,
+        founding: false,
+        filmCount: films.length,
+        nights: [],
+        films: [],
+        archiveNights,
+        archiveGuests,
       }),
     );
   }

@@ -28,6 +28,8 @@ export type Member = {
 export type MemberAdminItem = Member & {
   createdAt: Date;
   lastSignedInAt: Date | null;
+  archiveNights: number;
+  archiveGuests: number;
 };
 
 export { MemberAdminError };
@@ -38,6 +40,8 @@ type MemberDocument = {
   imageUrl: string | null;
   role: MemberRole;
   active: boolean;
+  archiveNights?: number;
+  archiveGuests?: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;
   lastSignedInAt: Timestamp;
@@ -192,6 +196,8 @@ function toAdminItem(id: string, document: MemberDocument): MemberAdminItem {
     ...toMember(id, document),
     createdAt: document.createdAt?.toDate() ?? new Date(0),
     lastSignedInAt: document.lastSignedInAt?.toDate() ?? null,
+    archiveNights: typeof document.archiveNights === "number" ? document.archiveNights : 0,
+    archiveGuests: typeof document.archiveGuests === "number" ? document.archiveGuests : 0,
   };
 }
 

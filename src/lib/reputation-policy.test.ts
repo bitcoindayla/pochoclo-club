@@ -73,6 +73,20 @@ describe("buildMemberReputation", () => {
     expect(reputation.tone).toBe("pillar");
   });
 
+  it("uses archived attendances when they are higher than tracked nights", () => {
+    const reputation = buildMemberReputation({
+      memberId: "a",
+      founding: false,
+      filmCount: 40,
+      nights,
+      films: [],
+      archiveNights: 18,
+      archiveGuests: 4,
+    });
+    expect(reputation.nights).toBe(18);
+    expect(reputation.guests).toBe(4);
+  });
+
   it("gives founding members every film and no absences", () => {
     const reputation = buildMemberReputation({
       memberId: "founder",

@@ -6,6 +6,7 @@ import { PopcornMark } from "@/components/popcorn-mark";
 import type { MemberSearchItem } from "@/lib/members";
 import {
   REPUTATION_TONE_LABEL,
+  guestReputationId,
   type Reputation,
 } from "@/lib/reputation-policy";
 import { AISLE_FLOOR_BY_ROW, placeDisplayLabel, ROOM_ROWS, type PlaceCode } from "@/lib/room";
@@ -43,8 +44,10 @@ function occupantReputation(
   reputations: Record<string, Reputation>,
 ) {
   if (!occupied) return null;
-  if (occupied.memberId.startsWith("external-")) return null;
-  return reputations[occupied.memberId] ?? null;
+  if (!occupied.memberId.startsWith("external-")) {
+    return reputations[occupied.memberId] ?? reputations[guestReputationId(occupied.memberName)] ?? null;
+  }
+  return reputations[guestReputationId(occupied.memberName)] ?? null;
 }
 
 function SeatMedal({
