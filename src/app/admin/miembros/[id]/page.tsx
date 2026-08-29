@@ -97,8 +97,8 @@ export default async function MemberDetailPage({
           </span>
         </div>
         <p className="pageIntro">
-          Se toma al cerrar la crítica: ocupó lugar y puntuó, presente; reservó y no puntuó, ausente.
-          Si alguien se fue antes del domingo, no aparece. Sesión de {admin.name}.
+          El archivo se carga a mano. Desde la próxima, al cerrar la crítica: ocupó lugar y
+          puntuó, presente; reservó y no puntuó, ausente. Sesión de {admin.name}.
         </p>
 
         {nights.length === 0 ? (

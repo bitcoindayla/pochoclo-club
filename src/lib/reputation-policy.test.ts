@@ -87,6 +87,21 @@ describe("buildMemberReputation", () => {
     expect(reputation.guests).toBe(4);
   });
 
+  it("counts present films in the archive as nights", () => {
+    const reputation = buildMemberReputation({
+      memberId: "a",
+      founding: false,
+      filmCount: 40,
+      nights: [],
+      films: [
+        { attendees: [{ memberId: "a", hostMemberId: null, status: "presente", average: null }] },
+        { attendees: [{ memberId: "a", hostMemberId: null, status: "presente", average: null }] },
+        { attendees: [{ memberId: "b", hostMemberId: null, status: "presente", average: null }] },
+      ],
+    });
+    expect(reputation.nights).toBe(2);
+  });
+
   it("gives founding members every film and no absences", () => {
     const reputation = buildMemberReputation({
       memberId: "founder",

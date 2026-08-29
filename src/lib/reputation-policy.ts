@@ -131,16 +131,22 @@ export function buildMemberReputation({
   });
 
   let absences = 0;
+  let historyPresent = 0;
   const scores: number[] = [];
   for (const film of films) {
+    let counted = false;
     for (const row of film.attendees) {
       if (row.memberId !== memberId) continue;
       if (row.status === "ausente") absences += 1;
+      if (row.status === "presente" && !counted) {
+        historyPresent += 1;
+        counted = true;
+      }
       if (typeof row.average === "number") scores.push(row.average);
     }
   }
 
-  let present = Math.max(occupied.size, archiveNights);
+  let present = Math.max(occupied.size, archiveNights, historyPresent);
   guests = Math.max(guests, archiveGuests);
   if (founding) {
     present = Math.max(present, filmCount);
