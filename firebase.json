@@ -7,6 +7,7 @@
     "public": "auth-host",
     "ignore": ["**/.*"],
     "rewrites": [
+      { "source": "/", "destination": "/ingreso/index.html" },
       { "source": "/ingreso", "destination": "/ingreso/index.html" },
       { "source": "/ingreso/**", "destination": "/ingreso/index.html" }
     ]

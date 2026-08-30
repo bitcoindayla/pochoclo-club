@@ -3,12 +3,18 @@
 import { useEffect, useId, useState } from "react";
 
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { shouldUseGoogleRedirect } from "@/lib/google-auth";
 
 type LandingDialog = "access" | "join";
 
 export function LandingAccess() {
   const [dialog, setDialog] = useState<LandingDialog | null>(null);
+  const [mobileGoogle, setMobileGoogle] = useState(false);
   const titleId = useId();
+
+  useEffect(() => {
+    setMobileGoogle(shouldUseGoogleRedirect());
+  }, []);
 
   useEffect(() => {
     if (!dialog) return;
@@ -52,7 +58,10 @@ export function LandingAccess() {
               <>
                 <h2 id={titleId}>Ingresá con tu Gmail de siempre.</h2>
                 <p className="a24DialogCopy">Solo para miembros con cuenta activa.</p>
-                <GoogleSignInButton hint="Habilitar Pop-up screen" label="Continuar con Google" />
+                <GoogleSignInButton
+                  hint={mobileGoogle ? undefined : "Habilitar Pop-up screen"}
+                  label="Continuar con Google"
+                />
               </>
             ) : (
               <>

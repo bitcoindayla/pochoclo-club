@@ -9,8 +9,9 @@ export function CompleteSession() {
 
   useEffect(() => {
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-    const idToken = hash.get("idToken");
-    const invitationToken = hash.get("invite");
+    const query = new URLSearchParams(window.location.search);
+    const idToken = hash.get("idToken") || query.get("idToken");
+    const invitationToken = hash.get("invite") || query.get("invite");
     history.replaceState(null, "", "/auth/complete");
     if (!idToken) {
       setError("No pudimos completar el acceso. Volvé al inicio e intentá otra vez.");

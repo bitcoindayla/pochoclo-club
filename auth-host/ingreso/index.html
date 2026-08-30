@@ -12,6 +12,7 @@
       .kicker { font-family: system-ui, sans-serif; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
       h1 { margin: 0; font-size: 1.8rem; letter-spacing: -0.04em; }
       .error { color: #ff7a6e; }
+      a { color: #f4f1ea; }
     </style>
   </head>
   <body>
@@ -24,71 +25,132 @@
       import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
       import {
         GoogleAuthProvider,
+        browserLocalPersistence,
         getAuth,
         getRedirectResult,
-        inMemoryPersistence,
         setPersistence,
-        signInWithPopup,
         signInWithRedirect,
+        signOut,
       } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
 
       const status = document.getElementById("status");
       const params = new URLSearchParams(location.search);
-      const returnTo = params.get("return") || "";
-      const invite = params.get("invite") || "";
-      const allowed =
-        returnTo.startsWith("https://pochoclo.club/") ||
-        returnTo.startsWith("https://www.pochoclo.club/");
+      const RETURN_KEY = "pochoclo.return";
+      const INVITE_KEY = "pochoclo.invite";
+      const REDIRECT_KEY = "pochoclo.authRedirect";
+      const DEFAULT_RETURN = "https://pochoclo.club/auth/complete";
 
       function fail(message) {
         status.className = "error";
-        status.textContent = message;
+        status.innerHTML = `${message}<br><a href="https://pochoclo.club/">Volver a pochoclo.club</a>`;
       }
 
+      function isAllowedReturn(value) {
+        return (
+          value.startsWith("https://pochoclo.club/") ||
+          value.startsWith("https://www.pochoclo.club/")
+        );
+      }
+
+      function readStored(key) {
+        try {
+          return sessionStorage.getItem(key) || localStorage.getItem(key) || "";
+        } catch {
+          return "";
+        }
+      }
+
+      function writeStored(key, value) {
+        try {
+          if (value) {
+            sessionStorage.setItem(key, value);
+            localStorage.setItem(key, value);
+          }
+        } catch {
+          // Safari can block storage; the default return still works.
+        }
+      }
+
+      function clearStored(key) {
+        try {
+          sessionStorage.removeItem(key);
+          localStorage.removeItem(key);
+        } catch {
+          // ignore
+        }
+      }
+
+      const returnFromQuery = params.get("return") || "";
+      const inviteFromQuery = params.get("invite") || "";
+      if (isAllowedReturn(returnFromQuery)) writeStored(RETURN_KEY, returnFromQuery);
+      if (inviteFromQuery) writeStored(INVITE_KEY, inviteFromQuery);
+
+      const storedReturn = readStored(RETURN_KEY);
+      const returnTo = isAllowedReturn(returnFromQuery)
+        ? returnFromQuery
+        : isAllowedReturn(storedReturn)
+          ? storedReturn
+          : DEFAULT_RETURN;
+      const invite = inviteFromQuery || readStored(INVITE_KEY);
+
       function goBack(hash) {
-        const url = new URL(allowed ? returnTo : "https://pochoclo.club/auth/complete");
+        const url = new URL(returnTo);
         url.hash = hash;
+        clearStored(RETURN_KEY);
+        clearStored(INVITE_KEY);
+        clearStored(REDIRECT_KEY);
         location.replace(url.toString());
       }
 
-      if (!allowed) {
-        fail("El destino de ingreso no es válido.");
-      } else {
-        const app = initializeApp({
-          apiKey: "AIzaSyCGYUd1YgKOI79ONOvy4nC6kgCfSHg-Fpo",
-          authDomain: "pochoclo-club.firebaseapp.com",
-          projectId: "pochoclo-club",
-          appId: "1:274140905514:web:aa9c8561f1f7d650838353",
-        });
-        const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
-        provider.setCustomParameters({ prompt: "select_account" });
+      const app = initializeApp({
+        apiKey: "AIzaSyCGYUd1YgKOI79ONOvy4nC6kgCfSHg-Fpo",
+        authDomain: "pochoclo-club.firebaseapp.com",
+        projectId: "pochoclo-club",
+        appId: "1:274140905514:web:aa9c8561f1f7d650838353",
+      });
+      const auth = getAuth(app);
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
 
-        async function finish(credential) {
-          const idToken = await credential.user.getIdToken();
-          const hash = new URLSearchParams({ idToken });
-          if (invite) hash.set("invite", invite);
-          goBack(hash.toString());
-        }
-
+      async function finish(credential) {
+        const idToken = await credential.user.getIdToken();
         try {
-          await setPersistence(auth, inMemoryPersistence);
-          const redirected = await getRedirectResult(auth);
-          if (redirected) {
-            await finish(redirected);
-          } else {
-            try {
-              const popped = await signInWithPopup(auth, provider);
-              await finish(popped);
-            } catch {
-              status.textContent = "Continuá en Google…";
-              await signInWithRedirect(auth, provider);
-            }
-          }
-        } catch (error) {
-          fail("Google no pudo completar el acceso. Volvé a pochoclo.club e intentá otra vez.");
-          console.error(error);
+          await signOut(auth);
+        } catch {
+          // continue with the token even if sign-out fails
         }
+        const hash = new URLSearchParams({ idToken });
+        if (invite) hash.set("invite", invite);
+        goBack(hash.toString());
+      }
+
+      function cameBackFromGoogle() {
+        const referrer = document.referrer || "";
+        return (
+          readStored(REDIRECT_KEY) === "1" ||
+          /accounts\.google\./i.test(referrer) ||
+          /\/__\/auth\//.test(referrer)
+        );
+      }
+
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+        const redirected = await getRedirectResult(auth);
+        if (redirected) {
+          status.textContent = "Google ya te reconoció. Volvemos al club…";
+          await finish(redirected);
+        } else if (cameBackFromGoogle()) {
+          clearStored(REDIRECT_KEY);
+          fail("Google no pudo completar el acceso. Volvé a pochoclo.club e intentá otra vez.");
+        } else {
+          status.textContent = "Continuá en Google…";
+          writeStored(REDIRECT_KEY, "1");
+          await signInWithRedirect(auth, provider);
+        }
+      } catch (error) {
+        const code = error && error.code ? ` (${error.code})` : "";
+        fail(`Google no pudo completar el acceso${code}. Volvé a pochoclo.club e intentá otra vez.`);
+        console.error(error);
       }
     </script>
   </body>
