@@ -15,7 +15,9 @@ export async function GET(request: Request) {
     (await cookies()).get(CRITIQUE_COOKIE)?.value,
     session.screeningId,
   );
-  const me = personId ? session.audience.find((row) => row.personId === personId) ?? null : null;
+  const occupant = personId
+    ? session.audience.find((row) => row.personId === personId && row.joined) ?? null
+    : null;
   return NextResponse.json({
     status: session.status,
     movieTitle: session.movieTitle,
@@ -24,7 +26,16 @@ export async function GET(request: Request) {
     occupantCount: session.occupantCount,
     joinedCount: session.joinedCount,
     roomAverage: session.roomAverage,
-    me,
+    me: occupant
+      ? {
+          personId: occupant.personId,
+          name: occupant.name,
+          joined: occupant.joined,
+          submitted: occupant.submitted,
+          average: occupant.average,
+          scores: occupant.scores,
+        }
+      : null,
     names: session.audience.map((row) => ({
       personId: row.personId,
       name: row.name,

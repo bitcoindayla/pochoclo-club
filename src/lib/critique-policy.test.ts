@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  CRITIQUE_CATEGORIES,
+  SCORE_ANCHORS,
+  SCORE_SCALE_LEGEND,
   generateCritiqueToken,
   hashCritiqueToken,
   isCritiqueToken,
+  isScoreAnchor,
   parseCritiqueScores,
   parseLegacyFilmScore,
   parseOptionalCritiqueScores,
@@ -55,5 +59,13 @@ describe("scores", () => {
 
   it("accepts legacy one-decimal scores", () => {
     expect(parseLegacyFilmScore("7,5")).toBe(7.5);
+  });
+
+  it("marks 5, 7, 8 and 10 as reference scores", () => {
+    expect(SCORE_ANCHORS.map((anchor) => anchor.score)).toEqual([5, 7, 8, 10]);
+    expect(isScoreAnchor(7)).toBe(true);
+    expect(isScoreAnchor(6)).toBe(false);
+    expect(SCORE_SCALE_LEGEND).toMatch(/5 correcto/);
+    expect(CRITIQUE_CATEGORIES.every((category) => category.hint.length > 0)).toBe(true);
   });
 });

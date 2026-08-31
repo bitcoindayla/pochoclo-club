@@ -29,7 +29,9 @@ export default async function CritiquePhonePage({
   }
 
   const personId = parseCritiqueCookie((await cookies()).get(CRITIQUE_COOKIE)?.value, session.screeningId);
-  const me = personId ? session.audience.find((row) => row.personId === personId) ?? null : null;
+  const me = personId
+    ? session.audience.find((row) => row.personId === personId && row.joined) ?? null
+    : null;
 
   return (
     <CritiquePhone
@@ -42,7 +44,16 @@ export default async function CritiquePhonePage({
         occupantCount: session.occupantCount,
         joinedCount: session.joinedCount,
         roomAverage: session.roomAverage,
-        me,
+        me: me
+          ? {
+              personId: me.personId,
+              name: me.name,
+              joined: me.joined,
+              submitted: me.submitted,
+              average: me.average,
+              scores: me.scores,
+            }
+          : null,
         names: session.audience.map((row) => ({
           personId: row.personId,
           name: row.name,

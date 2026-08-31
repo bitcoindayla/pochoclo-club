@@ -1,12 +1,25 @@
 import { createHash, randomBytes } from "node:crypto";
 
 export const CRITIQUE_CATEGORIES = [
-  { id: "fotografia", label: "Fotografía" },
-  { id: "sonido", label: "Sonido" },
-  { id: "actuacion", label: "Actuación" },
-  { id: "guion", label: "Guion" },
-  { id: "direccion", label: "Dirección" },
+  { id: "fotografia", label: "Fotografía", hint: "Luz, encuadre, textura." },
+  { id: "sonido", label: "Sonido", hint: "Música, ambiente, silencio." },
+  { id: "actuacion", label: "Actuación", hint: "Si creemos a quiénes vemos." },
+  { id: "guion", label: "Guion", hint: "Historia, diálogo, ritmo." },
+  { id: "direccion", label: "Dirección", hint: "La mirada que sostiene todo." },
 ] as const;
+
+export const SCORE_ANCHORS = [
+  { score: 5, label: "Correcto" },
+  { score: 7, label: "Bien" },
+  { score: 8, label: "Muy bien" },
+  { score: 10, label: "Excelente" },
+] as const;
+
+export const SCORE_SCALE_LEGEND = "5 correcto · 7 bien · 8 muy bien · 10 excepcional";
+
+export function isScoreAnchor(score: number) {
+  return SCORE_ANCHORS.some((anchor) => anchor.score === score);
+}
 
 export type CritiqueCategoryId = (typeof CRITIQUE_CATEGORIES)[number]["id"];
 export type CritiqueStatus = "lobby" | "scoring" | "closed";

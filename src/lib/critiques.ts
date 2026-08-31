@@ -102,6 +102,7 @@ export type CritiqueAudience = CritiqueOccupant & {
   joined: boolean;
   submitted: boolean;
   average: number | null;
+  scores: CritiqueScores | null;
 };
 
 export type CritiqueSession = {
@@ -288,6 +289,7 @@ function sessionFrom(
         joined: Boolean(row),
         submitted: Boolean(row?.submittedAt),
         average: row?.average ?? null,
+        scores: row?.scores ?? null,
       };
     }),
   };
@@ -468,26 +470,65 @@ export async function submitCritiqueScores(
       submittedAt: FieldValue.serverTimestamp(),
     });
 
-    const others = audienceQuery.docs
-      .filter((doc) => doc.id !== personId)
-      .map((doc) => doc.data() as AudienceDocument)
-      .filter((row) => row.scores && typeof row.average === "number");
-    const submitted = [
-      ...others,
-      { scores, average } as Pick<AudienceDocument, "scores" | "average">,
-    ];
-    const totals = roomAverages(
-      submitted.map((row) => row.average as number),
-      submitted.map((row) => row.scores as CritiqueScores),
-    );
-    transaction.update(critiqueReference, {
-      submittedCount: submitted.length,
-      roomAverage: totals.room,
-      categoryAverages: totals.categories,
+    const remaining = audienceQuery.docs.map((doc) => {
+      if (doc.id === personId) {
+        return { scores, average } as AudienceDocument;
+      }
+      return doc.data() as AudienceDocument;
     });
+    transaction.update(critiqueReference, liveTotals(remaining));
   });
 
   return getCritiqueSession(session.screeningId);
+}
+
+function liveTotals(rows: Array<Pick<AudienceDocument, "scores" | "average">>) {
+  const submitted = rows.filter((row) => row.scores && typeof row.average === "number");
+  const totals = roomAverages(
+    submitted.map((row) => row.average as number),
+    submitted.map((row) => row.scores as CritiqueScores),
+  );
+  return {
+    joinedCount: rows.length,
+    submittedCount: submitted.length,
+    roomAverage: totals.room,
+    categoryAverages: totals.categories,
+  };
+}
+
+export async function releaseCritiqueAudience(screeningId: string, personId: string) {
+  if (!validId(screeningId) || !validId(personId)) {
+    throw new CritiqueError("Esa persona no es válida.");
+  }
+  const session = await getCritiqueSession(screeningId);
+  if (!session) throw new CritiqueError("No hay una crítica abierta.");
+  if (session.status === "closed") throw new CritiqueError("La crítica ya se cerró.");
+  const occupant = session.audience.find((row) => row.personId === personId);
+  if (!occupant?.joined) throw new CritiqueError("Esa persona no está en la votación.");
+
+  const firestore = getAdminFirestore();
+  const critiqueReference = firestore.collection("critiques").doc(screeningId);
+  const audienceReference = critiqueReference.collection("audience").doc(personId);
+
+  await firestore.runTransaction(async (transaction) => {
+    const [critiqueSnapshot, audienceSnapshot, audienceQuery] = await Promise.all([
+      transaction.get(critiqueReference),
+      transaction.get(audienceReference),
+      transaction.get(critiqueReference.collection("audience")),
+    ]);
+    if (!critiqueSnapshot.exists) throw new CritiqueError("La crítica no está activa.");
+    const critique = critiqueSnapshot.data() as CritiqueDocument;
+    if (critique.status === "closed") throw new CritiqueError("La crítica ya se cerró.");
+    if (!audienceSnapshot.exists) throw new CritiqueError("Esa persona no está en la votación.");
+
+    transaction.delete(audienceReference);
+    const remaining = audienceQuery.docs
+      .filter((doc) => doc.id !== personId)
+      .map((doc) => doc.data() as AudienceDocument);
+    transaction.update(critiqueReference, liveTotals(remaining));
+  });
+
+  return getCritiqueSession(screeningId);
 }
 
 export async function startCritiqueScoring(screeningId: string) {

@@ -9,6 +9,7 @@ import {
   type CSSProperties,
 } from "react";
 
+import { ClubNav } from "@/components/club-nav";
 import type { MemberMovieBallot, MovieOption } from "@/lib/movie-voting";
 import { CLUB_TIME_ZONE } from "@/lib/screening-policy";
 
@@ -399,7 +400,7 @@ export function MovieBallotPanel({
   const content = (
     <>
       <div className="cinematicTopline">
-        <span className="cinematicMenu">La cartelera</span>
+        <ClubNav current="/club#cartelera" variant="cinematic" />
         <strong className="cinematicWordmark">Pochoclo <i>Club</i></strong>
         <span className="cinematicStatus">
           {canVote ? `Cierra el ${formatClose(ballot.closesAt)}` : "Votación cerrada"}
@@ -485,6 +486,7 @@ export function MovieBallotPanel({
         .filter(Boolean)
         .join(" ")}
       style={{ "--cinematic-accent": accent } as CSSProperties}
+      id="cartelera"
       aria-labelledby="cartelera-title"
       onMouseEnter={() => setIsInteracting(true)}
       onMouseLeave={() => setIsInteracting(false)}

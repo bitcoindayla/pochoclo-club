@@ -2,7 +2,13 @@
 
 import { useActionState, useEffect, useState } from "react";
 
-import { CRITIQUE_CATEGORIES, type CritiqueCategoryId } from "@/lib/critique-policy";
+import {
+  CRITIQUE_CATEGORIES,
+  SCORE_SCALE_LEGEND,
+  isScoreAnchor,
+  type CritiqueCategoryId,
+  type CritiqueScores,
+} from "@/lib/critique-policy";
 
 import { joinCritiqueAction, submitScoresAction, type PhoneCritiqueState } from "./actions";
 
@@ -16,7 +22,14 @@ type PhoneSnapshot = {
   occupantCount: number;
   joinedCount: number;
   roomAverage: number | null;
-  me: { personId: string; name: string; joined: boolean; submitted: boolean; average: number | null } | null;
+  me: {
+    personId: string;
+    name: string;
+    joined: boolean;
+    submitted: boolean;
+    average: number | null;
+    scores: CritiqueScores | null;
+  } | null;
   names: { personId: string; name: string; joined: boolean }[];
 };
 
@@ -30,7 +43,9 @@ export function CritiquePhone({
   const [data, setData] = useState(initialData);
   const [joinState, joinAction, joining] = useActionState(joinCritiqueAction, initial);
   const [scoreState, scoreAction, sending] = useActionState(submitScoresAction, initial);
-  const [scores, setScores] = useState<Partial<Record<CritiqueCategoryId, number>>>({});
+  const [scores, setScores] = useState<Partial<Record<CritiqueCategoryId, number>>>(
+    initialData.me?.scores ?? {},
+  );
 
   async function refresh() {
     const response = await fetch(`/api/critique/phone?token=${encodeURIComponent(token)}`, { cache: "no-store" });
@@ -48,6 +63,14 @@ export function CritiquePhone({
   useEffect(() => {
     if (joinState.message || scoreState.message) void refresh();
   }, [joinState.message, scoreState.message, token]);
+
+  useEffect(() => {
+    if (!data.me?.scores) return;
+    setScores((current) => {
+      const untouched = CRITIQUE_CATEGORIES.every((category) => current[category.id] == null);
+      return untouched ? data.me!.scores! : current;
+    });
+  }, [data.me]);
 
   const filled = CRITIQUE_CATEGORIES.every((category) => typeof scores[category.id] === "number");
   const average = filled
@@ -104,14 +127,17 @@ export function CritiquePhone({
         <form action={scoreAction} className="critiqueForm">
           <input name="token" type="hidden" value={token} />
           <input name="personId" type="hidden" value={data.me.personId} />
-          <p className="critiqueHint">Cinco notas, del 0 al 10. Sin texto.</p>
+          <p className="critiqueHint">
+            Cinco notas, del 0 al 10. {SCORE_SCALE_LEGEND}. El 10 se reserva.
+          </p>
           {average != null ? <p className="critiqueAverage">{average.toFixed(1)}</p> : null}
           {CRITIQUE_CATEGORIES.map((category) => (
             <fieldset className="critiqueScale" key={category.id}>
               <legend>{category.label}</legend>
+              <p className="critiqueFacetHint">{category.hint}</p>
               <div>
                 {Array.from({ length: 11 }, (_, score) => (
-                  <label key={score}>
+                  <label className={isScoreAnchor(score) ? "isAnchor" : undefined} key={score}>
                     <input
                       checked={scores[category.id] === score}
                       name={category.id}
@@ -129,6 +155,9 @@ export function CritiquePhone({
           <button className="primaryButton" disabled={sending || !filled} type="submit">
             {sending ? "Enviando…" : data.me.submitted ? "Actualizar puntaje" : "Enviar puntaje"}
           </button>
+          {data.me.submitted ? (
+            <p className="critiqueHint">Ya enviaste. Podés corregir hasta que cerremos la sala.</p>
+          ) : null}
           {scoreState.error ? <p className="formError">{scoreState.error}</p> : null}
           {scoreState.message ? <p className="formSuccess">{scoreState.message}</p> : null}
         </form>

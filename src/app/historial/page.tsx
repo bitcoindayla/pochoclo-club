@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { ClubNav } from "@/components/club-nav";
 import { requireMember } from "@/lib/authz";
 import { roundScore } from "@/lib/critique-policy";
 import { listFilmHistory } from "@/lib/critiques";
@@ -32,6 +33,7 @@ export default async function HistoryPage() {
         <div>
           <p className="kicker">El archivo</p>
           <h1>Lo que vimos</h1>
+          <ClubNav current="/historial" />
           <p className="pageIntro">
             Fecha, título, dirección, año y el puntaje de la sala. En las últimas, abrí cada
             película para ver el desglose por persona.

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { AdminNav } from "@/components/admin-nav";
+import { ClubNav } from "@/components/club-nav";
 import { SignOutButton } from "@/components/session-actions";
 import { requireMember } from "@/lib/authz";
 import { listActiveMembersForReservation } from "@/lib/members";
@@ -85,6 +86,7 @@ export default async function ClubPage() {
           <div>
             <p className="kicker">Membresía activa</p>
             <h1>Hola, {firstName}.</h1>
+            {ballot ? null : <ClubNav current="/club#sala" />}
           </div>
           <SignOutButton />
         </div>

@@ -11,6 +11,7 @@ import {
   CritiqueError,
   openCritiqueSession,
   publishOccupancyScores,
+  releaseCritiqueAudience,
   startCritiqueScoring,
 } from "@/lib/critiques";
 
@@ -67,6 +68,28 @@ export async function startScoringAction(
   } catch (error) {
     return {
       error: error instanceof CritiqueError || error instanceof Error ? error.message : "No se pudo empezar.",
+      message: null,
+    };
+  }
+}
+
+export async function releaseAudienceAction(
+  _previous: CritiqueActionState,
+  formData: FormData,
+): Promise<CritiqueActionState> {
+  await requireAdmin();
+  const screeningId = formData.get("screeningId");
+  const personId = formData.get("personId");
+  if (typeof screeningId !== "string" || typeof personId !== "string") {
+    return { error: "Esa persona no es válida.", message: null };
+  }
+  try {
+    await releaseCritiqueAudience(screeningId, personId);
+    refresh();
+    return { error: null, message: "Puede volver a votar desde el teléfono." };
+  } catch (error) {
+    return {
+      error: error instanceof CritiqueError || error instanceof Error ? error.message : "No se pudo reabrir.",
       message: null,
     };
   }
