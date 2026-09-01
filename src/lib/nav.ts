@@ -8,9 +8,9 @@ export function menuLinksFor(member: Member | null) {
   }
 
   const links = [
-    { href: "/club#cartelera", label: "Selección de la película" },
-    { href: "/club#sala", label: "Selección del asiento" },
-    { href: "/historial", label: "Historial de votaciones" },
+    { href: "/club#cartelera", label: "Votá la peli" },
+    { href: "/club#sala", label: "Elegí tu asiento" },
+    { href: "/historial", label: "Historial" },
     { href: "/club#tickets", label: "Tickets" },
   ];
   if (member.role === "admin") {

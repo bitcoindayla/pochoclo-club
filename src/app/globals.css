@@ -105,7 +105,7 @@ body:has(.critiquePhone) .siteFooter { display: none; }
   inset: 0;
   z-index: 40;
   display: grid;
-  grid-template-columns: minmax(18rem, 0.4fr) 1fr;
+  grid-template-columns: minmax(22rem, 0.36fr) 1fr;
   background: #050505;
 }
 .siteMenuPanel {
@@ -117,14 +117,14 @@ body:has(.critiquePhone) .siteFooter { display: none; }
 .siteMenuNav {
   display: grid;
   align-content: start;
-  gap: 0.15rem;
+  gap: 0.08rem;
 }
 .siteMenuNav a {
   color: var(--ink);
-  font-size: clamp(2.2rem, 5vw, 3.6rem);
+  font-size: clamp(1.7rem, 2vw, 2.25rem);
   font-weight: 800;
-  letter-spacing: -0.055em;
-  line-height: 1.05;
+  letter-spacing: -0.045em;
+  line-height: 1.18;
   text-decoration: none;
 }
 .siteMenuNav a:hover { color: rgba(244, 241, 234, 0.55); }
@@ -2011,6 +2011,14 @@ body:has(.cinematicBallot) .eyebrow {
 
 @media (max-width: 800px) {
   .siteMenu { grid-template-columns: 1fr; }
+  .siteMenuPanel { padding: 1.1rem 1.25rem 2rem; }
+  .menuClose { margin-bottom: 1.4rem; }
+  .siteMenuNav { gap: 0.12rem; }
+  .siteMenuNav a {
+    font-size: clamp(1.45rem, 6.4vw, 1.75rem);
+    line-height: 1.22;
+    letter-spacing: -0.035em;
+  }
   .siteMenuStill { display: none; }
   .landingStage { grid-template-columns: 1fr; }
   .landingStill { position: absolute; inset: 0; min-height: 100svh; }
