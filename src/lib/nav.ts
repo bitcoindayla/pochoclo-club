@@ -8,8 +8,10 @@ export function menuLinksFor(member: Member | null) {
   }
 
   const links = [
-    { href: "/club", label: "El club" },
-    { href: "/historial", label: "Historial" },
+    { href: "/club#cartelera", label: "Selección de la película" },
+    { href: "/club#sala", label: "Selección del asiento" },
+    { href: "/historial", label: "Historial de votaciones" },
+    { href: "/club#tickets", label: "Tickets" },
   ];
   if (member.role === "admin") {
     links.push(
@@ -19,7 +21,6 @@ export function menuLinksFor(member: Member | null) {
       { href: "/admin/ocupacion", label: "Sala" },
       { href: "/admin/miembros", label: "Miembros" },
       { href: "/admin/critica", label: "Crítica" },
-      { href: "/historial", label: "Historial" },
     );
   }
   return links;

@@ -9,7 +9,6 @@ import {
   type CSSProperties,
 } from "react";
 
-import { ClubNav } from "@/components/club-nav";
 import type { MemberMovieBallot, MovieOption } from "@/lib/movie-voting";
 import { CLUB_TIME_ZONE } from "@/lib/screening-policy";
 
@@ -399,20 +398,12 @@ export function MovieBallotPanel({
 
   const content = (
     <>
-      <div className="cinematicTopline">
-        <ClubNav current="/club#cartelera" variant="cinematic" />
-        <strong className="cinematicWordmark">Pochoclo <i>Club</i></strong>
-        <span className="cinematicStatus">
-          {canVote ? `Cierra el ${formatClose(ballot.closesAt)}` : "Votación cerrada"}
-        </span>
-      </div>
-
       <div className="cinematicMain">
         <div>
           <p className="cinematicInstruction">
             {canVote
-              ? "Elegí una, varias o todas las películas."
-              : "Estos fueron los títulos de la cartelera."}
+              ? `Elegí una, varias o todas las películas. Cierra el ${formatClose(ballot.closesAt)}.`
+              : "Votación cerrada. Estos fueron los títulos de la cartelera."}
             {ballot.showResults ? (
               <span className="cinematicVoteTotal">
                 {ballot.voterCount} voto{ballot.voterCount === 1 ? "" : "s"}

@@ -48,11 +48,17 @@ export function SiteMenu({
               Navegación
             </h2>
             <nav className="siteMenuNav">
-              {links.map((link) => (
-                <Link href={link.href} key={link.href} onClick={() => setOpen(false)}>
-                  {link.label}
-                </Link>
-              ))}
+              {links.map((link) =>
+                link.href.includes("#") ? (
+                  <a href={link.href} key={link.href} onClick={() => setOpen(false)}>
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link href={link.href} key={link.href} onClick={() => setOpen(false)}>
+                    {link.label}
+                  </Link>
+                ),
+              )}
             </nav>
           </div>
           <div className="siteMenuStill" aria-hidden="true">
