@@ -5,6 +5,11 @@ export const FOUNDING_MEMBER_EMAILS = [
   "pochocloclubfans@gmail.com",
 ] as const;
 
+export const FOUNDER_EMAILS = [
+  ...FOUNDING_MEMBER_EMAILS,
+  "ezekemel@gmail.com",
+] as const;
+
 export type ReputationTone = "seed" | "member" | "host" | "pillar" | "drift";
 
 export const REPUTATION_TONE_LABEL: Record<ReputationTone, string> = {
@@ -25,6 +30,7 @@ export type Reputation = {
   floor: number | null;
   stars: number;
   tone: ReputationTone;
+  founder: boolean;
 };
 
 export type ReputationNight = {
@@ -53,6 +59,12 @@ function clamp(value: number, min: number, max: number) {
 export function isFoundingEmail(email: string) {
   return FOUNDING_MEMBER_EMAILS.includes(
     email.trim().toLocaleLowerCase("en-US") as (typeof FOUNDING_MEMBER_EMAILS)[number],
+  );
+}
+
+export function isFounderEmail(email: string) {
+  return FOUNDER_EMAILS.includes(
+    email.trim().toLocaleLowerCase("en-US") as (typeof FOUNDER_EMAILS)[number],
   );
 }
 
@@ -103,6 +115,7 @@ export function guestReputationId(name: string) {
 export function buildMemberReputation({
   memberId,
   founding,
+  founder = false,
   filmCount,
   nights,
   films,
@@ -111,6 +124,7 @@ export function buildMemberReputation({
 }: {
   memberId: string;
   founding: boolean;
+  founder?: boolean;
   filmCount: number;
   nights: ReputationNight[];
   films: ReputationFilm[];
@@ -171,6 +185,7 @@ export function buildMemberReputation({
     floor,
     stars,
     tone: reputationTone({ nights: present, guests, absences, stars }),
+    founder,
   };
 }
 

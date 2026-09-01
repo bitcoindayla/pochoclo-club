@@ -91,7 +91,10 @@ export default async function MembersPage() {
                   return (
                     <tr key={member.id}>
                       <td data-label="Nombre">
-                        <strong>{member.name}</strong>
+                        <strong>
+                          {member.name}
+                          {reputation?.founder ? <span className="founderTag">Founder</span> : null}
+                        </strong>
                         <small>
                           {member.email}
                           {member.role === "admin" ? " · Admin" : ""}

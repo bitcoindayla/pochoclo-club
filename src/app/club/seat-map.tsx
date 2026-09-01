@@ -63,6 +63,7 @@ function SeatMedal({
     <div className={`seatMedal tone-${reputation?.tone ?? "seed"}`} aria-hidden="true">
       <div className="seatMedalTag">
         <strong>{name}</strong>
+        {reputation?.founder ? <span className="founderTag">Founder</span> : null}
         <span className="seatMedalScore">
           <b>{reputation ? reputation.stars : "—"}</b>
           <PopcornMark className="seatMedalPopcorn" />

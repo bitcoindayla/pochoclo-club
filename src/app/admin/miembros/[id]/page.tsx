@@ -8,6 +8,7 @@ import { attendanceForMember, sumMemberAttendance } from "@/lib/attendance-polic
 import { requireAdmin } from "@/lib/authz";
 import { listFilmHistory } from "@/lib/critiques";
 import { getMemberById, listMembers } from "@/lib/members";
+import { isFounderEmail } from "@/lib/reputation-policy";
 import { CLUB_TIME_ZONE } from "@/lib/screening-policy";
 
 import { AttendanceToggle, MemberActiveForm, MemberNameForm } from "../member-forms";
@@ -52,7 +53,10 @@ export default async function MemberDetailPage({
             ← Volver a miembros
           </Link>
           <p className="kicker">Panel administrativo</p>
-          <h1>{member.name}</h1>
+          <h1>
+            {member.name}
+            {isFounderEmail(member.email) ? <span className="founderTag">Founder</span> : null}
+          </h1>
           <p className="pageIntro">
             {member.email}
             {member.role === "admin" ? " · Administrador" : ""}

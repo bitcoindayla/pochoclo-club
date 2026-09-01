@@ -32,6 +32,7 @@ function titlesMatch(requested: string, stored: string) {
   const aliases: Record<string, string> = {
     "everyone everywhere all at once": "everything everywhere all at once",
     doogtooth: "dogtooth",
+    "berlin calling": "berlin callling",
   };
   return (aliases[left] ?? left) === right;
 }

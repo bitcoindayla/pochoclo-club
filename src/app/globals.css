@@ -1743,6 +1743,34 @@ body:has(.cinematicBallot) .eyebrow {
   background: #070707;
   transform: rotate(45deg) translateY(-0.28rem);
 }
+.founderTag {
+  display: inline-block;
+  margin-left: 0.4em;
+  padding: 0.12em 0.38em 0.08em;
+  border: 1px solid currentColor;
+  font-size: 0.48rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+  vertical-align: 0.35em;
+  opacity: 0.7;
+}
+h1 .founderTag {
+  margin-left: 0.55rem;
+  font-size: 0.55rem;
+  vertical-align: 0.55em;
+}
+.invitationTable strong .founderTag {
+  margin-left: 0.45rem;
+  vertical-align: 0.2em;
+}
+.seatMedalTag .founderTag {
+  display: block;
+  width: fit-content;
+  margin: 0.28rem 0 0;
+  vertical-align: 0;
+}
 .seatMedalTag strong {
   display: block;
   max-width: 12rem;

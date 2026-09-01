@@ -6,6 +6,7 @@ import { listMembers } from "@/lib/members";
 import {
   buildMemberReputation,
   guestReputationId,
+  isFounderEmail,
   isFoundingEmail,
   type Reputation,
 } from "@/lib/reputation-policy";
@@ -52,6 +53,7 @@ export async function listMemberReputations(): Promise<Map<string, Reputation>> 
       buildMemberReputation({
         memberId: member.id,
         founding: isFoundingEmail(member.email),
+        founder: isFounderEmail(member.email),
         filmCount: films.length,
         nights: closedNights,
         films,

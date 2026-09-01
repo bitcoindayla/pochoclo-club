@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildMemberReputation,
+  isFounderEmail,
+  isFoundingEmail,
   reputationStars,
   reputationSummary,
   reputationTone,
@@ -135,8 +137,17 @@ describe("copy", () => {
         floor: 5,
         stars: 8,
         tone: "pillar",
+        founder: false,
       }),
     ).toMatch(/12 funciones · 3 invitados · 1 ausencia · promedio 7\.4/);
+  });
+});
+
+describe("founders", () => {
+  it("tags Ezequiel as founder without counting every film", () => {
+    expect(isFounderEmail("ezekemel@gmail.com")).toBe(true);
+    expect(isFoundingEmail("ezekemel@gmail.com")).toBe(false);
+    expect(isFounderEmail("gandia.alvaro@gmail.com")).toBe(true);
   });
 });
 
