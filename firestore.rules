@@ -2,8 +2,26 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // The browser uses Firebase only for authentication. All club data goes
-    // through authorized Next.js server code using the Firebase Admin SDK.
+    // Pochoclo Club: the browser uses Firebase only for authentication.
+    // Club data goes through Next.js with the Admin SDK.
+    //
+    // Holistika Bombal: signed-in Google users read/write prefixed collections.
+    function holistikaSignedIn() {
+      return request.auth != null
+        && request.auth.token.email is string
+        && request.auth.token.email_verified == true;
+    }
+
+    match /holistika_occupancies/{id} {
+      allow read, write: if holistikaSignedIn();
+    }
+    match /holistika_quotas/{id} {
+      allow read, write: if holistikaSignedIn();
+    }
+    match /holistika_meta/{id} {
+      allow read, write: if holistikaSignedIn();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
