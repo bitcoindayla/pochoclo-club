@@ -127,7 +127,15 @@ export function ReservationTickets({
               <div className="ticketShade" />
               <div className="ticketBody">
                 <strong className="ticketBrand">Pochoclo <i>Club</i></strong>
-                <h3>{movie.title}</h3>
+                <h3
+                  style={
+                    {
+                      "--title-len": String(Math.max(movie.title.length, 7)),
+                    } as React.CSSProperties
+                  }
+                >
+                  {movie.title}
+                </h3>
                 {movie.year ? (
                   <p className="ticketMetaLine">{movie.year} · {movie.director}</p>
                 ) : null}
