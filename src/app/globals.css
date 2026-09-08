@@ -1335,20 +1335,19 @@ body:has(.cinematicBallot) .eyebrow {
 .cinematicSelectionMark {
   position: relative;
   z-index: 1;
-  width: 0.55rem;
-  height: 0.55rem;
+  width: 1.05rem;
+  height: 1.05rem;
   flex: 0 0 auto;
-  align-self: center;
-  margin-right: 0.1rem;
-  border: 1px solid currentColor;
+  align-self: flex-start;
+  margin-top: 0.78rem;
+  margin-right: 0.2rem;
+  border: 1.5px solid currentColor;
   border-radius: 50%;
-  transform: scale(0.7);
 }
 .cinematicTitles label:has(input:checked) .cinematicSelectionMark {
   border-color: var(--cinematic-accent);
   background: var(--cinematic-accent);
-  box-shadow: 0 0 0 3px rgba(255,255,255,0.16);
-  transform: scale(1);
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.16);
 }
 .cinematicVoteTrack {
   position: absolute;
@@ -2166,6 +2165,12 @@ h1 .founderTag {
   .cinematicInstruction { margin-bottom: 0.8rem; }
   .cinematicTitles { gap: 0.2rem; }
   .cinematicTitles label, .cinematicTitles button { flex-wrap: wrap; gap: 0.2rem 0.45rem; }
+  .cinematicSelectionMark {
+    width: 1.32rem;
+    height: 1.32rem;
+    margin-top: 0.72rem;
+    border-width: 2px;
+  }
   .cinematicTitleBlock { font-size: clamp(2.15rem, 11vw, 4.4rem); }
   .cinematicMovieTitle { max-width: calc(100vw - 8.2rem); }
   .cinematicTitles small { width: 100%; padding-left: 1.15rem; }
