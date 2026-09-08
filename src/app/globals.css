@@ -1270,7 +1270,7 @@ body:has(.cinematicBallot) .eyebrow {
 .cinematicMovieTitle {
   position: relative;
   z-index: 1;
-  max-width: min(80vw, calc(100% - 7.2rem));
+  max-width: min(80vw, calc(100% - 9.2rem));
   font-size: 1em;
   font-weight: 800;
   letter-spacing: -0.065em;
@@ -1285,18 +1285,20 @@ body:has(.cinematicBallot) .eyebrow {
   justify-content: space-between;
   align-items: flex-start;
   align-self: stretch;
-  min-width: 5.6rem;
-  padding: 0.12em 0 0.06em;
-  gap: 0.12rem;
+  min-width: 8.4rem;
+  padding: 0.06em 0 0.02em;
+  gap: 0.14rem;
 }
+.cinematicCredit,
 .cinematicTitles small {
   position: relative;
   z-index: 1;
-  font-size: clamp(0.58rem, 0.9vw, 0.82rem);
+  font-size: clamp(0.58rem, 0.9vw, 0.78rem);
   font-weight: 800;
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
+.cinematicCredit i,
 .cinematicTitles small i { margin-inline: 0.2rem; font-style: normal; opacity: 0.55; }
 .imdbStar {
   display: inline-flex;
@@ -2194,16 +2196,15 @@ h1 .founderTag {
     overflow-wrap: break-word;
   }
   .cinematicTitleMeta {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
     align-self: start;
     min-width: 0;
     min-height: 0;
-    padding: 0;
-    gap: 0.45rem 0.85rem;
+    padding: 0.1rem 0 0;
+    gap: 0.18rem;
   }
-  .cinematicTitles small { width: auto; padding-left: 0; }
+  .cinematicCredit, .cinematicTitles small { width: auto; padding-left: 0; }
   .cinematicVoteTrack { height: 0.82em; }
   .cinematicVoteScore b { font-size: 0.98rem; }
   .cinematicVoteScore i { font-size: 0.58rem; }

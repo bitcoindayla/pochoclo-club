@@ -197,15 +197,13 @@ function MovieTitleBlock({
       <span className={`cinematicMovieTitle${wordCount > 3 ? " isLongTitle" : " isShortTitle"}`}>
         {movie.title}
       </span>
-      {hasImdb || showResults ? (
-        <span className="cinematicTitleMeta">
-          {hasImdb ? <ImdbStar className="cinematicImdb" rating={movie.imdbRating!} /> : <span />}
-          {showResults ? <VoteScore count={votes} delay={delay} percentage={percentage} /> : null}
-        </span>
-      ) : null}
-      <small>
-        {movie.year} <i>|</i> {movie.director}
-      </small>
+      <span className="cinematicTitleMeta">
+        <small className="cinematicCredit">
+          {movie.year} <i>|</i> {movie.director}
+        </small>
+        {hasImdb ? <ImdbStar className="cinematicImdb" rating={movie.imdbRating!} /> : <span />}
+        {showResults ? <VoteScore count={votes} delay={delay} percentage={percentage} /> : <span />}
+      </span>
     </span>
   );
 }
