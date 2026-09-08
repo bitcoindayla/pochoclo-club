@@ -166,20 +166,25 @@ function MovieTitleBlock({
   votes: number;
 }) {
   const hasImdb = typeof movie.imdbRating === "number";
+  const wordCount = movie.title.trim().split(/\s+/).filter(Boolean).length;
+  const titleLen = Math.max(movie.title.replace(/\s+/g, "").length, 6);
 
   return (
     <span
       className="cinematicTitleBlock"
       style={
-        showResults
-          ? ({
-              "--vote-pct": percentage <= 0 ? "3.1rem" : `${percentage}%`,
-              "--bar-delay": `${delay}ms`,
-              "--vote-rgb": `${tone.channel}, ${tone.channel}, ${tone.channel}`,
-              "--vote-gain": String(tone.gain),
-              "--bar-noise": `${delay / 8}px ${delay / 13}px`,
-            } as CSSProperties)
-          : undefined
+        {
+          "--title-len": String(titleLen),
+          ...(showResults
+            ? {
+                "--vote-pct": percentage <= 0 ? "3.1rem" : `${percentage}%`,
+                "--bar-delay": `${delay}ms`,
+                "--vote-rgb": `${tone.channel}, ${tone.channel}, ${tone.channel}`,
+                "--vote-gain": String(tone.gain),
+                "--bar-noise": `${delay / 8}px ${delay / 13}px`,
+              }
+            : {}),
+        } as CSSProperties
       }
     >
       {showResults ? (
@@ -189,7 +194,9 @@ function MovieTitleBlock({
           </span>
         </span>
       ) : null}
-      <span className="cinematicMovieTitle">{movie.title}</span>
+      <span className={`cinematicMovieTitle${wordCount > 3 ? " isLongTitle" : " isShortTitle"}`}>
+        {movie.title}
+      </span>
       {hasImdb || showResults ? (
         <span className="cinematicTitleMeta">
           {hasImdb ? <ImdbStar className="cinematicImdb" rating={movie.imdbRating!} /> : <span />}

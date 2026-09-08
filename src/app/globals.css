@@ -1275,7 +1275,7 @@ body:has(.cinematicBallot) .eyebrow {
   font-weight: 800;
   letter-spacing: -0.065em;
   line-height: 0.92;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
 }
 .cinematicTitleMeta {
   position: relative;
@@ -2164,16 +2164,46 @@ h1 .founderTag {
   .cinematicMain { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; padding-top: 1rem; }
   .cinematicInstruction { margin-bottom: 0.8rem; }
   .cinematicTitles { gap: 0.2rem; }
-  .cinematicTitles label, .cinematicTitles button { flex-wrap: wrap; gap: 0.2rem 0.45rem; }
+  .cinematicTitles label, .cinematicTitles button {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 0.45rem 0.55rem;
+  }
   .cinematicSelectionMark {
     width: 1.32rem;
     height: 1.32rem;
-    margin-top: 0.72rem;
+    margin-top: 0.42rem;
     border-width: 2px;
   }
-  .cinematicTitleBlock { font-size: clamp(2.15rem, 11vw, 4.4rem); }
-  .cinematicMovieTitle { max-width: calc(100vw - 8.2rem); }
-  .cinematicTitles small { width: 100%; padding-left: 1.15rem; }
+  .cinematicTitleBlock {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.28rem;
+    font-size: clamp(1.7rem, 8.6vw, 2.35rem);
+  }
+  .cinematicMovieTitle {
+    max-width: 100%;
+    min-width: 0;
+  }
+  .cinematicMovieTitle.isShortTitle {
+    white-space: nowrap;
+    font-size: clamp(1.45rem, calc(108vw / var(--title-len, 10)), 2.2rem);
+  }
+  .cinematicMovieTitle.isLongTitle {
+    font-size: clamp(1.45rem, 7.2vw, 2rem);
+    overflow-wrap: break-word;
+  }
+  .cinematicTitleMeta {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    align-self: start;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    gap: 0.45rem 0.85rem;
+  }
+  .cinematicTitles small { width: auto; padding-left: 0; }
   .cinematicVoteTrack { height: 0.82em; }
   .cinematicVoteScore b { font-size: 0.98rem; }
   .cinematicVoteScore i { font-size: 0.58rem; }
