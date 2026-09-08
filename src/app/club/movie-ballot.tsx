@@ -3,7 +3,6 @@
 import {
   useActionState,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -136,12 +135,16 @@ function VoteScore({
   const votes = useCountUp(count, delay);
   const share = useCountUp(percentage, delay);
 
+  const word = count === 1 ? "voto" : "votos";
   return (
     <span
       className="cinematicVoteScore"
-      aria-label={`${count} ${count === 1 ? "voto" : "votos"}, ${percentage} por ciento`}
+      aria-label={`${count} ${word}, ${percentage} por ciento`}
     >
-      <b>{votes}</b>
+      <b>
+        {votes}
+        <em> {word}</em>
+      </b>
       <i>{share}</i>
     </span>
   );
@@ -162,35 +165,15 @@ function MovieTitleBlock({
   tone: { channel: number; gain: number };
   votes: number;
 }) {
-  const blockRef = useRef<HTMLSpanElement>(null);
-  const titleRef = useRef<HTMLSpanElement>(null);
-  const [titleClear, setTitleClear] = useState(0);
-
-  useLayoutEffect(() => {
-    if (!showResults) return;
-    const block = blockRef.current;
-    const title = titleRef.current;
-    if (!block || !title) return;
-
-    const update = () => {
-      setTitleClear(Math.ceil(title.getBoundingClientRect().width));
-    };
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(title);
-    observer.observe(block);
-    return () => observer.disconnect();
-  }, [movie.title, showResults]);
+  const hasImdb = typeof movie.imdbRating === "number";
 
   return (
     <span
       className="cinematicTitleBlock"
-      ref={blockRef}
       style={
         showResults
           ? ({
               "--vote-pct": percentage <= 0 ? "3.1rem" : `${percentage}%`,
-              "--title-clear": `${titleClear}px`,
               "--bar-delay": `${delay}ms`,
               "--vote-rgb": `${tone.channel}, ${tone.channel}, ${tone.channel}`,
               "--vote-gain": String(tone.gain),
@@ -206,11 +189,13 @@ function MovieTitleBlock({
           </span>
         </span>
       ) : null}
-      <span className="cinematicMovieTitle" ref={titleRef}>
-        {movie.title}
-      </span>
-      {typeof movie.imdbRating === "number" ? <ImdbStar className="cinematicImdb" rating={movie.imdbRating} /> : null}
-      {showResults ? <VoteScore count={votes} delay={delay} percentage={percentage} /> : null}
+      <span className="cinematicMovieTitle">{movie.title}</span>
+      {hasImdb || showResults ? (
+        <span className="cinematicTitleMeta">
+          {hasImdb ? <ImdbStar className="cinematicImdb" rating={movie.imdbRating!} /> : <span />}
+          {showResults ? <VoteScore count={votes} delay={delay} percentage={percentage} /> : null}
+        </span>
+      ) : null}
       <small>
         {movie.year} <i>|</i> {movie.director}
       </small>
