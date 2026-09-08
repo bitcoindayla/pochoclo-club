@@ -1,3 +1,4 @@
+import { parseImdbId } from "./imdb-policy";
 import { localScreeningDate } from "./screening-policy";
 
 export const MIN_MOVIE_OPTIONS = 3;
@@ -17,6 +18,8 @@ export type MovieOptionInput = {
   year: number;
   director: string;
   bio: string;
+  imdbId?: string | null;
+  imdbRating?: number | null;
   image?: MovieOptionImage | null;
 };
 
@@ -136,7 +139,18 @@ export function parseMovieBallotInput(
       360,
       true,
     );
-    options.push({ id: `movie-${index}`, title, year, director, bio });
+    const imdbRaw = textField(
+      formData,
+      `movieImdb${index}`,
+      `El IMDb de ${title}`,
+      220,
+      false,
+    );
+    const imdbId = imdbRaw ? parseImdbId(imdbRaw) : null;
+    if (imdbRaw && !imdbId) {
+      throw new MovieVotingPolicyError(`El enlace de IMDb de ${title} no es válido.`);
+    }
+    options.push({ id: `movie-${index}`, title, year, director, bio, imdbId, imdbRating: null });
   }
 
   if (options.length < MIN_MOVIE_OPTIONS || options.length > MAX_MOVIE_OPTIONS) {

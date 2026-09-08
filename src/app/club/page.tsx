@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { AdminNav } from "@/components/admin-nav";
 import { SignOutButton } from "@/components/session-actions";
 import { requireMember } from "@/lib/authz";
+import { ticketQrSvg } from "@/lib/critique-qr";
+import { imdbTitleUrl } from "@/lib/imdb-policy";
 import { listActiveMembersForReservation } from "@/lib/members";
 import {
   getLatestMovieWinner,
@@ -46,6 +48,12 @@ export default async function ClubPage() {
         )
       : [];
   const firstName = member.name.split(" ")[0];
+  const ticketMovies = await Promise.all(
+    (ballot?.options ?? []).map(async (movie) => ({
+      ...movie,
+      imdbQrSvg: movie.imdbId ? await ticketQrSvg(imdbTitleUrl(movie.imdbId)) : null,
+    })),
+  );
 
   const screeningDate = screening
     ? new Intl.DateTimeFormat("es-AR", {
@@ -139,7 +147,7 @@ export default async function ClubPage() {
             guestName={screening.guestReservation?.memberName ?? null}
             guestPlaceCode={screening.guestReservation?.placeCode ?? null}
             memberName={member.name}
-            movies={ballot?.options ?? []}
+            movies={ticketMovies}
             ownPlaceCode={screening.ownPlaceCode}
             screeningId={screening.id}
             screeningTitle={screening.title || "Próxima función"}

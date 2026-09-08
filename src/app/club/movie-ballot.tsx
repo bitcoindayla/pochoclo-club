@@ -9,6 +9,7 @@ import {
   type CSSProperties,
 } from "react";
 
+import { ImdbStar } from "@/components/imdb-star";
 import type { MemberMovieBallot, MovieOption } from "@/lib/movie-voting";
 import { CLUB_TIME_ZONE } from "@/lib/screening-policy";
 
@@ -208,6 +209,7 @@ function MovieTitleBlock({
       <span className="cinematicMovieTitle" ref={titleRef}>
         {movie.title}
       </span>
+      {typeof movie.imdbRating === "number" ? <ImdbStar className="cinematicImdb" rating={movie.imdbRating} /> : null}
       {showResults ? <VoteScore count={votes} delay={delay} percentage={percentage} /> : null}
       <small>
         {movie.year} <i>|</i> {movie.director}

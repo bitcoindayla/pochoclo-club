@@ -2,8 +2,13 @@
 
 import { useEffect, useRef } from "react";
 
+import { imdbTitleUrl } from "@/lib/imdb-policy";
 import type { MovieOptionInput } from "@/lib/movie-voting-policy";
 import { placeDisplayLabel } from "@/lib/room";
+
+export type TicketMovie = MovieOptionInput & {
+  imdbQrSvg?: string | null;
+};
 
 function movieStill(screeningId: string, movie: MovieOptionInput) {
   if (!movie.image) return null;
@@ -52,7 +57,7 @@ export function ReservationTickets({
   guestName: string | null;
   guestPlaceCode: string | null;
   memberName: string;
-  movies: MovieOptionInput[];
+  movies: TicketMovie[];
   ownPlaceCode: string;
   screeningId: string;
   screeningTitle: string;
@@ -159,8 +164,23 @@ export function ReservationTickets({
                 </dl>
               </div>
               <div className="ticketStub">
-                <FakeQr accent={accent} seed={`${screeningId}-${ownPlaceCode}-${movie.id}`} />
-                <p>Mostrá esta entrada al llegar. La película se confirma con el cierre de la votación.</p>
+                {movie.imdbQrSvg && movie.imdbId ? (
+                  <a
+                    className="ticketQr ticketImdbQr"
+                    href={imdbTitleUrl(movie.imdbId)}
+                    rel="noreferrer"
+                    target="_blank"
+                    aria-label={`IMDb: ${movie.title}`}
+                    dangerouslySetInnerHTML={{ __html: movie.imdbQrSvg }}
+                  />
+                ) : (
+                  <FakeQr accent={accent} seed={`${screeningId}-${ownPlaceCode}-${movie.id}`} />
+                )}
+                <p>
+                  {movie.imdbId
+                    ? "Escaneá para verla en IMDb. La película se confirma con el cierre de la votación."
+                    : "Mostrá esta entrada al llegar. La película se confirma con el cierre de la votación."}
+                </p>
               </div>
             </article>
           );

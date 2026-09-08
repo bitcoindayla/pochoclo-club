@@ -270,6 +270,16 @@ export function BallotForm({ ballot, screenings }: BallotFormProps) {
                 />
               </div>
               <div className="fieldGroup wideField">
+                <label htmlFor={`movieImdb${position}-${ballot?.id ?? "new"}`}>IMDb</label>
+                <input
+                  defaultValue={movie?.imdbId ? `https://www.imdb.com/title/${movie.imdbId}/` : ""}
+                  id={`movieImdb${position}-${ballot?.id ?? "new"}`}
+                  maxLength={220}
+                  name={`movieImdb${position}`}
+                  placeholder="https://www.imdb.com/title/tt1798709/"
+                />
+              </div>
+              <div className="fieldGroup wideField">
                 <label htmlFor={`movieBio${position}-${ballot?.id ?? "new"}`}>Breve sinopsis</label>
                 <textarea
                   defaultValue={movie?.bio}

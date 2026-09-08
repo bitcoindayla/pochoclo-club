@@ -2,6 +2,7 @@ import "server-only";
 
 import { Timestamp, type Transaction } from "firebase-admin/firestore";
 
+import { enrichMovieImdb } from "@/lib/imdb";
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import {
   memberCanAccessSeats,
@@ -171,6 +172,24 @@ function movieForScreening(option: MovieOption) {
   };
 }
 
+async function withImdbOptions(options: MovieOptionInput[]) {
+  return Promise.all(options.map((option) => enrichMovieImdb(option)));
+}
+
+function imdbChanged(left: MovieOptionInput[], right: MovieOptionInput[]) {
+  return left.some((option, index) => {
+    const next = right[index];
+    return option.imdbId !== next?.imdbId || option.imdbRating !== next?.imdbRating;
+  });
+}
+
+async function persistImdbOptions(ballot: MovieBallot): Promise<MovieBallot> {
+  const options = await withImdbOptions(ballot.options);
+  if (!imdbChanged(ballot.options, options)) return { ...ballot, options };
+  await getAdminFirestore().collection("movieBallots").doc(ballot.id).update({ options });
+  return { ...ballot, options };
+}
+
 function applyBallotResolution({
   transaction,
   ballotReference,
@@ -243,6 +262,8 @@ export async function createMovieBallot(
 ) {
   validateId(createdByMemberId, "El administrador no es válido.");
   validateId(screeningId, "La función no es válida.");
+  const options = await withImdbOptions(input.options);
+  const nextInput = { ...input, options };
   const firestore = getAdminFirestore();
   const ballotReference = firestore.collection("movieBallots").doc(screeningId);
   const screeningReference = firestore.collection("screenings").doc(screeningId);
@@ -267,7 +288,7 @@ export async function createMovieBallot(
     const document = newBallotDocument(
       screeningId,
       createdByMemberId,
-      input,
+      nextInput,
       Timestamp.now(),
     );
     transaction.create(ballotReference, document);
@@ -282,6 +303,8 @@ export async function updateMovieBallot(
 ) {
   validateId(updatedByMemberId, "El administrador no es válido.");
   validateId(screeningId, "La función no es válida.");
+  const options = await withImdbOptions(input.options);
+  const nextInput = { ...input, options };
   const firestore = getAdminFirestore();
   const ballotReference = firestore.collection("movieBallots").doc(screeningId);
   const screeningReference = firestore.collection("screenings").doc(screeningId);
@@ -304,10 +327,10 @@ export async function updateMovieBallot(
     const now = Timestamp.now();
     const next = {
       ...ballot,
-      options: input.options,
-      localCloseDate: input.localCloseDate,
-      localCloseTime: input.localCloseTime,
-      closesAt: Timestamp.fromDate(input.closesAt),
+      options: nextInput.options,
+      localCloseDate: nextInput.localCloseDate,
+      localCloseTime: nextInput.localCloseTime,
+      closesAt: Timestamp.fromDate(nextInput.closesAt),
       counts: Object.fromEntries(input.options.map((option) => [option.id, 0])),
       voterCount: 0,
       updatedAt: now,
@@ -647,9 +670,8 @@ export async function getMemberMovieBallot(
     ballotReference.collection("exemptions").doc(memberId).get(),
   ]);
   if (!ballotSnapshot.exists) return null;
-  const ballot = ballotFromDocument(
-    ballotSnapshot.id,
-    ballotSnapshot.data() as MovieBallotDocument,
+  const ballot = await persistImdbOptions(
+    ballotFromDocument(ballotSnapshot.id, ballotSnapshot.data() as MovieBallotDocument),
   );
   const selection = voteSnapshot.exists
     ? (voteSnapshot.data() as MovieVoteDocument).optionIds.filter((id) =>
@@ -676,9 +698,10 @@ export async function getMovieBallot(screeningId: string): Promise<MovieBallot |
   if (!validDocumentId(screeningId)) return null;
   await ensureMovieBallotClosed(screeningId);
   const snapshot = await getAdminFirestore().collection("movieBallots").doc(screeningId).get();
-  return snapshot.exists
-    ? ballotFromDocument(snapshot.id, snapshot.data() as MovieBallotDocument)
-    : null;
+  if (!snapshot.exists) return null;
+  return persistImdbOptions(
+    ballotFromDocument(snapshot.id, snapshot.data() as MovieBallotDocument),
+  );
 }
 
 export async function closeDueOpenMovieBallot() {

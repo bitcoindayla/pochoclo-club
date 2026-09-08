@@ -37,6 +37,17 @@ describe("movie ballot input", () => {
     });
   });
 
+  it("reads an IMDb title link", () => {
+    const formData = ballotForm();
+    formData.set(
+      "movieImdb1",
+      "https://www.imdb.com/es-es/title/tt1798709/?ref_=nv_sr_srsg_1_tt_6_nm_1_in_0_q_her",
+    );
+    expect(
+      parseMovieBallotInput(formData, new Date("2026-08-10T12:00:00Z")).options[0],
+    ).toMatchObject({ imdbId: "tt1798709" });
+  });
+
   it("rejects repeated or incomplete movies", () => {
     const repeated = ballotForm();
     repeated.set("movieTitle3", "  pelicula 1 ");
