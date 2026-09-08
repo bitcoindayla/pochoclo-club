@@ -50,7 +50,6 @@ export default async function Home() {
       <aside className="landingStill" aria-hidden={visual ? undefined : true}>
         {visual ? (
           <picture>
-            <source media="(max-width: 800px)" srcSet={visual.portraitUrl} />
             <img alt="" src={visual.landscapeUrl} />
           </picture>
         ) : (

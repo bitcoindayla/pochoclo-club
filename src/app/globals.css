@@ -275,6 +275,7 @@ body:has(.critiquePhone) .siteFooter { display: none; }
   height: 100%;
   display: block;
   object-fit: cover;
+  object-position: center;
 }
 .landingFallback {
   width: 100%;
@@ -2094,6 +2095,7 @@ h1 .founderTag {
   .siteMenuStill { display: none; }
   .landingStage { grid-template-columns: 1fr; }
   .landingStill { position: absolute; inset: 0; min-height: 100svh; }
+  .landingStill img { object-position: 88% 28%; }
   .landingPanel {
     position: relative;
     z-index: 1;
