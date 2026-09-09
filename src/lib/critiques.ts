@@ -23,6 +23,7 @@ import {
   attendanceCounts,
   parseAttendanceStatus,
   snapshotAttendance,
+  upsertAttendance,
   type AttendanceRecord,
   AttendanceError,
 } from "@/lib/attendance-policy";
@@ -705,6 +706,7 @@ export async function updateFilmAttendance(
   filmId: string,
   personId: string,
   status: unknown,
+  person?: { name: string; memberId: string },
 ) {
   if (!validId(filmId) || !validId(personId)) {
     throw new CritiqueError("La asistencia no es válida.");
@@ -717,7 +719,23 @@ export async function updateFilmAttendance(
       const snapshot = await transaction.get(reference);
       if (!snapshot.exists) throw new CritiqueError("No encontramos esa película.");
       const data = snapshot.data() as FilmHistoryDocument;
-      const attendees = applyAttendanceStatus(readAttendees(data), personId, parsed);
+      const current = readAttendees(data);
+      const attendees =
+        person && person.memberId === personId
+          ? upsertAttendance(
+              current,
+              {
+                personId,
+                name: person.name,
+                kind: "self",
+                memberId: person.memberId,
+                hostMemberId: null,
+                hostName: null,
+                placeCode: "",
+              },
+              parsed,
+            )
+          : applyAttendanceStatus(current, personId, parsed);
       const counts = attendanceCounts(attendees);
       transaction.update(reference, {
         attendees,

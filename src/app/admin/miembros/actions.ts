@@ -4,7 +4,12 @@ import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/authz";
 import { CritiqueError, updateFilmAttendance } from "@/lib/critiques";
-import { MemberAdminError, setMemberActive, updateMemberName } from "@/lib/members";
+import {
+  MemberAdminError,
+  getMemberById,
+  setMemberActive,
+  updateMemberName,
+} from "@/lib/members";
 
 export type MemberActionState = {
   error: string | null;
@@ -68,12 +73,21 @@ export async function updateAttendanceAction(
   const filmId = formData.get("filmId");
   const personId = formData.get("personId");
   const memberId = formData.get("memberId");
-  if (typeof filmId !== "string" || typeof personId !== "string") {
+  if (typeof filmId !== "string" || typeof personId !== "string" || typeof memberId !== "string") {
     return { error: "La asistencia no es válida.", message: null };
   }
   try {
-    await updateFilmAttendance(filmId, personId, formData.get("status"));
-    refreshMembers(typeof memberId === "string" ? memberId : undefined);
+    const member = await getMemberById(memberId);
+    if (!member) {
+      return { error: "Esa persona no es válida.", message: null };
+    }
+    await updateFilmAttendance(
+      filmId,
+      personId,
+      formData.get("status"),
+      personId === member.id ? { name: member.name, memberId: member.id } : undefined,
+    );
+    refreshMembers(memberId);
     return { error: null, message: "Asistencia actualizada." };
   } catch (error) {
     return {

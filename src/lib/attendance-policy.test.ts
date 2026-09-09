@@ -3,9 +3,11 @@ import { describe, expect, it } from "vitest";
 import {
   applyAttendanceStatus,
   attendanceForMember,
+  catalogForMember,
   presentAttendees,
   snapshotAttendance,
   sumMemberAttendance,
+  upsertAttendance,
 } from "./attendance-policy";
 
 const scores = {
@@ -95,6 +97,26 @@ describe("applyAttendanceStatus", () => {
   });
 });
 
+describe("upsertAttendance", () => {
+  it("adds a member who was not on the film", () => {
+    const next = upsertAttendance([], host, "presente");
+    expect(next).toEqual([
+      {
+        ...host,
+        status: "presente",
+        scores: null,
+        average: null,
+      },
+    ]);
+  });
+
+  it("updates status when the person is already listed", () => {
+    const next = upsertAttendance(snapshotAttendance([host], []), host, "presente");
+    expect(next).toHaveLength(1);
+    expect(next[0]?.status).toBe("presente");
+  });
+});
+
 describe("member views", () => {
   const films = [
     {
@@ -118,6 +140,26 @@ describe("member views", () => {
     const [night] = attendanceForMember(films, "host-1");
     expect(night?.own?.status).toBe("presente");
     expect(night?.guests.map((row) => row.name)).toEqual(["Mara"]);
+  });
+
+  it("lists every film so archive nights can be marked later", () => {
+    const catalog = catalogForMember(
+      [
+        ...films,
+        {
+          id: "film-2",
+          watchedAt: new Date("2026-07-12T15:00:00.000Z"),
+          title: "Titane",
+          year: 2021,
+          attendees: [],
+        },
+      ],
+      "host-1",
+    );
+    expect(catalog.map((night) => [night.title, night.own?.status ?? null])).toEqual([
+      ["The Invite", "presente"],
+      ["Titane", null],
+    ]);
   });
 
   it("lists only present people for the public score breakdown", () => {

@@ -74,6 +74,28 @@ export function applyAttendanceStatus(
   return next;
 }
 
+export function upsertAttendance(
+  records: AttendanceRecord[],
+  person: OccupantSnapshot,
+  status: AttendanceStatus,
+): AttendanceRecord[] {
+  const index = records.findIndex((record) => record.personId === person.personId);
+  if (index >= 0) {
+    return records.map((record, current) =>
+      current === index ? { ...record, status } : record,
+    );
+  }
+  return [
+    ...records,
+    {
+      ...person,
+      status,
+      scores: null,
+      average: null,
+    },
+  ].sort(byName);
+}
+
 export function presentAttendees(records: AttendanceRecord[]) {
   return records.filter((record) => record.status === "presente");
 }
@@ -110,6 +132,32 @@ export function sumMemberAttendance(
   );
 }
 
+export function catalogForMember(
+  films: Array<{
+    id: string;
+    watchedAt: Date;
+    title: string;
+    year: number;
+    attendees: AttendanceRecord[];
+  }>,
+  memberId: string,
+) {
+  return films.map((film) => {
+    const own = film.attendees.find((record) => record.memberId === memberId) ?? null;
+    const guests = film.attendees
+      .filter((record) => record.hostMemberId === memberId && record.personId !== own?.personId)
+      .sort(byName);
+    return {
+      filmId: film.id,
+      watchedAt: film.watchedAt,
+      title: film.title,
+      year: film.year,
+      own,
+      guests,
+    };
+  });
+}
+
 export function attendanceForMember(
   films: Array<{
     id: string;
@@ -120,21 +168,7 @@ export function attendanceForMember(
   }>,
   memberId: string,
 ) {
-  return films.flatMap((film) => {
-    const own = film.attendees.find((record) => record.memberId === memberId) ?? null;
-    const guests = film.attendees
-      .filter((record) => record.hostMemberId === memberId && record.personId !== own?.personId)
-      .sort(byName);
-    if (!own && guests.length === 0) return [];
-    return [
-      {
-        filmId: film.id,
-        watchedAt: film.watchedAt,
-        title: film.title,
-        year: film.year,
-        own,
-        guests,
-      },
-    ];
-  });
+  return catalogForMember(films, memberId).filter(
+    (night) => night.own || night.guests.length > 0,
+  );
 }

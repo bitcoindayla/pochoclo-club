@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 
 import { AdminNav } from "@/components/admin-nav";
 import { SignOutButton } from "@/components/session-actions";
-import { attendanceForMember, sumMemberAttendance } from "@/lib/attendance-policy";
+import { catalogForMember, sumMemberAttendance } from "@/lib/attendance-policy";
 import { requireAdmin } from "@/lib/authz";
 import { listFilmHistory } from "@/lib/critiques";
 import { getMemberById, listMembers } from "@/lib/members";
@@ -38,7 +38,7 @@ export default async function MemberDetailPage({
   ]);
   if (!member) notFound();
 
-  const nights = attendanceForMember(history, member.id);
+  const nights = catalogForMember(history, member.id);
   const counts = sumMemberAttendance(history, member.id);
   const lastAdmin =
     member.role === "admin" &&
@@ -101,12 +101,13 @@ export default async function MemberDetailPage({
           </span>
         </div>
         <p className="pageIntro">
-          El archivo se carga a mano. Desde la próxima, al cerrar la crítica: ocupó lugar y
-          puntuó, presente; reservó y no puntuó, ausente. Sesión de {admin.name}.
+          Marcá presente en cada película que esta persona vio. Las que no toques quedan sin
+          archivo. Desde la próxima, al cerrar la crítica: ocupó lugar y puntuó, presente;
+          reservó y no puntuó, ausente. Sesión de {admin.name}.
         </p>
 
-        {nights.length === 0 ? (
-          <p className="emptyList">Todavía no hay funciones con crítica cerrada para esta persona.</p>
+        {history.length === 0 ? (
+          <p className="emptyList">Todavía no hay películas en el historial.</p>
         ) : (
           <div className="tableScroll">
             <table className="invitationTable">
@@ -123,14 +124,21 @@ export default async function MemberDetailPage({
               <tbody>
                 {nights.flatMap((night) => {
                   const rows = [
-                    ...(night.own ? [{ record: night.own, label: night.own.name }] : []),
+                    {
+                      personId: night.own?.personId ?? member.id,
+                      label: night.own?.name ?? member.name,
+                      status: night.own?.status ?? null,
+                      average: night.own?.average ?? null,
+                    },
                     ...night.guests.map((guest) => ({
-                      record: guest,
+                      personId: guest.personId,
                       label: `+1 ${guest.name}`,
+                      status: guest.status,
+                      average: guest.average,
                     })),
                   ];
                   return rows.map((row, index) => (
-                    <tr key={`${night.filmId}-${row.record.personId}`}>
+                    <tr key={`${night.filmId}-${row.personId}`}>
                       <td data-label="Función">
                         {index === 0 ? (
                           <>
@@ -146,20 +154,26 @@ export default async function MemberDetailPage({
                       <td data-label="Quién">{row.label}</td>
                       <td data-label="Estado">
                         <span
-                          className={`status ${row.record.status === "presente" ? "status-available" : "status-revoked"}`}
+                          className={`status ${
+                            row.status === "presente"
+                              ? "status-available"
+                              : row.status === "ausente"
+                                ? "status-revoked"
+                                : ""
+                          }`}
                         >
-                          {row.record.status}
+                          {row.status ?? "sin marcar"}
                         </span>
-                        {row.record.average != null ? (
-                          <small>{row.record.average.toFixed(1)}</small>
+                        {row.average != null ? (
+                          <small>{row.average.toFixed(1)}</small>
                         ) : null}
                       </td>
                       <td data-label="Acciones">
                         <AttendanceToggle
                           filmId={night.filmId}
                           memberId={member.id}
-                          personId={row.record.personId}
-                          status={row.record.status}
+                          personId={row.personId}
+                          status={row.status}
                         />
                       </td>
                     </tr>

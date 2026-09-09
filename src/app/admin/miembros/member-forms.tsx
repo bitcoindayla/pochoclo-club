@@ -72,17 +72,18 @@ export function AttendanceToggle({
   filmId: string;
   personId: string;
   memberId: string;
-  status: "presente" | "ausente";
+  status: "presente" | "ausente" | null;
 }) {
   const [state, action, pending] = useActionState(updateAttendanceAction, initial);
+  const next = status === "presente" ? "ausente" : "presente";
   return (
     <form action={action} className="compactActions">
       <input name="filmId" type="hidden" value={filmId} />
       <input name="personId" type="hidden" value={personId} />
       <input name="memberId" type="hidden" value={memberId} />
-      <input name="status" type="hidden" value={status === "presente" ? "ausente" : "presente"} />
+      <input name="status" type="hidden" value={next} />
       <button className="smallButton" disabled={pending} type="submit">
-        {pending ? "…" : status === "presente" ? "Marcar ausente" : "Marcar presente"}
+        {pending ? "…" : next === "presente" ? "Marcar presente" : "Marcar ausente"}
       </button>
       <Feedback state={state} />
     </form>
