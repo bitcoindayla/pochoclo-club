@@ -9,7 +9,7 @@ import { getOpenScreeningForMember } from "@/lib/screenings";
 
 import { CritiqueBoard } from "../board";
 
-export const metadata: Metadata = { title: "Sala de crítica" };
+export const metadata: Metadata = { title: "Proyección" };
 
 async function publicOrigin() {
   const requestHeaders = await headers();
@@ -19,7 +19,7 @@ async function publicOrigin() {
   return `${proto}://${host}`;
 }
 
-export default async function CritiqueSalaPage() {
+export default async function CritiqueProjectionPage() {
   const admin = await requireAdmin();
   const screening = await getOpenScreeningForMember(admin.id);
   if (!screening) redirect("/admin/critica");
@@ -30,13 +30,11 @@ export default async function CritiqueSalaPage() {
   const qrSvg = await critiqueQrSvg(scoreUrl);
 
   return (
-    <>
-      <p className="critiqueControlBar">
-        <a href="/admin/critica/proyeccion" target="_blank" rel="noreferrer">
-          Abrir proyección en la tele
-        </a>
-      </p>
-      <CritiqueBoard initialSession={session} qrSvg={qrSvg} scoreUrl={scoreUrl} />
-    </>
+    <CritiqueBoard
+      initialSession={session}
+      projection
+      qrSvg={qrSvg}
+      scoreUrl={scoreUrl}
+    />
   );
 }

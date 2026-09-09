@@ -44,6 +44,7 @@ function FakeQr({ seed, accent }: { seed: string; accent: string }) {
 
 export function ReservationTickets({
   dateLabel,
+  decided = false,
   guestName,
   guestPlaceCode,
   memberName,
@@ -54,6 +55,7 @@ export function ReservationTickets({
   timeLabel,
 }: {
   dateLabel: string;
+  decided?: boolean;
   guestName: string | null;
   guestPlaceCode: string | null;
   memberName: string;
@@ -108,13 +110,17 @@ export function ReservationTickets({
 
   return (
     <section className="ticketStage" id="tickets">
-      <p className="kicker">Tus entradas</p>
-      <h2>Guardalas. La ganadora se decide entre estas.</h2>
+      <p className="kicker">{decided ? "Tu entrada" : "Tus entradas"}</p>
+      <h2>
+        {decided
+          ? "Esta es la peli de este domingo."
+          : "Guardalas. La ganadora se decide entre estas."}
+      </h2>
       <p className="ticketStageCopy">
         {memberName.split(" ")[0]}, {seats}
         {guestName ? ` · +1 ${guestName}` : ""}. Mendoza.
       </p>
-      <div className="ticketDeck" ref={deckRef}>
+      <div className={cards.length === 1 ? "ticketDeck isSingle" : "ticketDeck"} ref={deckRef}>
         {cards.map((movie, index) => {
           const accent = movie.image?.accent || accents[index % accents.length];
           const still = movieStill(screeningId, movie);
@@ -177,9 +183,13 @@ export function ReservationTickets({
                   <FakeQr accent={accent} seed={`${screeningId}-${ownPlaceCode}-${movie.id}`} />
                 )}
                 <p>
-                  {movie.imdbId
-                    ? "Escaneá para verla en IMDb. La película se confirma con el cierre de la votación."
-                    : "Mostrá esta entrada al llegar. La película se confirma con el cierre de la votación."}
+                  {decided
+                    ? movie.imdbId
+                      ? "Mostrá esta entrada al llegar. El QR abre la ficha en IMDb."
+                      : "Mostrá esta entrada al llegar."
+                    : movie.imdbId
+                      ? "Escaneá para verla en IMDb. La película se confirma con el cierre de la votación."
+                      : "Mostrá esta entrada al llegar. La película se confirma con el cierre de la votación."}
                 </p>
               </div>
             </article>

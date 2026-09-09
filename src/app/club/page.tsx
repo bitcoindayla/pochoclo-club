@@ -48,8 +48,12 @@ export default async function ClubPage() {
         )
       : [];
   const firstName = member.name.split(" ")[0];
+  const winnerMovie = ballot?.winnerOptionId
+    ? ballot.options.find((option) => option.id === ballot.winnerOptionId) ?? null
+    : null;
+  const ticketSource = winnerMovie ? [winnerMovie] : (ballot?.options ?? []);
   const ticketMovies = await Promise.all(
-    (ballot?.options ?? []).map(async (movie) => ({
+    ticketSource.map(async (movie) => ({
       ...movie,
       imdbQrSvg: movie.imdbId ? await ticketQrSvg(imdbTitleUrl(movie.imdbId)) : null,
     })),
@@ -147,6 +151,7 @@ export default async function ClubPage() {
             guestName={screening.guestReservation?.memberName ?? null}
             guestPlaceCode={screening.guestReservation?.placeCode ?? null}
             memberName={member.name}
+            decided={Boolean(winnerMovie)}
             movies={ticketMovies}
             ownPlaceCode={screening.ownPlaceCode}
             screeningId={screening.id}

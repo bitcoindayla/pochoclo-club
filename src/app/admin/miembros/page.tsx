@@ -98,6 +98,11 @@ export default async function MembersPage() {
                         <small>
                           {member.email}
                           {member.role === "admin" ? " · Admin" : ""}
+                          {reputation
+                            ? reputation.nights > 0
+                              ? ` · ${reputation.nights} funciones`
+                              : " · Sin archivo"
+                            : ""}
                         </small>
                       </td>
                       <td data-label="Estado">

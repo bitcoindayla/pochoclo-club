@@ -20,10 +20,12 @@ const initial: CritiqueActionState = { error: null, message: null };
 
 export function CritiqueBoard({
   initialSession,
+  projection = false,
   qrSvg,
   scoreUrl,
 }: {
   initialSession: CritiqueSession;
+  projection?: boolean;
   qrSvg: string;
   scoreUrl: string;
 }) {
@@ -51,7 +53,7 @@ export function CritiqueBoard({
   const canRelease = session.status !== "closed";
 
   return (
-    <section className="critiqueBoard">
+    <section className={projection ? "critiqueBoard isProjection" : "critiqueBoard"}>
       <p className="kicker">La crítica</p>
       <h1>
         {session.movieTitle}
@@ -74,23 +76,27 @@ export function CritiqueBoard({
             </p>
             <AudienceList
               action={releaseAction}
-              canRelease={canRelease}
+              canRelease={canRelease && !projection}
               pending={releasing}
               screeningId={session.screeningId}
               waiting={waiting}
               ready={ready}
               submitted={submitted}
             />
-            <form action={startAction}>
-              <input name="screeningId" type="hidden" value={session.screeningId} />
-              <button className="primaryButton" disabled={starting || session.joinedCount === 0} type="submit">
-                {starting ? "Abriendo…" : "Empezar puntuación"}
-              </button>
-            </form>
-            {startState.error ? <p className="formError">{startState.error}</p> : null}
-            {releaseState.error ? <p className="formError">{releaseState.error}</p> : null}
-            {releaseState.message ? <p className="formSuccess">{releaseState.message}</p> : null}
-            <p className="critiqueUrl">{scoreUrl}</p>
+            {projection ? null : (
+              <>
+                <form action={startAction}>
+                  <input name="screeningId" type="hidden" value={session.screeningId} />
+                  <button className="primaryButton" disabled={starting || session.joinedCount === 0} type="submit">
+                    {starting ? "Abriendo…" : "Empezar puntuación"}
+                  </button>
+                </form>
+                {startState.error ? <p className="formError">{startState.error}</p> : null}
+                {releaseState.error ? <p className="formError">{releaseState.error}</p> : null}
+                {releaseState.message ? <p className="formSuccess">{releaseState.message}</p> : null}
+                <p className="critiqueUrl">{scoreUrl}</p>
+              </>
+            )}
           </div>
         </div>
       ) : (
@@ -143,14 +149,14 @@ export function CritiqueBoard({
           )}
           <AudienceList
             action={releaseAction}
-            canRelease={canRelease}
+            canRelease={canRelease && !projection}
             pending={releasing}
             screeningId={session.screeningId}
             waiting={waiting}
             ready={ready}
             submitted={submitted}
           />
-          {session.status === "scoring" ? (
+          {projection ? null : session.status === "scoring" ? (
             <form action={closeAction}>
               <input name="screeningId" type="hidden" value={session.screeningId} />
               <button className="primaryButton" disabled={closing || session.submittedCount === 0} type="submit">
@@ -162,9 +168,13 @@ export function CritiqueBoard({
               Ver historial
             </a>
           )}
-          {closeState.error ? <p className="formError">{closeState.error}</p> : null}
-          {releaseState.error ? <p className="formError">{releaseState.error}</p> : null}
-          {releaseState.message ? <p className="formSuccess">{releaseState.message}</p> : null}
+          {projection ? null : (
+            <>
+              {closeState.error ? <p className="formError">{closeState.error}</p> : null}
+              {releaseState.error ? <p className="formError">{releaseState.error}</p> : null}
+              {releaseState.message ? <p className="formSuccess">{releaseState.message}</p> : null}
+            </>
+          )}
         </div>
       )}
     </section>

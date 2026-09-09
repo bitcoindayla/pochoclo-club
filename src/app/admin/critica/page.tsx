@@ -76,9 +76,14 @@ export default async function CritiqueAdminPage() {
               <p>
                 {session.movieTitle} · {session.joinedCount}/{session.occupantCount} en la sala
               </p>
-              <Link className="primaryButton" href="/admin/critica/sala">
-                Abrir pantalla
-              </Link>
+              <div className="buttonRow">
+                <Link className="primaryButton" href="/admin/critica/sala">
+                  Control
+                </Link>
+                <Link className="secondaryButton" href="/admin/critica/proyeccion" target="_blank">
+                  Proyectar
+                </Link>
+              </div>
             </div>
           ) : screening.occupancy.length === 0 ? (
             <p>No hay nadie sentado todavía.</p>
