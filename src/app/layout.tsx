@@ -16,11 +16,21 @@ const archivo = Archivo({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://pochoclo.club"),
   title: {
     default: "Pochoclo Club",
     template: "%s · Pochoclo Club",
   },
   description: "Reservas privadas para las funciones de Pochoclo Club.",
+  applicationName: "Pochoclo Club",
+  openGraph: {
+    type: "website",
+    locale: "es_AR",
+    siteName: "Pochoclo Club",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default async function RootLayout({
