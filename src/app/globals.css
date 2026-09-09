@@ -1304,15 +1304,22 @@ body:has(.cinematicBallot) .eyebrow {
 .imdbStar {
   display: inline-flex;
   align-items: center;
-  gap: 0.28rem;
+  gap: 0.32rem;
   color: #f5c518;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.03em;
   line-height: 1;
 }
-.imdbStar svg {
-  width: 0.9em;
-  height: 0.9em;
+.imdbLogo {
+  width: 1.85em;
+  height: 0.85em;
+  flex: 0 0 auto;
+  display: block;
+  filter: drop-shadow(0 1px 6px rgba(0,0,0,0.35));
+}
+.imdbStarMark {
+  width: 0.82em;
+  height: 0.82em;
   flex: 0 0 auto;
   fill: currentColor;
 }
