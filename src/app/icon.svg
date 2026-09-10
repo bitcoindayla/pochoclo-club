@@ -1,12 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <rect width="32" height="32" fill="#fff"/>
-  <g fill="#111">
-    <rect x="1.2" y="9.2" width="14.2" height="12.4" rx="2.4"/>
-    <rect x="16.6" y="9.2" width="14.2" height="12.4" rx="2.4"/>
-    <rect x="13.4" y="13.1" width="5.2" height="3.2" rx="1.2"/>
+  <g transform="translate(16 16.4) scale(1.12 .9) skewX(-7) skewY(-11) translate(-16 -16)">
+    <g fill="#111">
+      <rect x="1.2" y="9.2" width="14.2" height="12.4" rx="2.4"/>
+      <rect x="16.6" y="9.2" width="14.2" height="12.4" rx="2.4"/>
+      <rect x="13.4" y="13.1" width="5.2" height="3.2" rx="1.2"/>
+    </g>
+    <rect x="2.9" y="10.9" width="10.8" height="9" rx="1.5" fill="#e31c4a"/>
+    <rect x="18.3" y="10.9" width="10.8" height="9" rx="1.5" fill="#2b6cff"/>
+    <circle cx="8.3" cy="15.4" r="1.55" fill="#b41438"/>
+    <circle cx="23.7" cy="15.4" r="1.55" fill="#1a4ec4"/>
   </g>
-  <rect x="2.9" y="10.9" width="10.8" height="9" rx="1.5" fill="#e31c4a"/>
-  <rect x="18.3" y="10.9" width="10.8" height="9" rx="1.5" fill="#2b6cff"/>
-  <circle cx="8.3" cy="15.4" r="1.55" fill="#b41438"/>
-  <circle cx="23.7" cy="15.4" r="1.55" fill="#1a4ec4"/>
 </svg>
