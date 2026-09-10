@@ -1,14 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" fill="#fff"/>
-  <g transform="translate(16 16.4) scale(1.12 .9) skewX(-7) skewY(-11) translate(-16 -16)">
-    <g fill="#111">
-      <rect x="1.2" y="9.2" width="14.2" height="12.4" rx="2.4"/>
-      <rect x="16.6" y="9.2" width="14.2" height="12.4" rx="2.4"/>
-      <rect x="13.4" y="13.1" width="5.2" height="3.2" rx="1.2"/>
-    </g>
-    <rect x="2.9" y="10.9" width="10.8" height="9" rx="1.5" fill="#e31c4a"/>
-    <rect x="18.3" y="10.9" width="10.8" height="9" rx="1.5" fill="#2b6cff"/>
-    <circle cx="8.3" cy="15.4" r="1.55" fill="#b41438"/>
-    <circle cx="23.7" cy="15.4" r="1.55" fill="#1a4ec4"/>
-  </g>
+  <rect width="32" height="32" fill="#ff5538"/>
+  <path fill="#f4f1ea" d="M6.54 26.88V3.84H19.21Q21.55 3.84 23.21 4.79Q24.87 5.74 25.77 7.44Q26.66 9.14 26.66 11.43Q26.66 13.75 25.74 15.48Q24.83 17.2 23.14 18.15Q21.44 19.1 19.1 19.1H12.56V26.88ZM12.56 14.46H17.69Q19.09 14.46 19.83 13.68Q20.57 12.9 20.57 11.47Q20.57 10.5 20.25 9.85Q19.93 9.2 19.3 8.85Q18.66 8.51 17.69 8.51H12.56Z"/>
 </svg>
