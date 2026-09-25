@@ -13,13 +13,16 @@ service cloud.firestore {
     }
 
     match /holistika_occupancies/{id} {
-      allow read, write: if holistikaSignedIn();
+      allow read: if true;
+      allow write: if holistikaSignedIn();
     }
     match /holistika_quotas/{id} {
-      allow read, write: if holistikaSignedIn();
+      allow read: if true;
+      allow write: if holistikaSignedIn();
     }
     match /holistika_meta/{id} {
-      allow read, write: if holistikaSignedIn();
+      allow read: if true;
+      allow write: if holistikaSignedIn();
     }
 
     match /{document=**} {
