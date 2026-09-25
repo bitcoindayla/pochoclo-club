@@ -26,6 +26,7 @@ export type Member = {
 };
 
 export type MemberAdminItem = Member & {
+  pendingFirstLogin: boolean;
   createdAt: Date;
   lastSignedInAt: Date | null;
   archiveNights: number;
@@ -35,6 +36,8 @@ export type MemberAdminItem = Member & {
 export { MemberAdminError };
 
 type MemberDocument = {
+  authUid?: string | null;
+  createdByMemberId?: string;
   email: string;
   name: string;
   imageUrl: string | null;
@@ -44,7 +47,7 @@ type MemberDocument = {
   archiveGuests?: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;
-  lastSignedInAt: Timestamp;
+  lastSignedInAt: Timestamp | null;
 };
 
 export type FirebaseIdentity = {
@@ -89,7 +92,7 @@ function displayName(identity: FirebaseIdentity) {
   return identity.name?.trim() || identity.email.split("@")[0];
 }
 
-function emailLockId(email: string) {
+export function memberEmailLockId(email: string) {
   return createHash("sha256").update(email).digest("hex");
 }
 
@@ -104,12 +107,14 @@ export async function authorizeFirebaseIdentity(
     : null;
 
   const memberReference = firestore.collection("members").doc(identity.uid);
-  const emailReference = firestore.collection("memberEmails").doc(emailLockId(email));
+  const emailReference = firestore.collection("memberEmails").doc(memberEmailLockId(email));
+  const identityReference = firestore.collection("memberIdentities").doc(identity.uid);
 
   return firestore.runTransaction(async (transaction) => {
-    const [memberSnapshot, emailSnapshot] = await Promise.all([
+    const [memberSnapshot, emailSnapshot, identitySnapshot] = await Promise.all([
       transaction.get(memberReference),
       transaction.get(emailReference),
+      transaction.get(identityReference),
     ]);
 
     if (memberSnapshot.exists) {
@@ -130,7 +135,28 @@ export async function authorizeFirebaseIdentity(
       });
     }
 
-    if (emailSnapshot.exists) throw new MembershipError("account-conflict");
+    if (emailSnapshot.exists) {
+      const memberId = emailSnapshot.data()?.memberId;
+      if (typeof memberId !== "string" || !memberId || memberId.includes("/")) {
+        throw new MembershipError("account-conflict");
+      }
+      const linkedReference = firestore.collection("members").doc(memberId);
+      const linkedSnapshot = await transaction.get(linkedReference);
+      const linked = linkedSnapshot.exists ? linkedSnapshot.data() as MemberDocument : null;
+      if (!linked || !linked.createdByMemberId || normalizeEmail(linked.email) !== email ||
+        (linked.authUid !== null && linked.authUid !== identity.uid) ||
+        (identitySnapshot.exists && identitySnapshot.data()?.memberId !== memberId)) {
+        throw new MembershipError("account-conflict");
+      }
+      if (!linked.active) throw new MembershipError("inactive-member");
+      transaction.update(linkedReference, {
+        authUid: identity.uid, imageUrl: identity.imageUrl,
+        updatedAt: FieldValue.serverTimestamp(), lastSignedInAt: FieldValue.serverTimestamp(),
+      });
+      transaction.set(identityReference, { memberId, linkedAt: identitySnapshot.data()?.linkedAt ?? Timestamp.now() });
+      return toMember(memberId, { ...linked, imageUrl: identity.imageUrl });
+    }
+    if (identitySnapshot.exists) throw new MembershipError("account-conflict");
 
     const isInitialAdmin = initialAdminEmail === email;
     let invitationReference: FirebaseFirestore.DocumentReference | null = null;
@@ -191,9 +217,22 @@ export async function getMemberById(id: string) {
   return snapshot.exists ? toMember(snapshot.id, snapshot.data() as MemberDocument) : null;
 }
 
+export async function getMemberByFirebaseUid(uid: string) {
+  const existing = await getMemberById(uid);
+  if (existing) return existing;
+  const firestore = getAdminFirestore();
+  const identity = await firestore.collection("memberIdentities").doc(uid).get();
+  const memberId = identity.data()?.memberId;
+  if (typeof memberId !== "string" || !memberId || memberId.includes("/")) return null;
+  const snapshot = await firestore.collection("members").doc(memberId).get();
+  if (!snapshot.exists || snapshot.data()?.authUid !== uid) return null;
+  return toMember(memberId, snapshot.data() as MemberDocument);
+}
+
 function toAdminItem(id: string, document: MemberDocument): MemberAdminItem {
   return {
     ...toMember(id, document),
+    pendingFirstLogin: document.authUid === null && Boolean(document.createdByMemberId),
     createdAt: document.createdAt?.toDate() ?? new Date(0),
     lastSignedInAt: document.lastSignedInAt?.toDate() ?? null,
     archiveNights: typeof document.archiveNights === "number" ? document.archiveNights : 0,

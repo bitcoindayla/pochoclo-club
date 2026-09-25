@@ -150,6 +150,18 @@ Las principales colecciones son:
 - `movieBallots/{screeningId}/exemptions`: miembros autorizados por un administrador para reservar sin votar;
 - `system/openMovieBallot`: puntero a la única votación abierta.
 
+## Reservar desde administración
+
+En `/admin/ocupacion`, con una función abierta, seleccioná un lugar libre en el mapa o usá **Reservar** en la tabla. El formulario permite:
+
+- **Miembro del club:** buscar una persona activa y reservar directamente a su nombre. La reserva aparece en su cuenta y puede moverla, cancelarla o agregar su propio +1.
+- **Solo nombre:** crear una reserva independiente para esta función, sin cuenta y sin consumir el +1 del administrador. La persona aparece en la crítica por QR.
+- **Nombre y mail:** crear una ficha activa del club, o reutilizar la existente si el mail ya está registrado. No se envía correo ni se crea una contraseña: el primer ingreso con Google y ese correo verificado vincula la identidad a la ficha existente.
+
+Si el miembro no votó, se registra una excepción para esa función (no un voto). Los bloqueos se deben quitar antes de reservar; una persona ya en espera debe retirarse de esa lista antes de asignarle un lugar manualmente. No se permiten reservas duplicadas ni cambios en funciones cerradas.
+
+El alta de ficha, índice de email, excepción y reserva ocurre en una misma transacción. `screenings/{id}/adminReservationRequests` guarda claves de idempotencia para reintentos. `memberIdentities/{firebaseUid}` vincula los perfiles precreados a su primer acceso sin mover reservas, historial ni preferencias. Los miembros originales mantienen su ID basado en Firebase UID. En Miembros se indica cuáles están pendientes de primer ingreso.
+
 ## Verificación
 
 ```bash

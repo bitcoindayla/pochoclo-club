@@ -3,6 +3,9 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/authz";
+import { AdminReservationError, parseAdminReservationInput } from "@/lib/admin-reservation-policy";
+import { reserveSeatAsAdmin } from "@/lib/admin-reservations";
+import { MemberAdminError } from "@/lib/member-admin-policy";
 import {
   blockPlace,
   cancelOwnReservation,
@@ -34,6 +37,30 @@ function refreshOccupancy() {
   revalidatePath("/admin/ocupacion");
   revalidatePath("/admin/funciones");
   revalidatePath("/club");
+  revalidatePath("/admin/miembros");
+  revalidatePath("/admin/cartelera");
+  revalidatePath("/admin/critica");
+}
+
+export async function reserveSeatAdminAction(
+  _previousState: OccupancyActionState,
+  formData: FormData,
+): Promise<OccupancyActionState> {
+  const admin = await requireAdmin();
+  try {
+    const result = await reserveSeatAsAdmin(admin.id, parseAdminReservationInput(formData));
+    refreshOccupancy();
+    return {
+      error: null,
+      message: `${result.placeCode} reservado para ${result.name}.${result.createdMember ? " Su ficha ya está creada; puede entrar con Google usando ese mail." : ""}${result.exemptionGranted ? " Se registró una excepción de votación para esta función." : ""}`,
+    };
+  } catch (error) {
+    return {
+      error: error instanceof AdminReservationError || error instanceof MemberAdminError
+        ? error.message : "No se pudo reservar. Tus datos siguen en el formulario; podés reintentar.",
+      message: null,
+    };
+  }
 }
 
 export async function moveReservationAction(

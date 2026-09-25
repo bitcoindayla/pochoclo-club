@@ -65,8 +65,8 @@ export default async function MembersPage() {
           <span>{members.filter((member) => member.active).length} activos</span>
         </div>
         <p className="pageIntro">
-          Acá están quienes ya entraron con Google. Los +1 viven en cada función, a cargo de quien
-          los trajo. Cuando acepten una invitación, aparecen en esta lista.
+          Acá están quienes entraron con Google y las personas que diste de alta desde la sala.
+          Las fichas pendientes se vinculan al primer ingreso con el mismo mail.
         </p>
 
         {members.length === 0 ? (
@@ -97,6 +97,7 @@ export default async function MembersPage() {
                         </strong>
                         <small>
                           {member.email}
+                          {member.pendingFirstLogin ? " · Pendiente de primer ingreso" : ""}
                           {member.role === "admin" ? " · Admin" : ""}
                           {reputation
                             ? reputation.nights > 0

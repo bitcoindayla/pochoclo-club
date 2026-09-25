@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getAdminAuth } from "@/lib/firebase/admin";
-import { getMemberById } from "@/lib/members";
+import { getMemberByFirebaseUid } from "@/lib/members";
 import { SESSION_COOKIE } from "@/lib/session";
 
 export async function getCurrentMember() {
@@ -13,7 +13,7 @@ export async function getCurrentMember() {
 
   try {
     const identity = await getAdminAuth().verifySessionCookie(sessionCookie, true);
-    const member = await getMemberById(identity.uid);
+    const member = await getMemberByFirebaseUid(identity.uid);
     return member?.active ? member : null;
   } catch {
     return null;

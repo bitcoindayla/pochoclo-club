@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { AISLE_FLOOR_BY_ROW, ALL_PLACE_CODES, placeDisplayLabel, ROOM_ROWS, type PlaceCode } from "@/lib/room";
 import type { ScreeningOccupancy, WaitlistEntry } from "@/lib/screenings";
+import { AdminReservationForm, type ReservationMember } from "./reservation-form";
 
 import {
   blockPlaceAction,
@@ -24,6 +25,7 @@ export function OccupancyManager({
   blockedPlaceCodes,
   placeNames,
   readOnly,
+  members,
 }: {
   screeningId: string;
   occupancy: ScreeningOccupancy[];
@@ -31,7 +33,10 @@ export function OccupancyManager({
   blockedPlaceCodes: PlaceCode[];
   placeNames: Record<PlaceCode, string>;
   readOnly: boolean;
+  members: ReservationMember[];
 }) {
+  const [reservationPlace, setReservationPlace] = useState("");
+  const [reserving, setReserving] = useState(false);
   const [moveState, moveAction, movePending] = useActionState(
     moveReservationAction,
     initialState,
@@ -62,7 +67,7 @@ export function OccupancyManager({
     cancelWaitPending ||
     blockPending ||
     unblockPending ||
-    reorderPending;
+    reorderPending || reserving;
   const occupiedByPlace = new Map(occupancy.map((entry) => [entry.placeCode, entry]));
   const blockedPlaces = new Set(blockedPlaceCodes);
   const availablePlaces = ALL_PLACE_CODES.filter(
@@ -77,6 +82,11 @@ export function OccupancyManager({
     reorderState,
   ];
   const feedback = [...states].reverse().find((state) => state.error || state.message);
+
+  function selectReservationPlace(code: string) {
+    setReservationPlace(code);
+    if (code) document.getElementById("admin-reservation")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
 
   function renderReferencePlace(placeCode: PlaceCode, floor = false) {
     const occupant = occupiedByPlace.get(placeCode);
@@ -96,6 +106,19 @@ export function OccupancyManager({
         ? "bloqueado"
         : "disponible";
 
+    if (!readOnly && !occupant && !blocked) return (
+      <button
+        aria-label={`Reservar ${placeCode}`}
+        aria-pressed={reservationPlace === placeCode}
+        className={`adminMiniPlace adminMiniReservable ${floor ? "adminMiniFloor" : ""} ${stateClass}`}
+        disabled={pending}
+        key={placeCode}
+        onClick={() => selectReservationPlace(placeCode)}
+        type="button"
+      >
+        <strong>{placeDisplayLabel(placeCode)}</strong>
+      </button>
+    );
     return (
       <span
         aria-label={`${placeCode}, ${stateLabel}`}
@@ -117,7 +140,7 @@ export function OccupancyManager({
 
       <section className="occupancySection">
         <div className="adminRoomReference">
-          <p className="kicker">Mapa de referencia</p>
+          <p className="kicker">{readOnly ? "Mapa de referencia" : "Elegí un lugar para reservar"}</p>
           <div className="adminMiniScreen">Pantalla</div>
           <div className="adminMiniRows">
             {ROOM_ROWS.map((row, rowIndex) => {
@@ -145,6 +168,20 @@ export function OccupancyManager({
             <span><i className="adminMiniBlocked" /> Bloqueado</span>
           </div>
         </div>
+
+        {!readOnly ? (
+          <AdminReservationForm
+            availablePlaces={availablePlaces}
+            disabled={pending && !reserving}
+            members={members}
+            occupancy={occupancy}
+            onBusy={setReserving}
+            onPlaceChange={setReservationPlace}
+            placeCode={reservationPlace}
+            screeningId={screeningId}
+            waitlist={waitlist}
+          />
+        ) : null}
 
         <div className="sectionHeading">
           <div>
@@ -221,11 +258,14 @@ export function OccupancyManager({
                           <button className="smallButton" disabled={pending} type="submit">Desbloquear</button>
                         </form>
                       ) : (
-                        <form action={blockAction}>
-                          <input name="screeningId" type="hidden" value={screeningId} />
-                          <input name="placeCode" type="hidden" value={placeCode} />
-                          <button className="smallButton" disabled={pending} type="submit">Bloquear</button>
-                        </form>
+                        <div className="compactActions">
+                          <button className="smallButton" disabled={pending} onClick={() => selectReservationPlace(placeCode)} type="button">Reservar</button>
+                          <form action={blockAction}>
+                            <input name="screeningId" type="hidden" value={screeningId} />
+                            <input name="placeCode" type="hidden" value={placeCode} />
+                            <button className="smallButton" disabled={pending} type="submit">Bloquear</button>
+                          </form>
+                        </div>
                       )}
                     </td>
                   </tr>

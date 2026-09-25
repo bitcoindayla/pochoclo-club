@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AdminNav } from "@/components/admin-nav";
 import { SignOutButton } from "@/components/session-actions";
 import { requireAdmin } from "@/lib/authz";
+import { listMembers } from "@/lib/members";
 import { ALL_PLACE_CODES, FLOOR_PLACES, ROOM_ROWS, type PlaceCode } from "@/lib/room";
 import { CLUB_TIME_ZONE } from "@/lib/screening-policy";
 import { getOpenScreeningForMember } from "@/lib/screenings";
@@ -20,6 +21,9 @@ const placeNames = Object.fromEntries(
 export default async function OccupancyPage() {
   const admin = await requireAdmin();
   const screening = await getOpenScreeningForMember(admin.id);
+  const members = screening?.status === "open" ? (await listMembers())
+    .filter((member) => member.active)
+    .map(({ id, name, email }) => ({ id, name, email })) : [];
   const date = screening
     ? new Intl.DateTimeFormat("es-AR", {
         weekday: "long",
@@ -63,6 +67,7 @@ export default async function OccupancyPage() {
             {screening.status === "open" ? <CloseScreeningButton screeningId={screening.id} /> : null}
           </section>
           <OccupancyManager
+            members={members}
             blockedPlaceCodes={screening.blockedPlaceCodes}
             occupancy={screening.occupancy}
             placeNames={placeNames}
