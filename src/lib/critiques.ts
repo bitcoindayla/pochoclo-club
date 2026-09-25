@@ -1,6 +1,8 @@
 import "server-only";
 
+import { randomBytes } from "node:crypto";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { hashCritiqueAccess, hasCritiqueAccess } from "@/lib/critique-access";
 
 import {
   CRITIQUE_CATEGORIES,
@@ -29,6 +31,8 @@ import {
 } from "@/lib/attendance-policy";
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import { isPlaceCode, type PlaceCode } from "@/lib/room";
+import { getRecommendationRound } from "@/lib/recommendations";
+import type { RecommendationRound } from "@/lib/recommendation-policy";
 
 export class CritiqueError extends Error {
   constructor(message: string) {
@@ -63,6 +67,7 @@ type CritiqueDocument = {
 };
 
 type AudienceDocument = {
+  accessHash?: string;
   name: string;
   placeCode: PlaceCode;
   kind: "self" | "guest";
@@ -120,6 +125,7 @@ export type CritiqueSession = {
   roomAverage: number | null;
   categoryAverages: CritiqueScores | null;
   audience: CritiqueAudience[];
+  recommendations: RecommendationRound | null;
 };
 
 export type FilmHistoryEntry = {
@@ -283,6 +289,7 @@ function sessionFrom(
     submittedCount: critique.submittedCount,
     roomAverage: critique.roomAverage,
     categoryAverages: critique.categoryAverages,
+    recommendations: null,
     audience: occupants.map((occupant) => {
       const row = audienceDocs.get(occupant.personId);
       return {
@@ -311,9 +318,12 @@ export async function getCritiqueSession(screeningId: string): Promise<CritiqueS
   if (!validId(screeningId)) return null;
   const snapshot = await getAdminFirestore().collection("critiques").doc(screeningId).get();
   if (!snapshot.exists) return null;
-  const occupants = await listScreeningOccupants(screeningId);
-  const audience = await readAudience(screeningId);
-  return sessionFrom(screeningId, snapshot.data() as CritiqueDocument, occupants, audience);
+  const [occupants, audience, recommendations] = await Promise.all([
+    listScreeningOccupants(screeningId),
+    readAudience(screeningId),
+    getRecommendationRound(screeningId),
+  ]);
+  return { ...sessionFrom(screeningId, snapshot.data() as CritiqueDocument, occupants, audience), recommendations };
 }
 
 export async function getCritiqueByToken(token: string): Promise<CritiqueSession | null> {
@@ -386,18 +396,19 @@ export async function openCritiqueSession(
   return getCritiqueSession(screeningId);
 }
 
-export async function joinCritique(token: string, personId: string) {
+export async function joinCritique(token: string, personId: string, previousAccess?: string) {
   const session = await getCritiqueByToken(token);
   if (!session) throw new CritiqueError("Ese código no está activo.");
   if (session.status === "closed") throw new CritiqueError("La crítica ya se cerró.");
 
   const occupant = session.audience.find((row) => row.personId === personId);
   if (!occupant) throw new CritiqueError("Ese nombre no está en la sala de hoy.");
-  if (occupant.joined) return { session, personId };
 
   const firestore = getAdminFirestore();
   const critiqueReference = firestore.collection("critiques").doc(session.screeningId);
   const audienceReference = critiqueReference.collection("audience").doc(personId);
+  const accessToken = previousAccess && /^[A-Za-z0-9_-]{43}$/.test(previousAccess)
+    ? previousAccess : randomBytes(32).toString("base64url");
 
   await firestore.runTransaction(async (transaction) => {
     const [critiqueSnapshot, audienceSnapshot] = await Promise.all([
@@ -405,7 +416,12 @@ export async function joinCritique(token: string, personId: string) {
       transaction.get(audienceReference),
     ]);
     if (!critiqueSnapshot.exists) throw new CritiqueError("La crítica no está activa.");
-    if (audienceSnapshot.exists) return;
+    if (audienceSnapshot.exists) {
+      if (!hasCritiqueAccess(previousAccess, audienceSnapshot.data()?.accessHash)) {
+        throw new CritiqueError("Ese nombre ya entró desde otro teléfono. Pedile al anfitrión que lo reabra si necesitás volver a entrar.");
+      }
+      return;
+    }
     const critique = critiqueSnapshot.data() as CritiqueDocument;
     if (critique.status === "closed") throw new CritiqueError("La crítica ya se cerró.");
 
@@ -416,6 +432,7 @@ export async function joinCritique(token: string, personId: string) {
       placeCode: occupant.placeCode,
       kind: occupant.kind,
       memberId: occupant.memberId,
+      accessHash: hashCritiqueAccess(accessToken),
       joinedAt: FieldValue.serverTimestamp(),
       scores: null,
       average: null,
@@ -431,7 +448,7 @@ export async function joinCritique(token: string, personId: string) {
 
   const next = await getCritiqueSession(session.screeningId);
   if (!next) throw new CritiqueError("La crítica no está activa.");
-  return { session: next, personId };
+  return { session: next, personId, accessToken };
 }
 
 export async function submitCritiqueScores(
@@ -464,7 +481,6 @@ export async function submitCritiqueScores(
     }
     const critique = critiqueSnapshot.data() as CritiqueDocument;
     if (critique.status !== "scoring") throw new CritiqueError("Ahora no se puede puntuar.");
-    const previous = audienceSnapshot.data() as AudienceDocument;
     transaction.update(audienceReference, {
       scores,
       average,

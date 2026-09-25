@@ -52,6 +52,41 @@ Están implementados los **slices 1 al 9** del [PRD](./PRD.md):
 - mapa bloqueado hasta votar, con excepciones individuales concedidas por un administrador;
 - asignación de la película ganadora a la misma función sin alterar sus reservas.
 
+## Pochoclo Recomienda
+
+En **Administración → Crítica → Pochoclo Recomienda**, prepará las tres películas de la
+función actual. Cada una lleva arte (JPG, PNG o WebP, hasta 3 MB), título, dirección,
+año opcional y un texto de hasta 360 caracteres sobre por qué verla. Guardá cada
+película por separado; las imágenes se adaptan a pantalla horizontal y vertical.
+
+1. Abrí la crítica y puntuá como siempre desde los teléfonos.
+2. En el control de sala, cerrá y publicá los puntajes.
+3. Cuando quieras, presioná **Mostrar Pochoclo Recomienda**. La proyección y los
+   teléfonos de quienes puntuaron cambian automáticamente, sin escanear otro QR.
+4. Cada persona elige una, dos o las tres películas y guarda su selección. Puede
+   corregirla hasta que presiones **Cerrar selección y mostrar resultados**.
+
+Durante la selección se muestra solamente cuántas personas respondieron. Al cerrar,
+la proyección muestra cuántas eligieron cada película. Las recomendaciones no abren
+la votación oficial, no asignan una película ganadora ni modifican reservas o puntajes.
+Las películas quedan bloqueadas para edición desde su revelación.
+
+Las preferencias de miembros aparecen en **Administración → Miembros → Ver → Lo que
+le gustaría ver**. Se guarda también qué películas se ofrecieron y las notas de la
+crítica que originó la elección. Los invitados pueden elegir; su respuesta queda
+asociada a esa función, sin crear un perfil de miembro ni atribuirla al anfitrión.
+
+Los teléfonos reciben una credencial privada al entrar al QR. Si una persona cambia
+de teléfono antes de cerrar la crítica, el anfitrión puede usar **Reabrir** y dejarla
+entrar y puntuar nuevamente. Las sesiones iniciadas antes de esta actualización
+necesitan volver a entrar de esa manera para usar las recomendaciones.
+
+Colecciones nuevas, creadas automáticamente al usarlas:
+
+- `recommendations/{screeningId}`: borrador, películas, estado y conteos.
+- `recommendations/{screeningId}/responses/{personId}`: selección de cada asistente.
+- `members/{memberId}/recommendationPreferences/{screeningId}`: historial de intereses del miembro.
+
 ## Tecnología
 
 - Next.js 16, React 19 y TypeScript.

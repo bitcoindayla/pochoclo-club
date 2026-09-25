@@ -11,8 +11,10 @@ import {
 } from "@/lib/critiques";
 import { getMovieBallot } from "@/lib/movie-voting";
 import { getOpenScreeningForMember } from "@/lib/screenings";
+import { getRecommendationRound } from "@/lib/recommendations";
 
 import { LegacyFilmForm, OccupancyScoreForm, OpenCritiqueForm } from "./forms";
+import { RecommendationEditor } from "./recommendation-editor";
 
 export const metadata: Metadata = { title: "La crítica" };
 
@@ -20,6 +22,9 @@ export default async function CritiqueAdminPage() {
   const admin = await requireAdmin();
   const screening = await getOpenScreeningForMember(admin.id);
   const session = screening ? await getCritiqueSession(screening.id) : null;
+  const recommendations = screening
+    ? session?.recommendations ?? await getRecommendationRound(screening.id)
+    : null;
   const [history, occupants, ballot] = await Promise.all([
     listFilmHistory(),
     screening ? listScreeningOccupants(screening.id) : Promise.resolve([]),
@@ -126,6 +131,12 @@ export default async function CritiqueAdminPage() {
             </p>
           )}
         </section>
+      ) : null}
+
+      {screening ? (
+        <div id="recomienda">
+          <RecommendationEditor screeningId={screening.id} round={recommendations} />
+        </div>
       ) : null}
 
       <section className="invitationHistory">

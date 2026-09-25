@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 
 import { getCritiqueByToken, parseCritiqueCookie } from "@/lib/critiques";
-import { CRITIQUE_COOKIE } from "@/lib/session";
+import { CRITIQUE_ACCESS_COOKIE, CRITIQUE_COOKIE } from "@/lib/session";
+import { getPhoneRecommendations } from "@/lib/recommendations";
 
 import { CritiquePhone } from "./phone";
 
@@ -37,6 +38,7 @@ export default async function CritiquePhonePage({
     <CritiquePhone
       token={token}
       initialData={{
+        recommendations: await getPhoneRecommendations(session.screeningId, me?.submitted ? me.personId : null, session.recommendations, (await cookies()).get(CRITIQUE_ACCESS_COOKIE)?.value),
         status: session.status,
         movieTitle: session.movieTitle,
         movieYear: session.movieYear,

@@ -8,6 +8,8 @@ import {
   SCORE_SCALE_LEGEND,
 } from "@/lib/critique-policy";
 import type { CritiqueSession } from "@/lib/critiques";
+import { RecommendationScreen } from "@/components/recommendation-screen";
+import { RecommendationControls } from "./recommendation-controls";
 
 import {
   closeCritiqueAction,
@@ -30,17 +32,21 @@ export function CritiqueBoard({
   scoreUrl: string;
 }) {
   const [session, setSession] = useState(initialSession);
+  const [connectionError, setConnectionError] = useState(false);
   const [startState, startAction, starting] = useActionState(startScoringAction, initial);
   const [closeState, closeAction, closing] = useActionState(closeCritiqueAction, initial);
   const [releaseState, releaseAction, releasing] = useActionState(releaseAudienceAction, initial);
 
   useEffect(() => {
     const timer = window.setInterval(async () => {
-      const response = await fetch(`/api/critique/live?screeningId=${encodeURIComponent(initialSession.screeningId)}`, {
-        cache: "no-store",
-      });
-      if (!response.ok) return;
-      setSession((await response.json()) as CritiqueSession);
+      try {
+        const response = await fetch(`/api/critique/live?screeningId=${encodeURIComponent(initialSession.screeningId)}`, {
+          cache: "no-store",
+        });
+        if (!response.ok) throw new Error("connection");
+        setSession((await response.json()) as CritiqueSession);
+        setConnectionError(false);
+      } catch { setConnectionError(true); }
     }, 2000);
     return () => window.clearInterval(timer);
   }, [initialSession.screeningId]);
@@ -52,8 +58,22 @@ export function CritiqueBoard({
   const allIn = session.joinedCount >= session.occupantCount && session.occupantCount > 0;
   const canRelease = session.status !== "closed";
 
+  if (session.recommendations && session.recommendations.status !== "draft") {
+    return (
+      <section className={`critiqueBoard hasRecommendations${projection ? " isProjection" : ""}`}>
+        <RecommendationScreen round={session.recommendations} />
+        {connectionError ? <p className="recommendationConnection" role="status">Reconectando con la sala…</p> : null}
+        {!projection ? <>
+          <RecommendationControls screeningId={session.screeningId} round={session.recommendations} critiqueClosed />
+          <p className="recommendationScoreRecap">{session.movieTitle} · Puntaje final: {session.roomAverage?.toFixed(1) ?? "—"}</p>
+        </> : null}
+      </section>
+    );
+  }
+
   return (
     <section className={projection ? "critiqueBoard isProjection" : "critiqueBoard"}>
+      {connectionError ? <p className="recommendationConnection" role="status">Reconectando con la sala…</p> : null}
       <p className="kicker">La crítica</p>
       <h1>
         {session.movieTitle}
@@ -177,6 +197,13 @@ export function CritiqueBoard({
           )}
         </div>
       )}
+      {!projection ? (
+        <RecommendationControls
+          screeningId={session.screeningId}
+          round={session.recommendations}
+          critiqueClosed={session.status === "closed"}
+        />
+      ) : null}
     </section>
   );
 }

@@ -2,7 +2,8 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { getCritiqueByToken, parseCritiqueCookie } from "@/lib/critiques";
-import { CRITIQUE_COOKIE } from "@/lib/session";
+import { CRITIQUE_ACCESS_COOKIE, CRITIQUE_COOKIE } from "@/lib/session";
+import { getPhoneRecommendations } from "@/lib/recommendations";
 
 export const runtime = "nodejs";
 
@@ -19,6 +20,7 @@ export async function GET(request: Request) {
     ? session.audience.find((row) => row.personId === personId && row.joined) ?? null
     : null;
   return NextResponse.json({
+    recommendations: await getPhoneRecommendations(session.screeningId, occupant?.submitted ? occupant.personId : null, session.recommendations, (await cookies()).get(CRITIQUE_ACCESS_COOKIE)?.value),
     status: session.status,
     movieTitle: session.movieTitle,
     movieYear: session.movieYear,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useCallback, useEffect, useState } from "react";
 
 import {
   CRITIQUE_CATEGORIES,
@@ -11,10 +11,13 @@ import {
 } from "@/lib/critique-policy";
 
 import { joinCritiqueAction, submitScoresAction, type PhoneCritiqueState } from "./actions";
+import type { PhoneRecommendations } from "@/lib/recommendation-policy";
+import { RecommendationChoices } from "./recommendation-choices";
 
 const initial: PhoneCritiqueState = { error: null, message: null };
 
 type PhoneSnapshot = {
+  recommendations: PhoneRecommendations | null;
   status: "lobby" | "scoring" | "closed";
   movieTitle: string;
   movieYear: number;
@@ -41,36 +44,39 @@ export function CritiquePhone({
   initialData: PhoneSnapshot;
 }) {
   const [data, setData] = useState(initialData);
+  const [connectionError, setConnectionError] = useState(false);
   const [joinState, joinAction, joining] = useActionState(joinCritiqueAction, initial);
   const [scoreState, scoreAction, sending] = useActionState(submitScoresAction, initial);
   const [scores, setScores] = useState<Partial<Record<CritiqueCategoryId, number>>>(
     initialData.me?.scores ?? {},
   );
 
-  async function refresh() {
-    const response = await fetch(`/api/critique/phone?token=${encodeURIComponent(token)}`, { cache: "no-store" });
-    if (!response.ok) return;
-    setData((await response.json()) as PhoneSnapshot);
-  }
+  const refresh = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/critique/phone?token=${encodeURIComponent(token)}`, { cache: "no-store" });
+      if (!response.ok) throw new Error("connection");
+      const next = (await response.json()) as PhoneSnapshot;
+      setData(next);
+      if (next.me?.scores) {
+        setScores((current) => CRITIQUE_CATEGORIES.every((category) => current[category.id] == null)
+          ? next.me!.scores! : current);
+      }
+      setConnectionError(false);
+    } catch { setConnectionError(true); }
+  }, [token]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
       void refresh();
     }, 2000);
     return () => window.clearInterval(timer);
-  }, [token]);
+  }, [refresh]);
 
   useEffect(() => {
-    if (joinState.message || scoreState.message) void refresh();
-  }, [joinState.message, scoreState.message, token]);
-
-  useEffect(() => {
-    if (!data.me?.scores) return;
-    setScores((current) => {
-      const untouched = CRITIQUE_CATEGORIES.every((category) => current[category.id] == null);
-      return untouched ? data.me!.scores! : current;
-    });
-  }, [data.me]);
+    if (!joinState.message && !scoreState.message) return;
+    const timer = window.setTimeout(() => { void refresh(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [joinState.message, scoreState.message, refresh]);
 
   const filled = CRITIQUE_CATEGORIES.every((category) => typeof scores[category.id] === "number");
   const average = filled
@@ -81,8 +87,16 @@ export function CritiquePhone({
       ) / 10
     : null;
 
+  if (data.recommendations && data.me) {
+    return <>
+      <RecommendationChoices data={data.recommendations} key={data.recommendations.round.screeningId} name={data.me.name} token={token} />
+      {connectionError ? <p className="recommendationConnection" role="status">Reconectando… Tus cambios siguen en este teléfono.</p> : null}
+    </>;
+  }
+
   return (
     <section className="critiquePhone">
+      {connectionError ? <p className="recommendationConnection" role="status">Reconectando con la sala…</p> : null}
       <p className="kicker">La crítica</p>
       <h1>
         {data.movieTitle}
@@ -121,7 +135,8 @@ export function CritiquePhone({
       ) : data.status === "closed" ? (
         <div className="critiqueWait">
           <p className="critiqueAverage">{data.roomAverage == null ? "—" : data.roomAverage.toFixed(1)}</p>
-          <p className="critiqueHint">Sala cerrada. Ese es el puntaje final.</p>
+          <p className="critiqueHint">Ese es el puntaje final de la sala.</p>
+          {data.me.submitted ? <p className="critiqueHint">Podés quedarte acá. Si el anfitrión abre Pochoclo Recomienda, las películas van a aparecer en este teléfono.</p> : null}
         </div>
       ) : (
         <form action={scoreAction} className="critiqueForm">

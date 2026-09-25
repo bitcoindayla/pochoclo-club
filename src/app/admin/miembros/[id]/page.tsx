@@ -10,6 +10,7 @@ import { listFilmHistory } from "@/lib/critiques";
 import { getMemberById, listMembers } from "@/lib/members";
 import { isFounderEmail } from "@/lib/reputation-policy";
 import { CLUB_TIME_ZONE } from "@/lib/screening-policy";
+import { listMemberRecommendationPreferences } from "@/lib/recommendations";
 
 import { AttendanceToggle, MemberActiveForm, MemberNameForm } from "../member-forms";
 
@@ -31,10 +32,11 @@ export default async function MemberDetailPage({
 }) {
   const admin = await requireAdmin();
   const { id } = await params;
-  const [member, members, history] = await Promise.all([
+  const [member, members, history, preferences] = await Promise.all([
     getMemberById(id),
     listMembers(),
     listFilmHistory(),
+    listMemberRecommendationPreferences(id),
   ]);
   if (!member) notFound();
 
@@ -87,6 +89,23 @@ export default async function MemberDetailPage({
             />
           </div>
         </div>
+      </section>
+
+      <section className="invitationHistory">
+        <div className="sectionHeading">
+          <div><p className="kicker">Pochoclo Recomienda</p><h2>Lo que le gustaría ver</h2></div>
+          <span>{preferences.length} selecciones</span>
+        </div>
+        {preferences.length === 0 ? <p className="emptyList">Todavía no eligió películas en Pochoclo Recomienda.</p> : (
+          <ul className="recommendationPreferenceList">
+            {preferences.map((preference) => (
+              <li key={preference.screeningId}>
+                <p className="kicker">{formatDate(preference.updatedAt)} · Después de {preference.watchedTitle}</p>
+                {preference.movies.map((movie) => <p key={movie.id}><strong>{movie.title}</strong><span>{movie.director}{movie.year ? ` · ${movie.year}` : ""}</span></p>)}
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="invitationHistory">
