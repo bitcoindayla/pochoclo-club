@@ -52,6 +52,21 @@ Están implementados los **slices 1 al 9** del [PRD](./PRD.md):
 - mapa bloqueado hasta votar, con excepciones individuales concedidas por un administrador;
 - asignación de la película ganadora a la misma función sin alterar sus reservas.
 
+## Foto de portada
+
+Desde el inicio, un administrador puede usar **Cambiar foto** para cargar una imagen
+JPG, PNG o WebP de hasta 3 MB y completar nombre de la película, año y director/a.
+La referencia aparece en la esquina inferior derecha, también en celular. Para
+corregir esos datos, basta con guardarlos sin elegir otra foto. Las portadas
+anteriores siguen funcionando y se pueden completar desde el mismo formulario.
+
+El logo del inicio toma automáticamente un color característico de la foto y ajusta
+su luminosidad de forma moderada según el fondo, manteniendo el tono y sin rebordes
+ni sombras en las letras. Un degradado oscuro en la cabecera mejora su contraste
+y se desvanece sobre la foto. La referencia usa tipografía pequeña y discreta. El resto del
+sitio conserva el logo oficial blanco. No hace falta configurar el color al
+reemplazar una imagen.
+
 ## Pochoclo Recomienda
 
 En **Administración → Crítica → Pochoclo Recomienda**, prepará las tres películas de la

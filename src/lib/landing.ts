@@ -3,7 +3,7 @@ import "server-only";
 import { FieldValue } from "firebase-admin/firestore";
 
 import { getAdminFirestore } from "@/lib/firebase/admin";
-import { landingImageUrls, type LandingImageRecord } from "@/lib/landing-policy";
+import { landingImageUrls, type LandingImageRecord, type LandingMovie } from "@/lib/landing-policy";
 
 const LANDING_DOC = ["system", "landing"] as const;
 
@@ -12,19 +12,22 @@ export type LandingVisual = {
   accent: string | null;
   landscapeUrl: string;
   portraitUrl: string;
+  movie: LandingMovie | null;
 };
 
 type LandingDocument = LandingImageRecord & {
   updatedBy: string;
+  movie?: LandingMovie;
 };
 
-function visualFrom(record: LandingImageRecord): LandingVisual {
+function visualFrom(record: LandingImageRecord & { movie?: LandingMovie }): LandingVisual {
   const urls = landingImageUrls(record.version);
   return {
     version: record.version,
     accent: record.accent ?? null,
     landscapeUrl: urls.landscape,
     portraitUrl: urls.portrait,
+    movie: record.movie ?? null,
   };
 }
 
@@ -41,35 +44,53 @@ export async function getLandingVisual(): Promise<LandingVisual | null> {
       accent: data.accent ?? "",
       sourceWidth: data.sourceWidth ?? 0,
       sourceHeight: data.sourceHeight ?? 0,
+      movie: data.movie,
     });
   } catch {
     return null;
   }
 }
 
-export async function saveLandingImage(adminId: string, file: File) {
+export async function saveLandingImage(
+  adminId: string,
+  file: File | null,
+  movie: LandingMovie,
+  expectedVersion: string,
+) {
   const { deleteLandingImages, uploadLandingImage } = await import("@/lib/landing-images");
-  const uploaded = await uploadLandingImage(file);
-  const reference = getAdminFirestore().doc(LANDING_DOC.join("/"));
-  const previous = await reference.get();
-  const previousData = previous.exists ? (previous.data() as Partial<LandingDocument>) : null;
+  const uploaded = file ? await uploadLandingImage(file) : null;
+  const database = getAdminFirestore();
+  const reference = database.doc(LANDING_DOC.join("/"));
+  let result;
 
   try {
-    await reference.set({
-      ...uploaded,
-      updatedBy: adminId,
-      updatedAt: FieldValue.serverTimestamp(),
+    result = await database.runTransaction(async (transaction) => {
+      const previous = await transaction.get(reference);
+      const previousData = previous.exists ? previous.data() as LandingDocument : null;
+      if ((previousData?.version ?? "") !== expectedVersion) {
+        throw new Error("La portada cambió. Cerrá y volvé a abrir el editor antes de guardar.");
+      }
+      const image = uploaded ?? previousData;
+      if (!image) throw new Error("Elegí una foto para la portada.");
+      const next = { ...image, movie };
+      transaction.set(reference, {
+        ...next,
+        updatedBy: adminId,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      return { previousData, next };
     });
   } catch (error) {
-    await deleteLandingImages([uploaded.landscapePath, uploaded.portraitPath]);
+    if (uploaded) await deleteLandingImages([uploaded.landscapePath, uploaded.portraitPath]);
     throw error;
   }
 
-  if (previousData?.landscapePath && previousData?.portraitPath) {
+  const { previousData, next } = result;
+  if (uploaded && previousData?.landscapePath && previousData?.portraitPath) {
     await deleteLandingImages([previousData.landscapePath, previousData.portraitPath]);
   }
 
-  return visualFrom(uploaded);
+  return visualFrom(next);
 }
 
 export async function clearLandingImage() {

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/authz";
 import { clearLandingImage, saveLandingImage } from "@/lib/landing";
 import { LandingImageError } from "@/lib/landing-images";
+import { parseLandingMovie } from "@/lib/landing-policy";
 
 export type LandingActionState = {
   error: string | null;
@@ -22,12 +23,16 @@ export async function updateLandingImageAction(
 ): Promise<LandingActionState> {
   const admin = await requireAdmin();
   const file = formData.get("image");
-  if (!(file instanceof File) || file.size === 0) {
-    return { error: "Elegí una foto para la portada.", message: null };
-  }
 
   try {
-    await saveLandingImage(admin.id, file);
+    const movie = parseLandingMovie(formData);
+    const version = formData.get("version");
+    await saveLandingImage(
+      admin.id,
+      file instanceof File && file.size > 0 ? file : null,
+      movie,
+      typeof version === "string" ? version : "",
+    );
     refreshLanding();
     return { error: null, message: "Portada actualizada." };
   } catch (error) {

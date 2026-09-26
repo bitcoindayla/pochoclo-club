@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { LandingAccess } from "@/components/landing-access";
 import { LandingPhotoEditor } from "@/components/landing-photo-editor";
+import { LandingWordmark } from "@/components/landing-wordmark";
 import { SiteMenu } from "@/components/site-menu";
 import { getCurrentMember } from "@/lib/authz";
 import { getLandingVisual } from "@/lib/landing";
@@ -9,6 +10,9 @@ import { menuLinksFor } from "@/lib/nav";
 
 export default async function Home() {
   const [member, visual] = await Promise.all([getCurrentMember(), getLandingVisual()]);
+  const filmCredit = visual?.movie
+    ? `${visual.movie.title} (${visual.movie.year}) | Dirección: ${visual.movie.director}`
+    : "";
 
   return (
     <div className="landingStage">
@@ -16,9 +20,7 @@ export default async function Home() {
         <div className="landingChromeSide">
           {member ? <SiteMenu links={menuLinksFor(member)} visual={visual} /> : null}
         </div>
-        <span className="landingWordmark">
-          Pochoclo <i>Club</i>
-        </span>
+        <LandingWordmark key={visual?.version ?? "empty"} accent={visual?.accent ?? null} imageUrl={visual?.landscapeUrl} />
       </header>
       <section className="landingPanel">
         <div className="landingCopy">
@@ -49,9 +51,16 @@ export default async function Home() {
 
       <aside className="landingStill" aria-hidden={visual ? undefined : true}>
         {visual ? (
-          <picture>
-            <img alt="" src={visual.landscapeUrl} />
-          </picture>
+          <>
+            <picture>
+              <img alt={visual.movie ? `Fotograma de ${visual.movie.title}` : ""} src={visual.landscapeUrl} />
+            </picture>
+            {visual.movie ? (
+              <div className="landingFilmCredit">
+                <p title={filmCredit}>{filmCredit}</p>
+              </div>
+            ) : null}
+          </>
         ) : (
           <div className="landingFallback">
             <span>Próximamente</span>
