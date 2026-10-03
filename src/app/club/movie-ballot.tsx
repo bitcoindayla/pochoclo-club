@@ -285,67 +285,26 @@ function MovieTitles({
 function SeatAccessCue({
   canAccessSeats,
   hasSeat,
-  justSaved,
-  onOpenChange,
-  screeningId,
 }: {
   canAccessSeats: boolean;
   hasSeat: boolean;
-  justSaved: boolean;
-  onOpenChange?: (open: boolean) => void;
-  screeningId: string;
 }) {
-  const storageKey = `pochoclo-seat-cue:${screeningId}`;
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    const shouldShow = canAccessSeats && !hasSeat;
-    setOpen(shouldShow);
-    onOpenChange?.(shouldShow);
-  }, [canAccessSeats, hasSeat, onOpenChange]);
-
-  function dismiss() {
-    setOpen(false);
-    onOpenChange?.(false);
-    try {
-      sessionStorage.setItem(storageKey, "seen");
-    } catch {
-      /* ignore private-mode storage */
-    }
-  }
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") dismiss();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, storageKey]);
-
-  const arrow = (
-    <i aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none">
-        <path
-          d="M5 9.5 12 16.5 19 9.5"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="1.4"
-        />
-      </svg>
-    </i>
-  );
-
-  if (!open) return null;
+  if (!canAccessSeats || hasSeat) return null;
 
   return (
-    <a className="cinematicSeatCue" href="#sala" onClick={dismiss}>
-      <strong>
-        <span>Asegurá</span>
-        <span>tu lugar</span>
-      </strong>
-      {arrow}
+    <a className="cinematicSeatCue" href="#sala">
+      Asegurá tu lugar
+      <i aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path
+            d="M5 9.5 12 16.5 19 9.5"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.4"
+          />
+        </svg>
+      </i>
     </a>
   );
 }
@@ -363,8 +322,7 @@ export function MovieBallotPanel({
   const canVote = ballot.status === "open";
   const activeMovie = ballot.options[activeIndex] ?? ballot.options[0];
   const accent = activeMovie?.image?.accent || fallbackAccents[activeIndex % fallbackAccents.length];
-  const [seatCueOpen, setSeatCueOpen] = useState(false);
-  const showSeatCue = seatCueOpen || (Boolean(state.message) && ballot.canAccessSeats && !hasSeat);
+  const showSeatCue = ballot.canAccessSeats && !hasSeat;
 
   useEffect(() => {
     if (
@@ -435,7 +393,7 @@ export function MovieBallotPanel({
           ) : null}
           {state.error ? <p className="cinematicFeedback isError" role="alert">{state.error}</p> : null}
           {state.message ? (
-            <p className={showSeatCue ? "srOnly" : "cinematicFeedback"} role="status">
+            <p className="cinematicFeedback" role="status">
               {state.message}
             </p>
           ) : null}
@@ -443,18 +401,14 @@ export function MovieBallotPanel({
             <p className="cinematicFeedback">Tenés una excepción y podés reservar sin votar.</p>
           ) : null}
         </div>
-        <SeatAccessCue
-          canAccessSeats={ballot.canAccessSeats}
-          hasSeat={hasSeat}
-          justSaved={Boolean(state.message)}
-          onOpenChange={setSeatCueOpen}
-          screeningId={ballot.screeningId}
-        />
-        {canVote ? (
-          <button className="cinematicVoteButton" disabled={pending} type="submit">
-            {pending ? "Guardando…" : ballot.hasVoted ? "Actualizar voto" : "Confirmar selección"}
-          </button>
-        ) : null}
+        <div className="cinematicActions">
+          {canVote ? (
+            <button className="cinematicVoteButton" disabled={pending} type="submit">
+              {pending ? "Guardando…" : ballot.hasVoted ? "Actualizar voto" : "Confirmar selección"}
+            </button>
+          ) : null}
+          <SeatAccessCue canAccessSeats={ballot.canAccessSeats} hasSeat={hasSeat} />
+        </div>
       </div>
     </>
   );
@@ -484,7 +438,7 @@ export function MovieBallotPanel({
       ) : (
         <div className="cinematicContent">{content}</div>
       )}
-      {ballot.canAccessSeats && !seatCueOpen ? (
+      {ballot.canAccessSeats && !showSeatCue ? (
         <a className="cinematicScrollHint" href="#sala">
           <span className="srOnly">Bajá a elegir tu lugar</span>
           <i aria-hidden="true">
