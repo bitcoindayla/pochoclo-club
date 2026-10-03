@@ -1,4 +1,5 @@
 export const CLUB_TIME_ZONE = "America/Argentina/Mendoza";
+export const DEFAULT_SCREENING_TIME = "20:00";
 
 export type ScreeningInput = {
   localDate: string;
@@ -97,6 +98,39 @@ export function localScreeningDate(dateValue: string, timeValue: string) {
     throw new Error("Elegí una fecha y un horario válidos.");
   }
   return instant;
+}
+
+function pad2(value: number) {
+  return String(value).padStart(2, "0");
+}
+
+export function formatLocalDateTime(date: Date) {
+  const parts = zonedParts(date);
+  return {
+    localDate: `${parts.year}-${pad2(parts.month)}-${pad2(parts.day)}`,
+    localTime: `${pad2(parts.hour)}:${pad2(parts.minute)}`,
+  };
+}
+
+export function suggestNextScreening(now = new Date()) {
+  let localDate = formatLocalDateTime(now).localDate;
+  for (let index = 0; index < 16; index += 1) {
+    const startsAt = localScreeningDate(localDate, DEFAULT_SCREENING_TIME);
+    const weekday = new Intl.DateTimeFormat("en-US", {
+      weekday: "short",
+      timeZone: CLUB_TIME_ZONE,
+    }).format(startsAt);
+    if (weekday === "Sun" && startsAt.getTime() > now.getTime()) {
+      return { localDate, localTime: DEFAULT_SCREENING_TIME, startsAt };
+    }
+    localDate = formatLocalDateTime(new Date(startsAt.getTime() + 24 * 60 * 60 * 1000)).localDate;
+  }
+  throw new Error("No encontramos un domingo próximo.");
+}
+
+export function suggestBallotClose(localDate: string, localTime: string) {
+  const startsAt = localScreeningDate(localDate, localTime);
+  return formatLocalDateTime(new Date(startsAt.getTime() - 26 * 60 * 60 * 1000));
 }
 
 export function parseScreeningInput(formData: FormData, now = new Date()): ScreeningInput {

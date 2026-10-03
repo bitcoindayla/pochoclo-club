@@ -9,7 +9,7 @@ import {
   listMovieBallotExemptions,
   listMovieBallots,
 } from "@/lib/movie-voting";
-import { CLUB_TIME_ZONE } from "@/lib/screening-policy";
+import { CLUB_TIME_ZONE, suggestBallotClose, suggestNextScreening } from "@/lib/screening-policy";
 import { listScreenings } from "@/lib/screenings";
 
 import {
@@ -60,6 +60,8 @@ export default async function MovieBallotsPage() {
   const availableDrafts = screenings.filter(
     (screening) => screening.status === "draft" && !ballotScreeningIds.has(screening.id),
   );
+  const nextScreening = suggestNextScreening();
+  const nextClose = suggestBallotClose(nextScreening.localDate, nextScreening.localTime);
 
   return (
     <div className="adminPage shell">
@@ -79,17 +81,20 @@ export default async function MovieBallotsPage() {
           <p className="kicker">Nueva votación</p>
           <h2>Elegí entre 3 y 5 películas</h2>
           <p>
-            Primero creá la fecha en Funciones. La votación debe cerrar antes de esa función.
+            Escribí los títulos, completá las fichas, elegí las fotos y revisá. El domingo a las
+            20:00 y el cierre del sábado se proponen solos. La votación tiene que cerrar antes de
+            la función.
           </p>
-          <Link className="backLink" href="/admin/funciones">Ir a Funciones →</Link>
         </div>
-        {availableDrafts.length ? (
-          <BallotForm screenings={availableDrafts} />
-        ) : (
-          <p className="emptyList">
-            No hay una función borrador libre. Creá una, o terminá la cartelera que ya tiene.
-          </p>
-        )}
+        <BallotForm
+          defaults={{
+            screeningDate: nextScreening.localDate,
+            screeningTime: nextScreening.localTime,
+            closeDate: nextClose.localDate,
+            closeTime: nextClose.localTime,
+          }}
+          screenings={availableDrafts}
+        />
       </section>
 
       <section className="screeningHistory ballotHistory">

@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/authz";
+import { lookupMovieCatalog } from "@/lib/imdb";
+import type { MovieCatalogCard } from "@/lib/imdb-policy";
 import { prepareMovieBallotImages } from "@/lib/movie-images";
 import {
   cancelMovieBallot,
@@ -19,6 +21,8 @@ import {
   MovieVotingPolicyError,
   parseMovieBallotInput,
 } from "@/lib/movie-voting-policy";
+import { parseScreeningInput } from "@/lib/screening-policy";
+import { createScreening } from "@/lib/screenings";
 
 export type MovieBallotActionState = {
   error: string | null;
@@ -33,7 +37,15 @@ function screeningIdFrom(formData: FormData) {
   return value;
 }
 
+async function screeningIdForCreate(formData: FormData, adminId: string) {
+  const existing = formData.get("screeningId");
+  if (typeof existing === "string" && existing) return existing;
+  const screening = await createScreening(adminId, parseScreeningInput(formData));
+  return screening.id;
+}
+
 function refreshBallotPages() {
+  revalidatePath("/");
   revalidatePath("/admin/cartelera");
   revalidatePath("/admin/funciones");
   revalidatePath("/admin/ocupacion");
@@ -52,16 +64,41 @@ function actionError(error: unknown, fallback: string): MovieBallotActionState {
   };
 }
 
+export async function lookupMovieCatalogAction(
+  title: string,
+  yearText?: string,
+): Promise<{ error: string | null; movie: MovieCatalogCard | null }> {
+  await requireAdmin();
+  const trimmed = title.trim();
+  if (!trimmed) {
+    return { error: "Escribí el título.", movie: null };
+  }
+  const year = yearText && /^\d{4}$/.test(yearText.trim()) ? Number(yearText.trim()) : null;
+  try {
+    const movie = await lookupMovieCatalog(trimmed, year);
+    if (!movie) {
+      return {
+        error: "No encontramos esa película. Probá el título en inglés o el año.",
+        movie: null,
+      };
+    }
+    return { error: null, movie };
+  } catch {
+    return { error: "IMDb no respondió. Probá de nuevo en un momento.", movie: null };
+  }
+}
+
 export async function createMovieBallotAction(
   _previousState: MovieBallotActionState,
   formData: FormData,
 ): Promise<MovieBallotActionState> {
   const admin = await requireAdmin();
   try {
-    const screeningId = screeningIdFrom(formData);
+    const input = parseMovieBallotInput(formData);
+    const screeningId = await screeningIdForCreate(formData, admin.id);
     const prepared = await prepareMovieBallotImages({
       screeningId,
-      input: parseMovieBallotInput(formData),
+      input,
       formData,
     });
     try {

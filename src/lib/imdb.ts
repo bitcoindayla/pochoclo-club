@@ -1,9 +1,12 @@
 import "server-only";
 
 import {
+  parseCinemetaMovie,
   parseImdbId,
-  parseImdbRating,
+  pickImdbSuggestion,
+  type ImdbSuggestionRow,
   type ImdbTitle,
+  type MovieCatalogCard,
 } from "@/lib/imdb-policy";
 
 function normalize(value: string) {
@@ -39,33 +42,35 @@ export async function lookupImdbTitle(title: string, year: number, hint?: string
   return { imdbId, rating };
 }
 
-async function searchImdbId(title: string, year: number) {
+async function searchImdbId(title: string, year?: number | null) {
   const payload = await readJson(suggestionQuery(title));
   if (!payload || typeof payload !== "object" || !("d" in payload) || !Array.isArray(payload.d)) {
     return null;
   }
-  const wanted = normalize(title);
-  const movies = payload.d.filter((row): row is { id: string; l: string; y?: number; qid?: string; q?: string } => {
+  const movies = payload.d.filter((row): row is ImdbSuggestionRow => {
     return Boolean(row) && typeof row === "object" && typeof (row as { id?: unknown }).id === "string";
   });
-  const scored = movies
-    .filter((row) => parseImdbId(row.id))
-    .filter((row) => row.qid === "movie" || row.q === "feature" || !row.qid)
-    .map((row) => {
-      const sameYear = row.y === year ? 2 : 0;
-      const sameTitle = normalize(row.l) === wanted ? 2 : normalize(row.l).includes(wanted) ? 1 : 0;
-      return { id: parseImdbId(row.id)!, score: sameYear + sameTitle };
-    })
-    .filter((row) => row.score >= 2)
-    .sort((left, right) => right.score - left.score);
-  return scored[0]?.id ?? null;
+  return pickImdbSuggestion(movies, title, year);
+}
+
+async function loadCinemeta(imdbId: string) {
+  return readJson(`https://v3-cinemeta.strem.io/meta/movie/${imdbId}.json`);
 }
 
 async function lookupImdbRating(imdbId: string) {
-  const payload = await readJson(`https://v3-cinemeta.strem.io/meta/movie/${imdbId}.json`);
-  if (!payload || typeof payload !== "object" || !("meta" in payload)) return null;
-  const meta = (payload as { meta?: { imdbRating?: unknown } }).meta;
-  return parseImdbRating(meta?.imdbRating);
+  const movie = parseCinemetaMovie(await loadCinemeta(imdbId));
+  return movie?.imdbRating ?? null;
+}
+
+export async function lookupMovieCatalog(
+  title: string,
+  year?: number | null,
+): Promise<MovieCatalogCard | null> {
+  const trimmed = title.trim();
+  if (!trimmed) return null;
+  const imdbId = parseImdbId(trimmed) ?? (await searchImdbId(trimmed, year));
+  if (!imdbId) return null;
+  return parseCinemetaMovie(await loadCinemeta(imdbId));
 }
 
 export async function enrichMovieImdb<T extends { title: string; year: number; imdbId?: string | null; imdbRating?: number | null }>(
