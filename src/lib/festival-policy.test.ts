@@ -25,19 +25,17 @@ describe("festival marks", () => {
     ]);
   });
 
-  it("orders the five majors and labels them in Spanish", () => {
+  it("orders the four majors and labels them in Spanish", () => {
     expect(
       mergeFestivalMarks([
         { id: "sansebastian", result: "nominated" },
         { id: "oscar", result: "nominated" },
-        { id: "berlin", result: "won" },
         { id: "venice", result: "won" },
         { id: "cannes", result: "nominated" },
       ]).map((mark) => festivalMarkLabel(mark)),
     ).toEqual([
       "Nominada en Cannes",
       "Ganó en Venecia",
-      "Ganó en Berlín",
       "Nominada en los Oscars",
       "Nominada en San Sebastián",
     ]);
@@ -45,7 +43,6 @@ describe("festival marks", () => {
 
   it("seeds the live Deseo y poder slate", () => {
     expect(catalogFestivalMarks("tt13238346")).toEqual([
-      { id: "berlin", result: "nominated" },
       { id: "oscar", result: "nominated" },
     ]);
     expect(catalogFestivalMarks("tt4016934")).toEqual([{ id: "cannes", result: "won" }]);
@@ -63,7 +60,7 @@ describe("festival marks", () => {
     ]);
   });
 
-  it("maps Wikidata awards to the five festivals and ignores the rest", () => {
+  it("maps Wikidata awards to the four festivals and ignores the rest", () => {
     expect(
       marksFromAwardHints([
         {
@@ -105,12 +102,19 @@ describe("festival marks", () => {
         labels: ["European Film Award for Best Film"],
       }),
     ).toBeNull();
+    expect(
+      festivalFromAwardHint({
+        result: "won",
+        labels: ["Golden Bear", "Berlin International Film Festival"],
+      }),
+    ).toBeNull();
   });
 
   it("drops invalid stored marks", () => {
     expect(
       parseFestivalMarks([
         { id: "oscar", result: "won" },
+        { id: "berlin", result: "nominated" },
         { id: "sundance", result: "won" },
         { id: "cannes", result: "maybe" },
         null,

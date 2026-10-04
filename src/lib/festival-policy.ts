@@ -1,10 +1,4 @@
-export const FESTIVAL_IDS = [
-  "cannes",
-  "venice",
-  "berlin",
-  "oscar",
-  "sansebastian",
-] as const;
+export const FESTIVAL_IDS = ["cannes", "venice", "oscar", "sansebastian"] as const;
 
 export type FestivalId = (typeof FESTIVAL_IDS)[number];
 export type FestivalResult = "won" | "nominated";
@@ -13,7 +7,6 @@ export type FestivalMark = { id: FestivalId; result: FestivalResult };
 export const FESTIVAL_NAMES: Record<FestivalId, string> = {
   cannes: "Cannes",
   venice: "Venecia",
-  berlin: "Berlín",
   oscar: "los Oscars",
   sansebastian: "San Sebastián",
 };
@@ -44,8 +37,6 @@ const AWARD_FESTIVALS: Record<string, FestivalId> = {
   Q209459: "venice",
   Q944480: "venice",
   Q1088624: "venice",
-  Q154590: "berlin",
-  Q708861: "berlin",
   Q1169799: "sansebastian",
   Q3477036: "sansebastian",
 };
@@ -56,15 +47,11 @@ const ORG_FESTIVALS: Record<string, FestivalId> = {
   Q163536: "cannes",
   Q1115560: "cannes",
   Q182090: "venice",
-  Q130871: "berlin",
   Q129390: "sansebastian",
 };
 
 export const KNOWN_FESTIVAL_MARKS: Record<string, FestivalMark[]> = {
-  tt13238346: [
-    { id: "berlin", result: "nominated" },
-    { id: "oscar", result: "nominated" },
-  ],
+  tt13238346: [{ id: "oscar", result: "nominated" }],
   tt4016934: [{ id: "cannes", result: "won" }],
   tt5083738: [
     { id: "venice", result: "won" },
@@ -169,13 +156,6 @@ export function festivalFromAwardHint(hint: FestivalAwardHint): FestivalId | nul
     )
   ) {
     return "venice";
-  }
-  if (
-    /\bgolden bear\b|\bsilver bear\b|\bberlinale\b|\bberlin international film festival\b/.test(
-      text,
-    )
-  ) {
-    return "berlin";
   }
   if (
     /\bsan sebastian\b|\bdonostia\b|\bconcha de oro\b|\bconcha de plata\b|\bgolden shell\b|\bsilver shell\b|\bsebastiane\b/.test(
