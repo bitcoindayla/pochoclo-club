@@ -202,11 +202,9 @@ function MovieTitleBlock({
         <small className="cinematicCredit">
           {movie.year} <i>|</i> {movie.director}
         </small>
-        <span className="cinematicMetaRow">
-          <FestivalMarks marks={movie.awards} />
-          {hasImdb ? <ImdbStar className="cinematicImdb" rating={movie.imdbRating!} /> : <span />}
-        </span>
+        {hasImdb ? <ImdbStar className="cinematicImdb" rating={movie.imdbRating!} /> : <span />}
         {showResults ? <VoteScore count={votes} delay={delay} percentage={percentage} /> : <span />}
+        <FestivalMarks marks={movie.awards} />
       </span>
     </span>
   );
