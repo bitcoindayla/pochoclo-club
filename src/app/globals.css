@@ -1415,10 +1415,21 @@ body:has(.cinematicBallot) .eyebrow {
 .cinematicTitleMeta > .festivalMarks {
   position: absolute;
   left: 100%;
-  top: 50%;
+  top: 0;
+  bottom: 0;
   z-index: 2;
+  align-items: center;
+  gap: 0.55rem;
   margin-left: 0.7rem;
-  transform: translateY(-50%);
+  padding-left: 0.85rem;
+  border-left: 1.5px solid rgba(255, 255, 255, 0.92);
+  transform: none;
+}
+.cinematicTitleMeta > .festivalMarks .festivalMark {
+  height: 86%;
+}
+.cinematicTitleMeta > .festivalMarks .festivalMark.isOscar {
+  height: 100%;
 }
 .festivalMarks {
   position: relative;
@@ -1437,7 +1448,7 @@ body:has(.cinematicBallot) .eyebrow {
   filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.45));
 }
 .festivalMark.isOscar {
-  height: 2.15em;
+  height: 1.45em;
 }
 .festivalMark img {
   display: block;
@@ -2328,13 +2339,14 @@ h1 .founderTag {
     padding: 0.1rem 0 0;
     gap: 0.18rem;
   }
-  .cinematicTitleMeta:has(.festivalMarks) { padding-right: 4.8rem; }
+  .cinematicTitleMeta:has(.festivalMarks) { padding-right: 8.4rem; }
   .cinematicTitleMeta > .festivalMarks {
     left: auto;
     right: 0;
     margin-left: 0;
+    gap: 0.4rem;
+    padding-left: 0.65rem;
   }
-  .festivalMark.isOscar { height: 1.45em; }
   .cinematicCredit, .cinematicTitles small { width: auto; padding-left: 0; }
   .cinematicVoteTrack { height: 0.82em; }
   .cinematicVoteScore b { font-size: 0.98rem; }
