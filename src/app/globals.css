@@ -1174,6 +1174,8 @@ td small { display: block; margin-top: 0.3rem; color: var(--muted); font-size: 0
 .latestWinner .kicker { color: var(--muted); }
 .latestWinner h2 { margin: 0.25rem 0 0; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.05em; }
 .latestWinner p { margin: 0; color: var(--muted); }
+.latestWinner .festivalMarks { margin-top: 0.5rem; }
+.latestWinner .festivalMark { height: 1.35em; }
 
 .cinematicBallot {
   --cinematic-accent: #ff5538;
@@ -1352,6 +1354,12 @@ body:has(.cinematicBallot) .eyebrow {
   padding: 0.06em 0 0.02em;
   gap: 0.14rem;
 }
+.cinematicMetaLead {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.28rem;
+}
 .cinematicCredit,
 .cinematicTitles small {
   position: relative;
@@ -1403,6 +1411,39 @@ body:has(.cinematicBallot) .eyebrow {
   z-index: 1;
   font-size: clamp(0.78rem, 1.15vw, 1.05rem);
   text-shadow: 0 1px 10px rgba(0,0,0,0.45);
+}
+.festivalMarks {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.32rem 0.42rem;
+  min-height: 1.15em;
+}
+.festivalMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.18em;
+  color: #fff;
+  filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.45));
+}
+.festivalMark svg {
+  display: block;
+  width: auto;
+  height: 100%;
+  fill: currentColor;
+}
+.festivalMark.isNominated {
+  opacity: 0.42;
+}
+.festivalMarkLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
 }
 .cinematicSelectionMark {
   position: relative;
@@ -2278,6 +2319,7 @@ h1 .founderTag {
     padding: 0.1rem 0 0;
     gap: 0.18rem;
   }
+  .festivalMark { height: 1.02em; }
   .cinematicCredit, .cinematicTitles small { width: auto; padding-left: 0; }
   .cinematicVoteTrack { height: 0.82em; }
   .cinematicVoteScore b { font-size: 0.98rem; }

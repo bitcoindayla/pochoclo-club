@@ -2,6 +2,7 @@ import "server-only";
 
 import { Timestamp, type Transaction } from "firebase-admin/firestore";
 
+import { enrichMovieFestivals, festivalOptionsChanged } from "@/lib/festivals";
 import { enrichMovieImdb } from "@/lib/imdb";
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import {
@@ -172,20 +173,14 @@ function movieForScreening(option: MovieOption) {
   };
 }
 
-async function withImdbOptions(options: MovieOptionInput[]) {
-  return Promise.all(options.map((option) => enrichMovieImdb(option)));
-}
-
-function imdbChanged(left: MovieOptionInput[], right: MovieOptionInput[]) {
-  return left.some((option, index) => {
-    const next = right[index];
-    return option.imdbId !== next?.imdbId || option.imdbRating !== next?.imdbRating;
-  });
+async function withCatalogOptions(options: MovieOptionInput[]) {
+  const withImdb = await Promise.all(options.map((option) => enrichMovieImdb(option)));
+  return Promise.all(withImdb.map((option) => enrichMovieFestivals(option)));
 }
 
 async function persistImdbOptions(ballot: MovieBallot): Promise<MovieBallot> {
-  const options = await withImdbOptions(ballot.options);
-  if (!imdbChanged(ballot.options, options)) return { ...ballot, options };
+  const options = await withCatalogOptions(ballot.options);
+  if (!festivalOptionsChanged(ballot.options, options)) return { ...ballot, options };
   await getAdminFirestore().collection("movieBallots").doc(ballot.id).update({ options });
   return { ...ballot, options };
 }
@@ -262,7 +257,7 @@ export async function createMovieBallot(
 ) {
   validateId(createdByMemberId, "El administrador no es válido.");
   validateId(screeningId, "La función no es válida.");
-  const options = await withImdbOptions(input.options);
+  const options = await withCatalogOptions(input.options);
   const nextInput = { ...input, options };
   const firestore = getAdminFirestore();
   const ballotReference = firestore.collection("movieBallots").doc(screeningId);
@@ -303,7 +298,7 @@ export async function updateMovieBallot(
 ) {
   validateId(updatedByMemberId, "El administrador no es válido.");
   validateId(screeningId, "La función no es válida.");
-  const options = await withImdbOptions(input.options);
+  const options = await withCatalogOptions(input.options);
   const nextInput = { ...input, options };
   const firestore = getAdminFirestore();
   const ballotReference = firestore.collection("movieBallots").doc(screeningId);

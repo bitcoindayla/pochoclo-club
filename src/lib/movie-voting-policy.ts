@@ -1,3 +1,4 @@
+import type { FestivalMark } from "./festival-policy";
 import { parseImdbId } from "./imdb-policy";
 import { localScreeningDate } from "./screening-policy";
 
@@ -20,6 +21,7 @@ export type MovieOptionInput = {
   bio: string;
   imdbId?: string | null;
   imdbRating?: number | null;
+  awards?: FestivalMark[] | null;
   image?: MovieOptionImage | null;
 };
 

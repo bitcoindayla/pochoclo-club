@@ -8,6 +8,7 @@ import {
   type CSSProperties,
 } from "react";
 
+import { FestivalMarks } from "@/components/festival-marks";
 import { ImdbStar } from "@/components/imdb-star";
 import type { MemberMovieBallot, MovieOption } from "@/lib/movie-voting";
 import { CLUB_TIME_ZONE } from "@/lib/screening-policy";
@@ -198,9 +199,12 @@ function MovieTitleBlock({
         {movie.title}
       </span>
       <span className="cinematicTitleMeta">
-        <small className="cinematicCredit">
-          {movie.year} <i>|</i> {movie.director}
-        </small>
+        <span className="cinematicMetaLead">
+          <small className="cinematicCredit">
+            {movie.year} <i>|</i> {movie.director}
+          </small>
+          <FestivalMarks marks={movie.awards} />
+        </span>
         {hasImdb ? <ImdbStar className="cinematicImdb" rating={movie.imdbRating!} /> : <span />}
         {showResults ? <VoteScore count={votes} delay={delay} percentage={percentage} /> : <span />}
       </span>
@@ -464,6 +468,7 @@ export function LatestWinner({ movie }: { movie: MovieOption }) {
       <div>
         <p className="kicker">Última ganadora</p>
         <h2>{movie.title}</h2>
+        <FestivalMarks marks={movie.awards} />
       </div>
       <p>{movie.year} · {movie.director}</p>
     </section>
