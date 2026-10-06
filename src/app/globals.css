@@ -79,7 +79,12 @@ body:has(.landingStage) .siteFooter,
 body:has(.critiqueBoard) .siteHeader,
 body:has(.critiqueBoard) .siteFooter,
 body:has(.critiquePhone) .siteHeader,
-body:has(.critiquePhone) .siteFooter { display: none; }
+body:has(.critiquePhone) .siteFooter,
+body:has(.screeningPrelude) .siteHeader,
+body:has(.screeningPrelude) .siteFooter,
+body:has(.essayPage) .siteHeader,
+body:has(.essayPage) .siteFooter { display: none; }
+body:has(.screeningPrelude) { overflow: hidden; }
 
 .menuTrigger, .menuClose {
   padding: 0;
@@ -1045,6 +1050,25 @@ td small { display: block; margin-top: 0.3rem; color: var(--muted); font-size: 0
   background: var(--bg);
 }
 .screeningForm { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: end; }
+.screeningForm select, .screeningForm textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.75rem 0.9rem;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--bg);
+}
+.screeningForm textarea {
+  min-height: 12rem;
+  resize: vertical;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.screeningForm > .pageIntro,
+.screeningForm > .formError,
+.screeningForm > .formSuccess { grid-column: 1 / -1; }
 .fieldGroup { display: grid; gap: 0.45rem; }
 .fieldGroup label { font-size: 0.62rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
 .fieldGroup label span { color: var(--muted); font-size: 0.6rem; }
@@ -3165,6 +3189,23 @@ body:has(.directorLanding) .siteFooter { display: none; }
 .directorFilms { flex: 1; min-height: 0; padding: 0 clamp(12px, 1.35vw, 24px) 12px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; animation: director-reveal 280ms ease both; }
 .directorFilms ul { padding: 0; margin: 0; list-style: none; }
 .directorFilms li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 7px 0; border-top: 1px solid rgba(11, 11, 11, .2); font-size: clamp(10px, .82vw, 13px); line-height: 1.25; }
+.directorFilms li:has(.directorFilmLink) { grid-template-columns: minmax(0, 1fr); }
+.directorFilmLink {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+.directorFilmLink i {
+  margin-left: 0.4em;
+  font-style: normal;
+  font-size: 0.72em;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.5;
+}
 .directorFilms li span { overflow-wrap: anywhere; }
 .directorFilms li strong { font-weight: 600; font-variant-numeric: tabular-nums; }
 .directorEmpty { margin: 0; padding: 15vh 8vw; font-size: clamp(2rem, 7vw, 6rem); letter-spacing: -.06em; }
@@ -3183,4 +3224,231 @@ body:has(.directorLanding) .siteFooter { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .directorTile, .directorName { transition: none; }
   .directorFilms, .directorPortrait { animation: none; }
+}
+
+.screeningPrelude {
+  position: relative;
+  min-height: 100svh;
+  overflow: hidden;
+  color: #f4f1ea;
+  background: #050505;
+}
+.preludeStill {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.preludeStill.isEmpty { background: #111; }
+.preludeScrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(5, 5, 5, 0.9) 0%, rgba(5, 5, 5, 0.28) 54%, rgba(5, 5, 5, 0.72) 100%),
+    linear-gradient(180deg, rgba(5, 5, 5, 0.08) 0%, rgba(5, 5, 5, 0.9) 100%);
+}
+.preludeMain {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(16rem, 0.65fr);
+  gap: clamp(1.2rem, 3vw, 2.5rem);
+  align-items: end;
+  min-height: calc(100svh - 8.8rem);
+  padding: clamp(1.5rem, 4vw, 3.4rem) clamp(1.3rem, 4vw, 3.4rem) 1.1rem;
+}
+.preludeCopy h1 {
+  max-width: 14ch;
+  margin: 0;
+  font-size: clamp(3rem, 8vw, 7rem);
+  font-weight: 800;
+  letter-spacing: -0.07em;
+  line-height: 0.86;
+}
+.preludeCopy h1 small {
+  display: block;
+  margin-top: 0.75rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.preludeBio {
+  max-width: 38rem;
+  margin: 1.25rem 0 0;
+  color: rgba(244, 241, 234, 0.78);
+  font-size: clamp(0.95rem, 1.35vw, 1.15rem);
+  line-height: 1.45;
+}
+.preludeTimer { margin: 0; text-align: right; }
+.preludeTimer b {
+  display: block;
+  font-size: clamp(2.5rem, 6.5vw, 5.2rem);
+  font-weight: 800;
+  letter-spacing: -0.07em;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+}
+.preludeTimer small {
+  display: block;
+  margin-top: 0.7rem;
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.preludeBallot {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0;
+  padding: 0 clamp(1.3rem, 4vw, 3.4rem) 1.3rem;
+  list-style: none;
+}
+.preludeBallot button {
+  width: 100%;
+  min-height: 6.2rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  color: inherit;
+  border: 0;
+  border-top: 1px solid rgba(244, 241, 234, 0.22);
+  background: transparent;
+  text-align: left;
+}
+.preludeBallot button:hover { background: rgba(244, 241, 234, 0.06); }
+.preludeBallot button.isFeatured,
+.preludeBallot button.isFeatured:hover { background: rgba(244, 241, 234, 0.08); }
+.preludeBallot strong {
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+}
+.preludeBallot span {
+  display: grid;
+  gap: 0.22rem;
+  min-width: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+.preludeBallot small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.essayPage {
+  min-height: 100svh;
+  color: #f4f1ea;
+  background: #0b0b0b;
+}
+.essayStill {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 62svh;
+  overflow: hidden;
+  background: #111;
+}
+.essayStill img,
+.essayStillFallback {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.essayScore {
+  position: absolute;
+  left: 4%;
+  bottom: 8%;
+  display: flex;
+  align-items: center;
+  gap: 0.12rem;
+  margin: 0;
+}
+.essayScore svg {
+  width: clamp(3.1rem, 8vw, 5.5rem);
+  height: clamp(3.1rem, 8vw, 5.5rem);
+  fill: #f5c518;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.45));
+}
+.essayScore b {
+  display: grid;
+  place-items: center;
+  min-width: 1.55em;
+  padding: 0.12em 0.28em 0.08em;
+  color: #f4f1ea;
+  background: #111;
+  border-radius: 0.18em;
+  font-size: clamp(2.5rem, 7vw, 5.1rem);
+  font-weight: 800;
+  letter-spacing: -0.07em;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+}
+.essayBody {
+  width: min(100% - 2.4rem, 40rem);
+  margin: 0 auto;
+  padding: clamp(2.2rem, 6vw, 4.4rem) 0 6rem;
+}
+.essayBody h1 {
+  margin: 0 0 2rem;
+  font-size: clamp(2.2rem, 6vw, 3.6rem);
+  font-weight: 800;
+  letter-spacing: -0.06em;
+  line-height: 0.9;
+}
+.essayBody h1 small {
+  display: block;
+  margin-top: 0.7rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.essayText {
+  display: grid;
+  gap: 1.15rem;
+  color: rgba(244, 241, 234, 0.88);
+  font-size: 1.05rem;
+  font-weight: 400;
+  line-height: 1.62;
+}
+.essayText p { margin: 0; white-space: pre-wrap; }
+.essayShare {
+  margin-top: 2.5rem;
+  padding: 0;
+  color: var(--muted);
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  background: transparent;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.essayShare:hover { color: var(--ink); }
+
+@media (max-width: 899px) {
+  .preludeMain { grid-template-columns: 1fr; min-height: calc(100svh - 14rem); }
+  .preludeTimer { text-align: left; }
+  .preludeBallot { grid-template-columns: 1fr; padding-bottom: 0.4rem; }
+  .preludeBallot button { min-height: 4.4rem; }
+}
+@media (max-width: 699px) {
+  .essayStill { aspect-ratio: 3 / 4; max-height: 88svh; }
 }

@@ -91,6 +91,15 @@ type FilmHistoryDocument = {
   attendees?: AttendanceRecord[];
   presentCount?: number;
   absentCount?: number;
+  essay?: string | null;
+  essayImage?: {
+    landscapePath: string;
+    portraitPath: string;
+    version: string;
+    accent: string;
+    sourceWidth: number;
+    sourceHeight: number;
+  } | null;
   createdAt: Timestamp;
 };
 
@@ -142,6 +151,8 @@ export type FilmHistoryEntry = {
   attendees: AttendanceRecord[];
   presentCount: number;
   absentCount: number;
+  essay: string | null;
+  hasEssayImage: boolean;
 };
 
 export function parseCritiqueCookie(value: string | undefined, screeningId: string) {
@@ -190,6 +201,13 @@ function historyFrom(id: string, data: FilmHistoryDocument): FilmHistoryEntry {
     attendees,
     presentCount: data.presentCount ?? counts.present,
     absentCount: data.absentCount ?? counts.absent,
+    essay: typeof data.essay === "string" && data.essay.trim() ? data.essay.trim() : null,
+    hasEssayImage: Boolean(
+      data.essayImage &&
+        typeof data.essayImage === "object" &&
+        typeof data.essayImage.landscapePath === "string" &&
+        typeof data.essayImage.version === "string",
+    ),
   };
 }
 

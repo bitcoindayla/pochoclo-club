@@ -108,7 +108,9 @@ export function CritiquePhone({
       {!data.me ? (
         <form action={joinAction} className="critiqueJoin">
           <input name="token" type="hidden" value={token} />
-          <p className="critiqueHint">¿Quién sos en la sala de hoy?</p>
+          <p className="critiqueHint">
+            ¿Quién sos en la sala de hoy? Si alguien dejó el teléfono, elegí su nombre desde acá.
+          </p>
           <div className="critiquePick">
             {data.names
               .filter((row) => !row.joined)

@@ -14,6 +14,7 @@ import {
   releaseCritiqueAudience,
   startCritiqueScoring,
 } from "@/lib/critiques";
+import { FilmEssayError, saveFilmEssay } from "@/lib/film-essays";
 
 export type CritiqueActionState = {
   error: string | null;
@@ -21,8 +22,10 @@ export type CritiqueActionState = {
 };
 
 function refresh() {
+  revalidatePath("/");
   revalidatePath("/admin/critica");
   revalidatePath("/admin/critica/sala");
+  revalidatePath("/admin/critica/proyeccion");
   revalidatePath("/admin/miembros");
   revalidatePath("/historial");
 }
@@ -166,6 +169,39 @@ export async function addLegacyFilmAction(
   } catch (error) {
     return {
       error: error instanceof CritiqueError || error instanceof Error ? error.message : "No se pudo guardar.",
+      message: null,
+    };
+  }
+}
+
+export async function saveFilmEssayAction(
+  _previous: CritiqueActionState,
+  formData: FormData,
+): Promise<CritiqueActionState> {
+  await requireAdmin();
+  const filmId = formData.get("filmId");
+  const image = formData.get("image");
+  if (typeof filmId !== "string") {
+    return { error: "Elegí una película del historial.", message: null };
+  }
+  try {
+    const saved = await saveFilmEssay(
+      filmId,
+      formData.get("essay"),
+      image instanceof File && image.size > 0 ? image : null,
+    );
+    refresh();
+    revalidatePath(`/visto/${filmId}`);
+    return {
+      error: null,
+      message: saved ? `Reseña de ${saved.title} publicada.` : "Reseña publicada.",
+    };
+  } catch (error) {
+    return {
+      error:
+        error instanceof FilmEssayError || error instanceof Error
+          ? error.message
+          : "No se pudo guardar la reseña.",
       message: null,
     };
   }

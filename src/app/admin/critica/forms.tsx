@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { CRITIQUE_CATEGORIES } from "@/lib/critique-policy";
 
@@ -8,6 +8,7 @@ import {
   addLegacyFilmAction,
   openCritiqueAction,
   publishOccupancyScoresAction,
+  saveFilmEssayAction,
   type CritiqueActionState,
 } from "./actions";
 
@@ -155,6 +156,71 @@ export function LegacyFilmForm() {
       </label>
       <button className="primaryButton" disabled={pending} type="submit">
         {pending ? "Guardando…" : "Agregar al historial"}
+      </button>
+      {state.error ? <p className="formError">{state.error}</p> : null}
+      {state.message ? <p className="formSuccess">{state.message}</p> : null}
+    </form>
+  );
+}
+
+export function EssayForm({
+  films,
+}: {
+  films: Array<{
+    id: string;
+    title: string;
+    year: number;
+    director: string;
+    score: number;
+    essay: string | null;
+    hasEssayImage: boolean;
+  }>;
+}) {
+  const [state, action, pending] = useActionState(saveFilmEssayAction, initial);
+  const [filmId, setFilmId] = useState(films[0]?.id ?? "");
+  const selected = films.find((film) => film.id === filmId) ?? null;
+
+  return (
+    <form action={action} className="screeningForm" encType="multipart/form-data">
+      <label className="wideField">
+        Película
+        <select
+          name="filmId"
+          onChange={(event) => setFilmId(event.target.value)}
+          required
+          value={filmId}
+        >
+          {films.map((film) => (
+            <option key={film.id} value={film.id}>
+              {film.title} ({film.year}) · {film.score.toFixed(1)}
+              {film.essay ? " · con nota" : ""}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="wideField">
+        Reseña
+        <textarea
+          defaultValue={selected?.essay ?? ""}
+          key={filmId}
+          maxLength={8000}
+          minLength={40}
+          name="essay"
+          required
+          rows={10}
+        />
+      </label>
+      <label className="wideField">
+        Foto de la escena
+        <input accept="image/jpeg,image/png,image/webp" name="image" type="file" />
+      </label>
+      <p className="pageIntro">
+        {selected?.hasEssayImage
+          ? "Ya hay una foto. Si subís otra, reemplaza la anterior."
+          : "La foto queda en la infografía y en el enlace que mandamos por WhatsApp."}
+      </p>
+      <button className="primaryButton" disabled={pending || films.length === 0} type="submit">
+        {pending ? "Publicando…" : "Publicar reseña"}
       </button>
       {state.error ? <p className="formError">{state.error}</p> : null}
       {state.message ? <p className="formSuccess">{state.message}</p> : null}

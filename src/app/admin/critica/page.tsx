@@ -13,7 +13,7 @@ import { getMovieBallot } from "@/lib/movie-voting";
 import { getOpenScreeningForMember } from "@/lib/screenings";
 import { getRecommendationRound } from "@/lib/recommendations";
 
-import { LegacyFilmForm, OccupancyScoreForm, OpenCritiqueForm } from "./forms";
+import { EssayForm, LegacyFilmForm, OccupancyScoreForm, OpenCritiqueForm } from "./forms";
 import { RecommendationEditor } from "./recommendation-editor";
 
 export const metadata: Metadata = { title: "La crítica" };
@@ -57,8 +57,8 @@ export default async function CritiqueAdminPage() {
           <p className="kicker">Panel administrativo</p>
           <h1>La crítica</h1>
           <p className="pageIntro">
-            Desde este domingo, cada presente deja cinco notas. El historial guarda el puntaje de la
-            sala y el de cada uno.
+            Antes de Stremio, la tele muestra el timer y las películas en carrera. Después de los
+            créditos, la crítica: puntuación, debate y Pochoclo Recomienda.
           </p>
           <AdminNav current="/admin/critica" />
         </div>
@@ -70,8 +70,8 @@ export default async function CritiqueAdminPage() {
           <p className="kicker">Esta noche</p>
           <h2>Pantalla de la sala</h2>
           <p>
-            Abrí la crítica, proyectá el QR y esperá a que todos escaneen. Después empezás la
-            puntuación.
+            Prendé la pantalla con el timer. Cuando terminen los títulos, abrí la crítica. Si alguien
+            no trajo el teléfono, otro de la sala escanea y elige su nombre.
           </p>
         </div>
         {screening ? (
@@ -90,16 +90,31 @@ export default async function CritiqueAdminPage() {
                 </Link>
               </div>
             </div>
-          ) : screening.occupancy.length === 0 ? (
-            <p>No hay nadie sentado todavía.</p>
           ) : (
-            <OpenCritiqueForm
-              director={movie?.director ?? ""}
-              occupancy={screening.occupancy.length}
-              screeningId={screening.id}
-              title={movie?.title ?? ""}
-              year={movie?.year ? String(movie.year) : ""}
-            />
+            <>
+              <div className="accessCard">
+                <h2>{movie?.title ?? screening.title ?? "Esta noche"}</h2>
+                <p>
+                  {screening.occupancy.length} en la sala · arranca a las {screening.localTime}
+                </p>
+                <div className="buttonRow">
+                  <Link className="primaryButton" href="/admin/critica/proyeccion" target="_blank">
+                    Pantalla de la sala
+                  </Link>
+                </div>
+              </div>
+              {screening.occupancy.length === 0 ? (
+                <p>No hay nadie sentado todavía.</p>
+              ) : (
+                <OpenCritiqueForm
+                  director={movie?.director ?? ""}
+                  occupancy={screening.occupancy.length}
+                  screeningId={screening.id}
+                  title={movie?.title ?? ""}
+                  year={movie?.year ? String(movie.year) : ""}
+                />
+              )}
+            </>
           )
         ) : (
           <p>No hay una función abierta o cerrada para criticar.</p>
@@ -138,6 +153,21 @@ export default async function CritiqueAdminPage() {
           <RecommendationEditor screeningId={screening.id} round={recommendations} />
         </div>
       ) : null}
+
+      <section className="invitationHistory">
+        <div className="sectionHeading">
+          <div>
+            <p className="kicker">Archivo</p>
+            <h2>Reseña y fotograma</h2>
+          </div>
+          <span>{history.filter((film) => film.essay).length} con nota</span>
+        </div>
+        <p className="pageIntro">
+          El análisis que mandamos por WhatsApp queda en la infografía de directores, con la foto de
+          la escena y el puntaje de la sala.
+        </p>
+        {history.length > 0 ? <EssayForm films={history} /> : <p>Primero cargá una película al historial.</p>}
+      </section>
 
       <section className="invitationHistory">
         <div className="sectionHeading">

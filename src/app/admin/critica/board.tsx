@@ -74,7 +74,9 @@ export function CritiqueBoard({
   return (
     <section className={projection ? "critiqueBoard isProjection" : "critiqueBoard"}>
       {connectionError ? <p className="recommendationConnection" role="status">Reconectando con la sala…</p> : null}
-      <p className="kicker">La crítica</p>
+      <p className="kicker">
+        {session.status === "closed" ? "El debate" : session.status === "scoring" ? "Puntuación" : "La crítica"}
+      </p>
       <h1>
         {session.movieTitle}
         <small>
@@ -92,7 +94,7 @@ export function CritiqueBoard({
             <p className="critiqueHint">
               {allIn
                 ? "Toda la sala escaneó. Empezá la puntuación."
-                : "Que cada uno apunte el QR con el teléfono."}
+                : "Que cada uno apunte el QR. Si alguien no trajo el teléfono, otro de la sala escanea y elige su nombre."}
             </p>
             <AudienceList
               action={releaseAction}
@@ -130,7 +132,7 @@ export function CritiqueBoard({
               </p>
               <p className="critiqueHint">
                 {session.status === "closed"
-                  ? "Puntaje final de la sala."
+                  ? "Puntaje final de la sala. Ahora el debate."
                   : pending.length === 0
                     ? "Toda la sala ya puntuó."
                     : `${pending.length} todavía en el teléfono.`}
