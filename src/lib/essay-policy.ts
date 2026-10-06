@@ -87,7 +87,14 @@ export function essayShareText({
   score: number;
   url: string;
 }) {
-  return `${title} (${year})\n${director}\nPuntaje de la sala: ${formatClubScore(score)}\n${url}`;
+  return [
+    "Te comparto la reseña de la peli que vimos el Domingo en el ciclo de Pochoclo.club",
+    "",
+    `${title} (${year})`,
+    director,
+    `Puntaje de la sala: ${formatClubScore(score)}`,
+    url,
+  ].join("\n");
 }
 
 export function whatsappShareUrl(text: string) {

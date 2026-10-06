@@ -52,8 +52,9 @@ describe("essay policy", () => {
       url: "https://pochoclo.club/visto/GNZXnAswzdwG7dUQhbqY",
     });
     expect(text).toBe(
-      "Past Lives (2023)\nCeline Song\nPuntaje de la sala: 8,6\nhttps://pochoclo.club/visto/GNZXnAswzdwG7dUQhbqY",
+      "Te comparto la reseña de la peli que vimos el Domingo en el ciclo de Pochoclo.club\n\nPast Lives (2023)\nCeline Song\nPuntaje de la sala: 8,6\nhttps://pochoclo.club/visto/GNZXnAswzdwG7dUQhbqY",
     );
+    expect(text.match(/https:\/\/pochoclo\.club\/visto\//g)).toHaveLength(1);
     expect(formatClubScore(8)).toBe("8,0");
     expect(whatsappShareUrl(text)).toContain("wa.me/?text=");
     expect(essayImageUrl("film1", "v2")).toBe("/api/essay-image/film1?variant=landscape&v=v2");

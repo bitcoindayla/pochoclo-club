@@ -17,20 +17,12 @@ export function EssayShare({
 }) {
   const text = essayShareText({ title, year, director, score, url });
 
-  async function share() {
-    if (typeof navigator.share === "function") {
-      try {
-        await navigator.share({ title: `${title} (${year})`, text, url });
-        return;
-      } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-      }
-    }
+  function share() {
     window.open(whatsappShareUrl(text), "_blank", "noopener,noreferrer");
   }
 
   return (
-    <button className="essayShare" onClick={() => void share()} type="button">
+    <button className="essayShare" onClick={share} type="button">
       Compartir por WhatsApp
     </button>
   );
