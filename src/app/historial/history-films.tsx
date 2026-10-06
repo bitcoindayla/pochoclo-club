@@ -1,3 +1,5 @@
+"use client";
+
 import { ReputationMark } from "@/components/reputation-mark";
 import { presentAttendees, type AttendanceRecord } from "@/lib/attendance-policy";
 import { CRITIQUE_CATEGORIES, type CritiqueScores } from "@/lib/critique-policy";
@@ -44,7 +46,7 @@ function PersonBreakdown({
         <div className="historyPersonHead">
           <strong>{person.name}</strong>
           {mark}
-          <span>—</span>
+          <span>{person.average?.toFixed(1) ?? "—"}</span>
         </div>
         {person.kind === "guest" && person.hostName ? (
           <small>+1 de {person.hostName}</small>
@@ -84,7 +86,20 @@ function FilmRow({
     <>
       <span className="historyFilmDate">{formatDate(film.watchedAt)}</span>
       <span className="historyFilmTitle">
-        <strong>{film.title}</strong>
+        <strong>
+          {film.essay ? (
+            <a
+              className="historyFilmEssay"
+              href={`/visto/${film.id}`}
+              onClick={(event) => event.stopPropagation()}
+              onPointerDown={(event) => event.stopPropagation()}
+            >
+              {film.title}
+            </a>
+          ) : (
+            film.title
+          )}
+        </strong>
         <small>
           {film.year} · {film.director}
         </small>

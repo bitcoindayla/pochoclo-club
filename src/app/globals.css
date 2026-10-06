@@ -751,6 +751,14 @@ body:has(.screeningPrelude) { overflow: hidden; }
   font-size: 1.05rem;
   letter-spacing: -0.03em;
 }
+.historyFilmEssay {
+  color: inherit;
+  text-decoration: none;
+}
+.historyFilmEssay:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
 .historyFilmTitle small,
 .historyFilmScore small,
 .historyFilmDate {

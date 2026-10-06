@@ -33,8 +33,8 @@ export default async function HistoryPage() {
           <p className="kicker">El archivo</p>
           <h1>Lo que vimos</h1>
           <p className="pageIntro">
-            Fecha, título, dirección, año y el puntaje de la sala. En las últimas, abrí cada
-            película para ver el desglose por persona.
+            Fecha, título, dirección, año y el puntaje de la sala. El nombre abre la reseña.
+            En las últimas, abrí cada película para ver el desglose por persona.
           </p>
         </div>
         {history.length > 0 ? (
