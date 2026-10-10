@@ -1329,9 +1329,11 @@ body:has(.cinematicBallot) .eyebrow {
   color: rgba(255,255,255,0.42);
   letter-spacing: 0;
 }
-.cinematicTitles { display: grid; justify-items: stretch; width: min(100%, 64rem); }
+.cinematicTitles { display: grid; justify-items: stretch; width: min(100%, 64rem); row-gap: 0.28rem; }
 .cinematicTitles label, .cinematicTitles button {
   position: relative;
+  z-index: 0;
+  isolation: isolate;
   width: 100%;
   min-width: 0;
   display: flex;
@@ -1345,16 +1347,13 @@ body:has(.cinematicBallot) .eyebrow {
   text-align: left;
   text-shadow: 0 2px 22px rgba(0,0,0,0.42);
   cursor: pointer;
-  transition: color 180ms ease, transform 180ms ease;
+  transition: color 180ms ease;
 }
 .cinematicTitles label:hover, .cinematicTitles label.isActive,
 .cinematicTitles button:hover, .cinematicTitles button.isActive,
 .cinematicTitles label:has(input:checked) { color: #fff; }
-.cinematicTitles label.isActive, .cinematicTitles button.isActive { transform: translateX(0.45rem); }
 .cinematicTitles.hasResults label,
 .cinematicTitles.hasResults button { color: #fff; }
-.cinematicTitles.hasResults label.isActive,
-.cinematicTitles.hasResults button.isActive { transform: none; }
 .cinematicTitles.hasResults .cinematicMovieTitle {
   text-shadow: 0 1px 0 rgba(0,0,0,0.28), 0 10px 28px rgba(0,0,0,0.38);
 }
@@ -1385,12 +1384,13 @@ body:has(.cinematicBallot) .eyebrow {
   z-index: 2;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: flex-start;
   align-self: stretch;
   min-width: 8.4rem;
   padding: 0.06em 0 0.02em;
   gap: 0.14rem;
+  pointer-events: none;
 }
 .cinematicCredit,
 .cinematicTitles small {
@@ -1456,6 +1456,7 @@ body:has(.cinematicBallot) .eyebrow {
   padding-left: 0.85rem;
   border-left: 1.5px solid rgba(255, 255, 255, 0.92);
   transform: none;
+  pointer-events: none;
 }
 .cinematicTitleMeta > .festivalMarks .festivalMark {
   height: 86%;
