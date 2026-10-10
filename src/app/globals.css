@@ -3134,9 +3134,19 @@ body:has(.directorLanding) .siteFooter { display: none; }
 .directorHeaderCaption { display: grid; gap: 6px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
 .directorHeaderCaption span { color: var(--muted); font-size: 9px; }
 .directorHeaderAccess { justify-self: end; }
-.directorHeaderAccess .landingCtasCompact { display: block; width: auto; }
+.directorHeaderAccess .landingCtasCompact {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+  width: min(100%, 22rem);
+}
+.directorHeaderAccess .landingCtasCompact:not(:has(.landingCtaJoin)) {
+  grid-template-columns: minmax(0, 1fr);
+  width: auto;
+}
 .directorHeaderAccess .landingCta { min-height: 38px; padding: .7rem 1rem; font-size: 9px; }
 .directorCanvas { position: relative; height: calc(100svh - 88px); min-height: 580px; overflow: hidden; }
+.directorLanding.isTasteGate .directorCanvas { height: calc(100svh - 88px - 5.6rem); min-height: 480px; }
 .directorTile {
   position: absolute;
   display: flex;
@@ -3208,7 +3218,26 @@ body:has(.directorLanding) .siteFooter { display: none; }
 .directorFilms { flex: 1; min-height: 0; padding: 0 clamp(12px, 1.35vw, 24px) 12px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; animation: director-reveal 280ms ease both; }
 .directorFilms ul { padding: 0; margin: 0; list-style: none; }
 .directorFilms li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 7px 0; border-top: 1px solid rgba(11, 11, 11, .2); font-size: clamp(10px, .82vw, 13px); line-height: 1.25; }
-.directorFilms li:has(.directorFilmLink) { grid-template-columns: minmax(0, 1fr); }
+.directorFilms li:has(.directorFilmLink),
+.directorFilms li:has(.directorFilmPick) { grid-template-columns: minmax(0, 1fr); }
+.directorFilmPick {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+.directorFilmPick[aria-pressed="true"] span { text-decoration: underline; text-underline-offset: 0.18em; }
+.directorFilmPick[aria-pressed="true"] strong {
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.directorFilms li[data-selected="true"] { color: #0b0b0b; }
 .directorFilmLink {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -3228,6 +3257,60 @@ body:has(.directorLanding) .siteFooter { display: none; }
 .directorFilms li span { overflow-wrap: anywhere; }
 .directorFilms li strong { font-weight: 600; font-variant-numeric: tabular-nums; }
 .directorEmpty { margin: 0; padding: 15vh 8vw; font-size: clamp(2rem, 7vw, 6rem); letter-spacing: -.06em; }
+.tasteDock {
+  position: sticky;
+  bottom: 0;
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem 1.4rem;
+  min-height: 5.6rem;
+  padding: 0.9rem clamp(1.2rem, 3vw, 3rem);
+  border-top: 1px solid var(--line);
+  background: #0b0b0b;
+}
+.tasteDockCopy {
+  display: grid;
+  gap: 0.28rem;
+  min-width: 0;
+}
+.tasteCount {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.tasteCount b { font-size: 1.45rem; font-weight: 800; }
+.tasteCount span { color: var(--muted); font-size: 0.78rem; font-weight: 700; }
+.tasteDockCopy > p { margin: 0; color: var(--muted); font-size: 0.78rem; line-height: 1.35; }
+.tasteDockError { color: var(--cream) !important; }
+.tasteRetry, .tasteCopy {
+  margin-left: 0.35rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--cream);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+.tasteDockInvite {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem 1rem;
+}
+.tasteDockInvite .signInControl { margin: 0; }
+.tasteDockInvite .googleButton { min-height: 44px; min-width: 0; }
+.tasteCopy { margin: 0; }
+.tasteDockWait { margin: 0; color: var(--muted); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; }
 @keyframes director-reveal { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 640px) {
   .directorHeader { height: 72px; padding: 0 16px; gap: 12px; grid-template-columns: auto 1fr; }
@@ -3236,9 +3319,20 @@ body:has(.directorLanding) .siteFooter { display: none; }
   .directorHeader:has(.menuTrigger) .directorHeaderLeft { display: block; }
   .directorHeader .brand { justify-self: start; font-size: 1.2rem; white-space: nowrap; }
   .directorHeaderAccess .landingCta { font-size: 8px; padding: .65rem .7rem; }
+  .directorHeaderAccess .landingCtasCompact { width: min(100%, 16.5rem); }
   .directorCanvas { height: max(calc(100svh - 72px), calc(var(--director-count) * 64px)); min-height: 0; }
+  .directorLanding.isTasteGate .directorCanvas {
+    height: max(calc(100svh - 72px - 7.2rem), calc(var(--director-count) * 64px));
+  }
   .directorName { font-weight: 600; }
   .directorFilms li { font-size: 11px; }
+  .tasteDock {
+    position: sticky;
+    min-height: 0;
+    padding: 0.75rem 1rem 0.9rem;
+  }
+  .tasteDockInvite { width: 100%; }
+  .tasteDockInvite .googleButton { flex: 1; width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) {
   .directorTile, .directorName { transition: none; }

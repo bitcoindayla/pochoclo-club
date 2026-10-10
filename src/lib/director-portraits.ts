@@ -1,0 +1,47 @@
+// Archive spellings are kept as keys so adding portraits never changes credits.
+const portraits: Record<string, string> = {
+  "ruben ostlund": "ruben-ostlund",
+  "mike mills": "mike-mills",
+  "ari aster": "ari-aster",
+  "paul thomas anderson": "paul-thomas-anderson",
+  "joachim trier": "joachim-trier",
+  "park chan-wook": "park-chan-wook",
+  "celine song": "celine-song",
+  "cristopher nolan": "christopher-nolan",
+  "christopher nolan": "christopher-nolan",
+  "gints zibalodis": "gints-zilbalodis",
+  "gints zilbalodis": "gints-zilbalodis",
+  "matt ross": "matt-ross",
+  "spike jonze": "spike-jonze",
+  "olivia wilde": "olivia-wilde",
+  "ben stiller": "ben-stiller",
+  "daniel kwan / daniel scheinert": "daniels",
+  "max barbakow": "max-barbakow",
+  "hannes stohr": "hannes-stohr",
+  "quentin tarantino": "quentin-tarantino",
+  "kogonada": "kogonada",
+  "james mangold": "james-mangold",
+  "alejandro inarritu": "alejandro-gonzalez-inarritu",
+  "alexander payne": "alexander-payne",
+  "hirokazu kore-eda": "hirokazu-kore-eda",
+  "jt mollner": "jt-mollner",
+  "wagner moura": "wagner-moura",
+  "yorgos lanthimos": "yorgos-lanthimos",
+  "aaron schimberg": "aaron-schimberg",
+  "jane schoenbrun": "jane-schoenbrun",
+  "jesse eisenberg": "jesse-eisenberg",
+  "abdellatif kechiche": "abdellatif-kechiche",
+  "elia suleiman": "elia-suleiman",
+  "jonathan glazer": "jonathan-glazer",
+  "kristoffer borgli": "kristoffer-borgli",
+  "luca guadagnino": "luca-guadagnino",
+  "rodrigo sorogoyen": "rodrigo-sorogoyen",
+  "takashi miike": "takashi-miike",
+  "bertrand bonello": "bertrand-bonello",
+  "julia ducournau": "julia-ducournau",
+};
+
+export function directorPortrait(id: string): string | undefined {
+  const slug = portraits[id];
+  return slug ? `/directors/${slug}.webp` : undefined;
+}

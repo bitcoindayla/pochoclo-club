@@ -1,21 +1,49 @@
 import Link from "next/link";
 
+import { Brand } from "@/components/brand";
+import { DirectorMosaic } from "@/components/director-mosaic";
+import { LandingRefresh } from "@/components/landing-refresh";
 import { LandingAccess } from "@/components/landing-access";
 import { LandingPhotoEditor } from "@/components/landing-photo-editor";
 import { LandingWordmark } from "@/components/landing-wordmark";
 import { SiteMenu } from "@/components/site-menu";
 import { getCurrentMember } from "@/lib/authz";
 import { getLandingVisual } from "@/lib/landing";
+import { getLandingDirectors, hasLiveLandingBallot } from "@/lib/landing-directors";
+import { getLandingStats } from "@/lib/landing-stats";
 import { menuLinksFor } from "@/lib/nav";
 
 export default async function Home() {
-  const [member, visual] = await Promise.all([getCurrentMember(), getLandingVisual()]);
+  const [member, visual, liveBallot] = await Promise.all([
+    getCurrentMember(), getLandingVisual(), hasLiveLandingBallot(),
+  ]);
+  if (!liveBallot) {
+    const [directors, stats] = await Promise.all([getLandingDirectors(), getLandingStats()]);
+    return (
+      <div className="directorLanding">
+        <LandingRefresh />
+        <header className="directorHeader">
+          <div className="directorHeaderLeft">
+            {member ? <SiteMenu links={menuLinksFor(member)} visual={visual} /> : (
+              <span className="directorHeaderCaption">Otra mirada, algo nos queda.<span>{stats.functionsCount.toLocaleString("es-AR")} FUNCIONES | {stats.people.toLocaleString("es-AR")} ESPECTADORES</span></span>
+            )}
+          </div>
+          <Brand />
+          <div className="directorHeaderAccess">
+            {member ? <Link className="landingCta landingCtaMember" href="/club">Entrar al club</Link> : <LandingAccess compact />}
+          </div>
+        </header>
+        <DirectorMosaic directors={directors} />
+      </div>
+    );
+  }
   const filmCredit = visual?.movie
     ? `${visual.movie.title} (${visual.movie.year}) | Dirección: ${visual.movie.director}`
     : "";
 
   return (
     <div className="landingStage">
+      <LandingRefresh />
       <header className="landingChrome">
         <div className="landingChromeSide">
           {member ? <SiteMenu links={menuLinksFor(member)} visual={visual} /> : null}

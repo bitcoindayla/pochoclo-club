@@ -11,6 +11,13 @@ import {
   isInvitationToken,
   type InvitationStatus,
 } from "@/lib/invitation-policy";
+import {
+  parseTasteFilmIds,
+  TASTE_GATE_CREATOR,
+  TASTE_GATE_DAILY_CAP,
+  TASTE_GATE_MIN_FILMS,
+  tasteGateDay,
+} from "@/lib/taste-gate-policy";
 
 type InvitationDocument = {
   createdAt: Timestamp;
@@ -19,6 +26,9 @@ type InvitationDocument = {
   usedAt: Timestamp | null;
   usedByMemberId: string | null;
   createdByMemberId: string;
+  source?: "admin" | "taste-gate";
+  filmIds?: string[];
+  clientKey?: string;
 };
 
 export type InvitationListItem = {
@@ -72,6 +82,52 @@ export async function createInvitationBatch(createdByMemberId: string, count: nu
   await batch.commit();
 
   return invitations.map(({ id, token }) => ({ id, token, expiresAt }));
+}
+
+export async function createTasteInvitation(filmIds: string[], clientKey: string, now = new Date()) {
+  const requested = parseTasteFilmIds(filmIds);
+  const firestore = getAdminFirestore();
+  const snapshots = await firestore.getAll(
+    ...requested.map((id) => firestore.collection("filmHistory").doc(id)),
+  );
+  const validIds = snapshots.filter((snapshot) => snapshot.exists).map((snapshot) => snapshot.id);
+  if (validIds.length < TASTE_GATE_MIN_FILMS) {
+    throw new Error("Marcá pelis que estén en el archivo del club.");
+  }
+
+  const token = generateInvitationToken();
+  const invitationId = hashInvitationToken(token);
+  const expiresAt = invitationExpiration(now);
+  const day = tasteGateDay(now);
+  const limitRef = firestore.collection("tasteGateLimits").doc(clientKey);
+
+  await firestore.runTransaction(async (transaction) => {
+    const limitSnap = await transaction.get(limitRef);
+    const previous = limitSnap.data() as { day?: string; count?: number } | undefined;
+    const count = previous?.day === day ? previous.count ?? 0 : 0;
+    if (count >= TASTE_GATE_DAILY_CAP) {
+      throw new Error("Hoy ya te armamos un pase. Guardalo o volvé mañana.");
+    }
+
+    transaction.set(limitRef, {
+      day,
+      count: count + 1,
+      updatedAt: Timestamp.fromDate(now),
+    });
+    transaction.create(firestore.collection("invitations").doc(invitationId), {
+      createdByMemberId: TASTE_GATE_CREATOR,
+      createdAt: Timestamp.fromDate(now),
+      expiresAt: Timestamp.fromDate(expiresAt),
+      revokedAt: null,
+      usedAt: null,
+      usedByMemberId: null,
+      source: "taste-gate",
+      filmIds: validIds,
+      clientKey,
+    } satisfies InvitationDocument);
+  });
+
+  return { token, expiresAt, filmCount: validIds.length };
 }
 
 export async function listInvitations(): Promise<InvitationListItem[]> {

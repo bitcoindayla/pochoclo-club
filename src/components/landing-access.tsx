@@ -1,25 +1,31 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
+import Link from "next/link";
 
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { shouldUseGoogleRedirect } from "@/lib/google-auth";
 
-type LandingDialog = "access" | "join";
-
-export function LandingAccess() {
-  const [dialog, setDialog] = useState<LandingDialog | null>(null);
+export function LandingAccess({
+  compact = false,
+  join = true,
+}: {
+  compact?: boolean;
+  join?: boolean;
+}) {
+  const [dialog, setDialog] = useState(false);
   const [mobileGoogle, setMobileGoogle] = useState(false);
   const titleId = useId();
 
   useEffect(() => {
-    setMobileGoogle(shouldUseGoogleRedirect());
+    const frame = requestAnimationFrame(() => setMobileGoogle(shouldUseGoogleRedirect()));
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {
     if (!dialog) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setDialog(null);
+      if (event.key === "Escape") setDialog(false);
     };
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
@@ -31,16 +37,18 @@ export function LandingAccess() {
 
   return (
     <>
-      <div className="landingCtas">
-        <button className="landingCta landingCtaMember" onClick={() => setDialog("access")} type="button">
-          Ingreso miembros
+      <div className={compact ? "landingCtas landingCtasCompact" : "landingCtas"}>
+        <button className="landingCta landingCtaMember" onClick={() => setDialog(true)} type="button">
+          Ya soy miembro
         </button>
-        <button className="landingCta landingCtaJoin" onClick={() => setDialog("join")} type="button">
-          Quiero participar
-        </button>
+        {join ? (
+          <Link className="landingCta landingCtaJoin" href="/participar">
+            Quiero participar
+          </Link>
+        ) : null}
       </div>
       {dialog ? (
-        <div className="a24Scrim" role="presentation" onClick={() => setDialog(null)}>
+        <div className="a24Scrim" role="presentation" onClick={() => setDialog(false)}>
           <div
             className="a24Dialog"
             role="dialog"
@@ -49,32 +57,17 @@ export function LandingAccess() {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="a24DialogHead">
-              <p className="kicker">{dialog === "access" ? "Acceso" : "Invitación"}</p>
-              <button className="dialogClose" onClick={() => setDialog(null)} type="button" aria-label="Cerrar">
+              <p className="kicker">Acceso</p>
+              <button className="dialogClose" onClick={() => setDialog(false)} type="button" aria-label="Cerrar">
                 ×
               </button>
             </div>
-            {dialog === "access" ? (
-              <>
-                <h2 id={titleId}>Ingresá con tu Gmail de siempre.</h2>
-                <p className="a24DialogCopy">Solo para miembros con cuenta activa.</p>
-                <GoogleSignInButton
-                  hint={mobileGoogle ? undefined : "Habilitar Pop-up screen"}
-                  label="Continuar con Google"
-                />
-              </>
-            ) : (
-              <>
-                <h2 id={titleId}>El club es por invitación.</h2>
-                <p className="a24DialogCopy">
-                  Catorce lugares, un domingo, una sala privada. Pedile a un miembro que te invite al
-                  próximo encuentro. Si ya tenés el enlace, usalo: no hay alta pública.
-                </p>
-                <button className="landingCta landingCtaMember" onClick={() => setDialog("access")} type="button">
-                  Ya soy miembro
-                </button>
-              </>
-            )}
+            <h2 id={titleId}>Ingresá con tu Gmail de siempre.</h2>
+            <p className="a24DialogCopy">Solo para quienes ya tienen lugar en el club.</p>
+            <GoogleSignInButton
+              hint={mobileGoogle ? undefined : "Habilitar Pop-up screen"}
+              label="Continuar con Google"
+            />
           </div>
         </div>
       ) : null}
