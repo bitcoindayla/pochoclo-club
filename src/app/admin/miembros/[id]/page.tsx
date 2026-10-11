@@ -8,9 +8,10 @@ import { catalogForMember, sumMemberAttendance } from "@/lib/attendance-policy";
 import { requireAdmin } from "@/lib/authz";
 import { listFilmHistory } from "@/lib/critiques";
 import { getMemberById, listMembers } from "@/lib/members";
+import { listMemberRecommendationPreferences } from "@/lib/recommendations";
 import { isFounderEmail } from "@/lib/reputation-policy";
 import { CLUB_TIME_ZONE } from "@/lib/screening-policy";
-import { listMemberRecommendationPreferences } from "@/lib/recommendations";
+import { filmsWatchedOnOwn } from "@/lib/taste-gate-policy";
 
 import { AttendanceToggle, MemberActiveForm, MemberNameForm } from "../member-forms";
 
@@ -42,6 +43,7 @@ export default async function MemberDetailPage({
 
   const nights = catalogForMember(history, member.id);
   const counts = sumMemberAttendance(history, member.id);
+  const ownFilms = filmsWatchedOnOwn(history, member.outsideFilmIds);
   const lastAdmin =
     member.role === "admin" &&
     member.active &&
@@ -203,6 +205,35 @@ export default async function MemberDetailPage({
           </div>
         )}
       </section>
+
+      {ownFilms.length > 0 ? (
+        <section className="invitationHistory">
+          <div className="sectionHeading">
+            <div>
+              <p className="kicker">Fuera de sala</p>
+              <h2>Vistas por su cuenta</h2>
+            </div>
+            <span>
+              {ownFilms.length} película{ownFilms.length === 1 ? "" : "s"}
+            </span>
+          </div>
+          <p className="pageIntro">
+            Las marcó al entrar. No son funciones del club y no suman reputación.
+          </p>
+          <ul className="recommendationPreferenceList">
+            {ownFilms.map((film) => (
+              <li key={film.id}>
+                <p>
+                  <strong>{film.title}</strong>
+                  <span>
+                    {film.year} · {film.director}
+                  </span>
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   );
 }

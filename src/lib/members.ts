@@ -8,6 +8,7 @@ import {
   hashInvitationToken,
   isInvitationToken,
 } from "@/lib/invitation-policy";
+import { readOutsideFilmIds } from "@/lib/taste-gate-policy";
 import {
   canDeactivateMember,
   parseDisplayName,
@@ -23,6 +24,7 @@ export type Member = {
   imageUrl: string | null;
   role: MemberRole;
   active: boolean;
+  outsideFilmIds: string[];
 };
 
 export type MemberAdminItem = Member & {
@@ -48,6 +50,7 @@ type MemberDocument = {
   createdAt: Timestamp;
   updatedAt: Timestamp;
   lastSignedInAt: Timestamp | null;
+  outsideFilmIds?: string[];
 };
 
 export type FirebaseIdentity = {
@@ -85,6 +88,7 @@ function toMember(id: string, document: MemberDocument): Member {
     imageUrl: document.imageUrl,
     role: document.role,
     active: document.active,
+    outsideFilmIds: readOutsideFilmIds(document.outsideFilmIds),
   };
 }
 
@@ -160,6 +164,7 @@ export async function authorizeFirebaseIdentity(
 
     const isInitialAdmin = initialAdminEmail === email;
     let invitationReference: FirebaseFirestore.DocumentReference | null = null;
+    let outsideFilmIds: string[] = [];
 
     if (!isInitialAdmin) {
       if (!invitationToken) throw new MembershipError("invitation-required");
@@ -179,12 +184,14 @@ export async function authorizeFirebaseIdentity(
         expiresAt: Timestamp;
         revokedAt: Timestamp | null;
         usedAt: Timestamp | null;
+        filmIds?: unknown;
       };
       if (invitation.usedAt) throw new MembershipError("used-invitation");
       if (invitation.revokedAt) throw new MembershipError("revoked-invitation");
       if (invitation.expiresAt.toMillis() <= Date.now()) {
         throw new MembershipError("expired-invitation");
       }
+      outsideFilmIds = readOutsideFilmIds(invitation.filmIds);
     }
 
     const now = Timestamp.now();
@@ -197,6 +204,7 @@ export async function authorizeFirebaseIdentity(
       createdAt: now,
       updatedAt: now,
       lastSignedInAt: now,
+      ...(outsideFilmIds.length ? { outsideFilmIds } : {}),
     };
 
     transaction.create(memberReference, member);

@@ -64,6 +64,7 @@ vi.mock("@/lib/firebase/admin", () => {
 
 import { reserveSeatAsAdmin } from "./admin-reservations";
 import { parseAdminReservationInput, type AdminReservationInput } from "./admin-reservation-policy";
+import { generateInvitationToken, hashInvitationToken } from "./invitation-policy";
 import { authorizeFirebaseIdentity, getMemberByFirebaseUid, memberEmailLockId } from "./members";
 import { cancelOwnReservation, changeOwnSeat, reserveGuestSeat, reserveOwnSeat } from "./screenings";
 import { openCritiqueSession } from "./critiques";
@@ -225,6 +226,39 @@ describe("first login for admin-provisioned profiles", () => {
     await reserveSeatAsAdmin("admin", account());
     await authorizeFirebaseIdentity(identity());
     await expect(authorizeFirebaseIdentity(identity("nueva@example.com", "different-uid"))).rejects.toMatchObject({ code: "account-conflict" });
+  });
+  it("copies taste-gate films onto the member as personal watches, without club attendance", async () => {
+    const token = generateInvitationToken();
+    const filmIds = Array.from({ length: 10 }, (_, index) => `film${String(index).padStart(4, "0")}xxxx`);
+    docs.set(`invitations/${hashInvitationToken(token)}`, {
+      createdByMemberId: "taste-gate",
+      createdAt: Timestamp.now(),
+      expiresAt: Timestamp.fromMillis(Date.now() + 86_400_000),
+      revokedAt: null,
+      usedAt: null,
+      usedByMemberId: null,
+      source: "taste-gate",
+      filmIds,
+    });
+    const member = await authorizeFirebaseIdentity(identity(), token);
+    expect(member?.outsideFilmIds).toEqual(filmIds);
+    expect(docs.get("members/google-uid")?.outsideFilmIds).toEqual(filmIds);
+    expect(docs.get(`invitations/${hashInvitationToken(token)}`)?.usedByMemberId).toBe("google-uid");
+    expect([...docs.keys()].filter((path) => path.startsWith("filmHistory/"))).toHaveLength(0);
+  });
+  it("leaves a regular invitation without personal watches", async () => {
+    const token = generateInvitationToken();
+    docs.set(`invitations/${hashInvitationToken(token)}`, {
+      createdByMemberId: "admin",
+      createdAt: Timestamp.now(),
+      expiresAt: Timestamp.fromMillis(Date.now() + 86_400_000),
+      revokedAt: null,
+      usedAt: null,
+      usedByMemberId: null,
+    });
+    const member = await authorizeFirebaseIdentity(identity(), token);
+    expect(member?.outsideFilmIds).toEqual([]);
+    expect(docs.get("members/google-uid")?.outsideFilmIds).toBeUndefined();
   });
 });
 

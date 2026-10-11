@@ -5,6 +5,20 @@ export const TASTE_GATE_CREATOR = "taste-gate";
 
 const FILM_ID = /^[A-Za-z0-9_-]{8,64}$/;
 
+export function readOutsideFilmIds(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return [
+    ...new Set(
+      value.filter((id): id is string => typeof id === "string" && FILM_ID.test(id)),
+    ),
+  ];
+}
+
+export function filmsWatchedOnOwn<T extends { id: string }>(history: T[], outsideFilmIds: string[]) {
+  const wanted = new Set(outsideFilmIds);
+  return history.filter((film) => wanted.has(film.id));
+}
+
 export function parseTasteFilmIds(value: unknown) {
   if (!Array.isArray(value)) {
     throw new Error("Marcá las pelis que viste.");

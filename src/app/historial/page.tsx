@@ -5,17 +5,19 @@ import { requireMember } from "@/lib/authz";
 import { roundScore } from "@/lib/critique-policy";
 import { listFilmHistory } from "@/lib/critiques";
 import { listMemberReputations } from "@/lib/reputation";
+import { filmsWatchedOnOwn } from "@/lib/taste-gate-policy";
 
-import { HistoryFilms } from "./history-films";
+import { HistoryFilms, HistoryOwnFilms } from "./history-films";
 
 export const metadata: Metadata = { title: "Historial" };
 
 export default async function HistoryPage() {
-  await requireMember();
+  const member = await requireMember();
   const [history, reputationList] = await Promise.all([
     listFilmHistory(),
     listMemberReputations(),
   ]);
+  const ownFilms = filmsWatchedOnOwn(history, member.outsideFilmIds);
   const reputations = Object.fromEntries(reputationList);
   const average =
     history.length > 0
@@ -63,6 +65,19 @@ export default async function HistoryPage() {
       ) : (
         <HistoryFilms films={history} reputations={reputations} />
       )}
+
+      {ownFilms.length > 0 ? (
+        <section className="historyOwn">
+          <div className="historyOwnHead">
+            <p className="kicker">Por tu cuenta</p>
+            <h2>Las que ya habías visto</h2>
+            <p>
+              Las marcaste al entrar. No son funciones del club y no suman reputación.
+            </p>
+          </div>
+          <HistoryOwnFilms films={ownFilms} />
+        </section>
+      ) : null}
 
       <p>
         <Link className="inlineLink" href="/club">

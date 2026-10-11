@@ -166,3 +166,32 @@ export function HistoryFilms({
     </div>
   );
 }
+
+export function HistoryOwnFilms({ films }: { films: FilmHistoryEntry[] }) {
+  return (
+    <div className="historyList">
+      {films.map((film) => (
+        <div className="historyFilmRow isOwnWatch" key={film.id}>
+          <span className="historyFilmDate">Por tu cuenta</span>
+          <span className="historyFilmTitle">
+            <strong>
+              {film.essay ? (
+                <a className="historyFilmEssay" href={`/visto/${film.id}`}>
+                  {film.title}
+                </a>
+              ) : (
+                film.title
+              )}
+            </strong>
+            <small>
+              {film.year} · {film.director}
+            </small>
+          </span>
+          <span className="historyFilmScore">
+            <small>fuera de sala</small>
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}

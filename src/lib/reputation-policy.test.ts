@@ -104,6 +104,19 @@ describe("buildMemberReputation", () => {
     expect(reputation.nights).toBe(2);
   });
 
+  it("ignores films without club attendance, even if they are in the archive", () => {
+    const reputation = buildMemberReputation({
+      memberId: "a",
+      founding: false,
+      filmCount: 40,
+      nights: [],
+      films: [{ attendees: [] }, { attendees: [] }, { attendees: [] }],
+    });
+    expect(reputation.nights).toBe(0);
+    expect(reputation.stars).toBe(0);
+    expect(reputation.tone).toBe("seed");
+  });
+
   it("gives founding members every film and no absences", () => {
     const reputation = buildMemberReputation({
       memberId: "founder",

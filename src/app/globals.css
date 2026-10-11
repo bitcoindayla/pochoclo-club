@@ -588,7 +588,7 @@ body:has(.screeningPrelude) { overflow: hidden; }
   border-top: 1px solid var(--line);
 }
 .emptyFeature h2, .adminCallout h2, .generatorCard h2, .invitationHistory h2,
-.screeningCreator h2, .screeningHistory h2, .screeningFeature h2 {
+.screeningCreator h2, .screeningHistory h2, .screeningFeature h2, .historyOwn h2 {
   margin: 0;
   font-size: clamp(1.7rem, 4vw, 2.8rem);
   font-weight: 800;
@@ -767,6 +767,28 @@ body:has(.screeningPrelude) { overflow: hidden; }
   font-size: 0.68rem;
 }
 .historyFilmScore { text-align: right; font-variant-numeric: tabular-nums; }
+.historyOwn {
+  margin-top: 3.2rem;
+  padding-top: 2.4rem;
+  border-top: 1px solid var(--line);
+}
+.historyOwnHead {
+  margin-bottom: 1.4rem;
+}
+.historyOwnHead h2 { margin: 0.15rem 0 0; }
+.historyOwnHead p {
+  max-width: 36rem;
+  margin: 0.7rem 0 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+.historyOwn .historyList { border-top: 0; }
+.historyFilmRow.isOwnWatch { opacity: 0.88; }
+.historyFilmRow.isOwnWatch .historyFilmDate {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 800;
+}
 .historyFilmBody {
   display: grid;
   gap: 1.6rem;
