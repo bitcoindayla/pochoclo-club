@@ -28,12 +28,16 @@ function visibleAccent({ r, g, b }: { r: number; g: number; b: number }) {
   return `rgb(${lift(r)} ${lift(g)} ${lift(b)})`;
 }
 
+export type MovieImageCrop = "attention" | "top";
+
 export async function processMovieImageSource({
   source,
   mimeType,
+  crop = "attention",
 }: {
   source: Buffer;
   mimeType: string;
+  crop?: MovieImageCrop;
 }) {
   if (!ALLOWED_MIME_TYPES.has(mimeType)) {
     throw new MovieImageProcessingError("La imagen debe ser JPG, PNG o WebP.");
@@ -79,15 +83,16 @@ export async function processMovieImageSource({
       failOn: "error",
       limitInputPixels: MAX_SOURCE_PIXELS,
     }).rotate();
+    const position = crop === "top" ? "top" : sharp.strategy.attention;
     const [landscape, portrait, stats] = await Promise.all([
       pipeline
         .clone()
-        .resize(1920, 1080, { fit: "cover", position: sharp.strategy.attention })
+        .resize(1920, 1080, { fit: "cover", position })
         .webp({ quality: 84, effort: 5 })
         .toBuffer(),
       pipeline
         .clone()
-        .resize(864, 1080, { fit: "cover", position: sharp.strategy.attention })
+        .resize(864, 1080, { fit: "cover", position })
         .webp({ quality: 84, effort: 5 })
         .toBuffer(),
       pipeline.clone().stats(),

@@ -29,6 +29,40 @@ describe("movie image processing", () => {
     expect(result.accent).toMatch(/^rgb\(\d+ \d+ \d+\)$/);
   });
 
+  it("keeps the top of the frame when cropping from above", async () => {
+    const stripe = await sharp({
+      create: {
+        width: 1920,
+        height: 80,
+        channels: 3,
+        background: { r: 220, g: 30, b: 30 },
+      },
+    })
+      .png()
+      .toBuffer();
+    const source = await sharp({
+      create: {
+        width: 1920,
+        height: 1440,
+        channels: 3,
+        background: { r: 20, g: 40, b: 180 },
+      },
+    })
+      .composite([{ input: stripe, top: 0, left: 0 }])
+      .png()
+      .toBuffer();
+
+    const topCrop = await processMovieImageSource({
+      source,
+      mimeType: "image/png",
+      crop: "top",
+    });
+    const topPixels = await sharp(topCrop.landscape).raw().toBuffer();
+
+    expect(topPixels[0]).toBeGreaterThan(180);
+    expect(topPixels[2]).toBeLessThan(80);
+  });
+
   it("accepts a low-resolution image and enlarges it without changing its proportions", async () => {
     const lowResolution = await sharp({
       create: {

@@ -30,7 +30,11 @@ export async function uploadEssayImage(filmId: string, file: File): Promise<Essa
   const { processMovieImageSource } = await import("@/lib/movie-image-processing");
   let processed: Awaited<ReturnType<typeof processMovieImageSource>>;
   try {
-    processed = await processMovieImageSource({ source, mimeType: file.type });
+    processed = await processMovieImageSource({
+      source,
+      mimeType: file.type,
+      crop: "top",
+    });
   } catch (error) {
     throw new EssayImageError(
       error instanceof Error ? error.message : "No pudimos preparar esa imagen.",
