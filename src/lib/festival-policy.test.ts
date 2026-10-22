@@ -60,6 +60,12 @@ describe("festival marks", () => {
     ]);
   });
 
+  it("seeds The Ugly Stepsister oscar nomination", () => {
+    expect(catalogFestivalMarks("tt29344903")).toEqual([
+      { id: "oscar", result: "nominated" },
+    ]);
+  });
+
   it("maps Wikidata awards to the four festivals and ignores the rest", () => {
     expect(
       marksFromAwardHints([
