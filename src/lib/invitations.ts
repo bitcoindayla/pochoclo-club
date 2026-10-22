@@ -40,20 +40,29 @@ export type InvitationListItem = {
 };
 
 export async function getInvitationStatusFromToken(token: string) {
-  if (!isInvitationToken(token)) return "invalid" as const;
+  const invitation = await getInvitationTicketPayload(token);
+  return invitation?.status ?? ("invalid" as const);
+}
+
+export async function getInvitationTicketPayload(token: string) {
+  if (!isInvitationToken(token)) return null;
 
   const snapshot = await getAdminFirestore()
     .collection("invitations")
     .doc(hashInvitationToken(token))
     .get();
-  if (!snapshot.exists) return "invalid" as const;
+  if (!snapshot.exists) return null;
   const invitation = snapshot.data() as InvitationDocument;
+  const expiresAt = invitation.expiresAt.toDate();
 
-  return invitationStatus({
-    expiresAt: invitation.expiresAt.toDate(),
-    revokedAt: invitation.revokedAt?.toDate() ?? null,
-    usedAt: invitation.usedAt?.toDate() ?? null,
-  });
+  return {
+    expiresAt,
+    status: invitationStatus({
+      expiresAt,
+      revokedAt: invitation.revokedAt?.toDate() ?? null,
+      usedAt: invitation.usedAt?.toDate() ?? null,
+    }),
+  };
 }
 
 export async function createInvitationBatch(createdByMemberId: string, count: number) {

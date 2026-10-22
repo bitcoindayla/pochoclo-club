@@ -5,13 +5,25 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/authz";
 import { parseInvitationCount } from "@/lib/invitation-policy";
 import {
+  invitationSerial,
+  invitationTicketPath,
+} from "@/lib/invitation-ticket-policy";
+import {
   createInvitationBatch,
   revokeInvitation,
 } from "@/lib/invitations";
 
+export type GeneratedInvitationLink = {
+  id: string;
+  url: string;
+  expiresAt: string;
+  serial: string;
+  ticketPath: string;
+};
+
 export type GenerateInvitationsState = {
   error: string | null;
-  links: Array<{ id: string; url: string; expiresAt: string }>;
+  links: GeneratedInvitationLink[];
 };
 
 function applicationUrl() {
@@ -43,6 +55,8 @@ export async function generateInvitationsAction(
         id: invitation.id,
         url: new URL(`/invite/${invitation.token}`, baseUrl).toString(),
         expiresAt: invitation.expiresAt.toISOString(),
+        serial: invitationSerial(invitation.id),
+        ticketPath: invitationTicketPath(invitation.token),
       })),
     };
   } catch (error) {

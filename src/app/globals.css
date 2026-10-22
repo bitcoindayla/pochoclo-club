@@ -656,6 +656,58 @@ body:has(.screeningPrelude) { overflow: hidden; }
 .freshLinks li { padding: 0.7rem 0; border-top: 1px solid var(--line); }
 .freshLinks code { display: block; overflow: hidden; color: var(--ink); font-size: 0.72rem; text-overflow: ellipsis; white-space: nowrap; }
 .freshLinks li span { display: block; margin-top: 0.3rem; color: var(--muted); font-size: 0.68rem; }
+.invitePassList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.25rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.invitePass {
+  display: grid;
+  gap: 0.7rem;
+  min-width: 0;
+}
+.invitePassImage {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 720 / 1200;
+  object-fit: contain;
+  border: 1px solid #e8c36a;
+  background: #0b0b0b;
+}
+.invitePassMeta { display: grid; gap: 0.15rem; }
+.invitePassMeta strong { font-size: 0.78rem; letter-spacing: 0.08em; }
+.invitePassMeta span { color: var(--muted); font-size: 0.68rem; }
+.invitePassActions { display: grid; gap: 0.4rem; }
+.invitePassActions .copyButton,
+.invitePassActions .secondaryButton,
+.inviteWhatsApp {
+  width: 100%;
+  min-height: 40px;
+  padding-block: 0.5rem;
+}
+.inviteWhatsApp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #1a1208;
+  border: 0;
+  background: #e8c36a;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.inviteTicketPreview {
+  display: block;
+  width: min(100%, 22rem);
+  height: auto;
+  margin: 0 auto 1.6rem;
+  border: 1px solid #e8c36a;
+  box-shadow: 0 18px 50px rgba(232, 195, 106, 0.18);
+}
 
 .historyHead {
   display: grid;
@@ -2702,7 +2754,7 @@ h1 .founderTag {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .primaryButton, .secondaryButton, .googleButton, .copyButton, .landingCta, .seat, .floorPlace, .cinematicSeatCue {
+  .primaryButton, .secondaryButton, .googleButton, .copyButton, .inviteWhatsApp, .landingCta, .seat, .floorPlace, .cinematicSeatCue {
     transition: border-color 160ms ease, background 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
   }
   html { scroll-behavior: smooth; }
