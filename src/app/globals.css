@@ -677,6 +677,7 @@ body:has(.screeningPrelude) { overflow: hidden; }
   border: 1px solid #e8c36a;
   background: #0b0b0b;
 }
+.inviteJoinList { display: grid; gap: 0.45rem; }
 .invitePassMeta { display: grid; gap: 0.15rem; }
 .invitePassMeta strong { font-size: 0.78rem; letter-spacing: 0.08em; }
 .invitePassMeta span { color: var(--muted); font-size: 0.68rem; }
@@ -2384,7 +2385,8 @@ h1 .founderTag {
   .accessCard { max-width: 34rem; }
   .emptyFeature { grid-template-columns: auto 1fr; }
   .generatorCard { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
-  .generatorForm { grid-template-columns: 110px 160px; }
+  .generatorForm { grid-template-columns: minmax(16rem, 24rem) auto; }
+  .generatorForm select { width: 100%; }
   .generatorForm label { grid-column: 1 / -1; }
   .generatorCard .freshLinks, .generatorCard .formError { grid-column: 1 / -1; }
   .screeningCreator { grid-template-columns: minmax(220px, 0.65fr) minmax(0, 1.35fr); align-items: start; }

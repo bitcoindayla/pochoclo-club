@@ -5,7 +5,7 @@ import { AdminNav } from "@/components/admin-nav";
 import { ReputationMark } from "@/components/reputation-mark";
 import { SignOutButton } from "@/components/session-actions";
 import { requireAdmin } from "@/lib/authz";
-import { listInvitations } from "@/lib/invitations";
+import { listInvitations, type InvitationListItem } from "@/lib/invitations";
 import { listMembers } from "@/lib/members";
 import { listMemberReputations } from "@/lib/reputation";
 
@@ -31,6 +31,16 @@ function formatDate(date: Date) {
   }).format(date);
 }
 
+function invitationStateLabel(invitation: InvitationListItem) {
+  if (invitation.kind === "member" && invitation.status === "available") {
+    const count = invitation.joined.length;
+    if (count === 0) return "Vigente";
+    if (count === 1) return "Vigente · 1 ingreso";
+    return `Vigente · ${count} ingresos`;
+  }
+  return invitationStatusLabels[invitation.status];
+}
+
 export default async function MembersPage() {
   const admin = await requireAdmin();
   const [members, invitations, reputationList] = await Promise.all([
@@ -39,7 +49,11 @@ export default async function MembersPage() {
     listMemberReputations(),
   ]);
   const reputations = Object.fromEntries(reputationList);
+  const memberNames = new Map(members.map((member) => [member.id, member.name]));
   const activeAdmins = members.filter((member) => member.role === "admin" && member.active).length;
+  const inviters = members
+    .filter((member) => member.active)
+    .map((member) => ({ id: member.id, name: member.name, email: member.email }));
 
   return (
     <div className="adminPage shell">
@@ -88,6 +102,9 @@ export default async function MembersPage() {
                 {members.map((member) => {
                   const reputation = reputations[member.id];
                   const lastAdmin = member.role === "admin" && member.active && activeAdmins <= 1;
+                  const inviterName = member.invitedByMemberId
+                    ? memberNames.get(member.invitedByMemberId)
+                    : undefined;
                   return (
                     <tr key={member.id}>
                       <td data-label="Nombre">
@@ -99,6 +116,9 @@ export default async function MembersPage() {
                           {member.email}
                           {member.pendingFirstLogin ? " · Pendiente de primer ingreso" : ""}
                           {member.role === "admin" ? " · Admin" : ""}
+                          {member.invitedByMemberId
+                            ? ` · Invitado por ${inviterName ?? "un miembro"}`
+                            : ""}
                           {reputation
                             ? reputation.nights > 0
                               ? ` · ${reputation.nights} funciones`
@@ -136,7 +156,7 @@ export default async function MembersPage() {
         )}
       </section>
 
-      <InvitationManager />
+      <InvitationManager members={inviters} />
 
       <section className="invitationHistory">
         <div className="sectionHeading">
@@ -156,7 +176,8 @@ export default async function MembersPage() {
                 <tr>
                   <th>Creada</th>
                   <th>Estado</th>
-                  <th>Miembro</th>
+                  <th>Invita</th>
+                  <th>Ingresaron</th>
                   <th>
                     <span className="srOnly">Acciones</span>
                   </th>
@@ -171,17 +192,38 @@ export default async function MembersPage() {
                     </td>
                     <td data-label="Estado">
                       <span className={`status status-${invitation.status}`}>
-                        {invitationStatusLabels[invitation.status]}
+                        {invitationStateLabel(invitation)}
                       </span>
                     </td>
-                    <td data-label="Miembro">
-                      {invitation.usedBy ? (
-                        <>
-                          {invitation.usedBy.name}
-                          <small>{invitation.usedBy.email}</small>
-                        </>
+                    <td data-label="Invita">
+                      {invitation.kind === "member" ? (
+                        invitation.inviter ? (
+                          <Link className="inlineLink" href={`/admin/miembros/${invitation.inviter.id}`}>
+                            {invitation.inviter.name}
+                          </Link>
+                        ) : (
+                          "Miembro no encontrado"
+                        )
                       ) : (
-                        "—"
+                        "Pase individual"
+                      )}
+                    </td>
+                    <td data-label="Ingresaron">
+                      {invitation.joined.length === 0 ? "—" : (
+                        <div className="inviteJoinList">
+                          {invitation.joined.map((person) => (
+                            <div key={person.id}>
+                              {person.email ? (
+                                <Link className="inlineLink" href={`/admin/miembros/${person.id}`}>
+                                  {person.name}
+                                </Link>
+                              ) : (
+                                person.name
+                              )}
+                              {person.email ? <small>{person.email}</small> : null}
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </td>
                     <td data-label="Acciones">

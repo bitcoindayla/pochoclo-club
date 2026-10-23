@@ -246,6 +246,90 @@ describe("first login for admin-provisioned profiles", () => {
     expect(docs.get(`invitations/${hashInvitationToken(token)}`)?.usedByMemberId).toBe("google-uid");
     expect([...docs.keys()].filter((path) => path.startsWith("filmHistory/"))).toHaveLength(0);
   });
+  it("lets several people enter through one member link and records who invited them", async () => {
+    const token = generateInvitationToken();
+    const path = `invitations/${hashInvitationToken(token)}`;
+    docs.set(path, {
+      createdByMemberId: "admin",
+      createdAt: Timestamp.now(),
+      expiresAt: Timestamp.fromMillis(Date.now() + 86_400_000),
+      revokedAt: null,
+      usedAt: null,
+      usedByMemberId: null,
+      kind: "member",
+      inviterMemberId: "ana",
+      redemptionMemberIds: [],
+    });
+    const first = await authorizeFirebaseIdentity(identity(), token);
+    const second = await authorizeFirebaseIdentity(identity("otra@example.com", "other-uid"), token);
+    expect(first?.invitedByMemberId).toBe("ana");
+    expect(second?.invitedByMemberId).toBe("ana");
+    expect(docs.get(path)?.usedAt).toBeNull();
+    expect(docs.get(path)?.redemptionMemberIds).toEqual(["google-uid", "other-uid"]);
+    expect((await authorizeFirebaseIdentity(identity("tercera@example.com", "third-uid"), token))?.invitedByMemberId).toBe("ana");
+    expect(docs.get(path)?.redemptionMemberIds).toEqual(["google-uid", "other-uid", "third-uid"]);
+  });
+  it("still spends a single-use invitation on the first person", async () => {
+    const token = generateInvitationToken();
+    const path = `invitations/${hashInvitationToken(token)}`;
+    docs.set(path, {
+      createdByMemberId: "admin",
+      createdAt: Timestamp.now(),
+      expiresAt: Timestamp.fromMillis(Date.now() + 86_400_000),
+      revokedAt: null,
+      usedAt: null,
+      usedByMemberId: null,
+    });
+    await authorizeFirebaseIdentity(identity(), token);
+    await expect(authorizeFirebaseIdentity(identity("otra@example.com", "other-uid"), token))
+      .rejects.toMatchObject({ code: "used-invitation" });
+    expect(docs.has("members/other-uid")).toBe(false);
+    expect(docs.get("members/google-uid")?.invitedByMemberId).toBeUndefined();
+  });
+  it("rejects a member link that expired, was revoked, or has no inviter", async () => {
+    const expired = generateInvitationToken();
+    docs.set(`invitations/${hashInvitationToken(expired)}`, {
+      kind: "member",
+      inviterMemberId: "ana",
+      createdByMemberId: "admin",
+      createdAt: Timestamp.now(),
+      expiresAt: Timestamp.fromMillis(Date.now() - 1000),
+      revokedAt: null,
+      usedAt: null,
+      usedByMemberId: null,
+    });
+    await expect(authorizeFirebaseIdentity(identity(), expired)).rejects.toMatchObject({ code: "expired-invitation" });
+
+    const revoked = generateInvitationToken();
+    docs.set(`invitations/${hashInvitationToken(revoked)}`, {
+      kind: "member",
+      inviterMemberId: "ana",
+      createdByMemberId: "admin",
+      createdAt: Timestamp.now(),
+      expiresAt: Timestamp.fromMillis(Date.now() + 86_400_000),
+      revokedAt: Timestamp.now(),
+      usedAt: null,
+      usedByMemberId: null,
+    });
+    await expect(authorizeFirebaseIdentity(identity("otra@example.com", "other-uid"), revoked))
+      .rejects.toMatchObject({ code: "revoked-invitation" });
+
+    const broken = generateInvitationToken();
+    docs.set(`invitations/${hashInvitationToken(broken)}`, {
+      kind: "member",
+      createdByMemberId: "admin",
+      createdAt: Timestamp.now(),
+      expiresAt: Timestamp.fromMillis(Date.now() + 86_400_000),
+      revokedAt: null,
+      usedAt: null,
+      usedByMemberId: null,
+    });
+    await expect(authorizeFirebaseIdentity(identity("tercera@example.com", "third-uid"), broken))
+      .rejects.toMatchObject({ code: "invalid-invitation" });
+    expect(docs.has("members/google-uid")).toBe(false);
+    expect(docs.has("members/other-uid")).toBe(false);
+    expect(docs.has("members/third-uid")).toBe(false);
+  });
   it("leaves a regular invitation without personal watches", async () => {
     const token = generateInvitationToken();
     docs.set(`invitations/${hashInvitationToken(token)}`, {

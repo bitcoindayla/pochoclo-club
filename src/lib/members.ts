@@ -7,6 +7,10 @@ import { getAdminFirestore } from "@/lib/firebase/admin";
 import {
   hashInvitationToken,
   isInvitationToken,
+  isMemberId,
+  isMemberInvitation,
+  nextRedemptionMemberIds,
+  readRedemptionMemberIds,
 } from "@/lib/invitation-policy";
 import { readOutsideFilmIds } from "@/lib/taste-gate-policy";
 import {
@@ -25,6 +29,7 @@ export type Member = {
   role: MemberRole;
   active: boolean;
   outsideFilmIds: string[];
+  invitedByMemberId: string | null;
 };
 
 export type MemberAdminItem = Member & {
@@ -51,6 +56,7 @@ type MemberDocument = {
   updatedAt: Timestamp;
   lastSignedInAt: Timestamp | null;
   outsideFilmIds?: string[];
+  invitedByMemberId?: string;
 };
 
 export type FirebaseIdentity = {
@@ -89,6 +95,7 @@ function toMember(id: string, document: MemberDocument): Member {
     role: document.role,
     active: document.active,
     outsideFilmIds: readOutsideFilmIds(document.outsideFilmIds),
+    invitedByMemberId: isMemberId(document.invitedByMemberId) ? document.invitedByMemberId : null,
   };
 }
 
@@ -165,6 +172,9 @@ export async function authorizeFirebaseIdentity(
     const isInitialAdmin = initialAdminEmail === email;
     let invitationReference: FirebaseFirestore.DocumentReference | null = null;
     let outsideFilmIds: string[] = [];
+    let reusable = false;
+    let hostMemberId: string | null = null;
+    let nextRedemptions: string[] | null = null;
 
     if (!isInitialAdmin) {
       if (!invitationToken) throw new MembershipError("invitation-required");
@@ -185,11 +195,23 @@ export async function authorizeFirebaseIdentity(
         revokedAt: Timestamp | null;
         usedAt: Timestamp | null;
         filmIds?: unknown;
+        kind?: unknown;
+        inviterMemberId?: unknown;
+        redemptionMemberIds?: unknown;
       };
-      if (invitation.usedAt) throw new MembershipError("used-invitation");
+      reusable = isMemberInvitation(invitation.kind);
+      if (!reusable && invitation.usedAt) throw new MembershipError("used-invitation");
       if (invitation.revokedAt) throw new MembershipError("revoked-invitation");
       if (invitation.expiresAt.toMillis() <= Date.now()) {
         throw new MembershipError("expired-invitation");
+      }
+      if (reusable) {
+        if (!isMemberId(invitation.inviterMemberId)) throw new MembershipError("invalid-invitation");
+        hostMemberId = invitation.inviterMemberId;
+        const redemptions = nextRedemptionMemberIds(invitation.redemptionMemberIds, identity.uid);
+        if (redemptions.length !== readRedemptionMemberIds(invitation.redemptionMemberIds).length) {
+          nextRedemptions = redemptions;
+        }
       }
       outsideFilmIds = readOutsideFilmIds(invitation.filmIds);
     }
@@ -205,11 +227,14 @@ export async function authorizeFirebaseIdentity(
       updatedAt: now,
       lastSignedInAt: now,
       ...(outsideFilmIds.length ? { outsideFilmIds } : {}),
+      ...(hostMemberId ? { invitedByMemberId: hostMemberId } : {}),
     };
 
     transaction.create(memberReference, member);
     transaction.create(emailReference, { memberId: identity.uid, createdAt: now });
-    if (invitationReference) {
+    if (invitationReference && reusable && nextRedemptions) {
+      transaction.update(invitationReference, { redemptionMemberIds: nextRedemptions });
+    } else if (invitationReference && !reusable) {
       transaction.update(invitationReference, {
         usedAt: now,
         usedByMemberId: identity.uid,

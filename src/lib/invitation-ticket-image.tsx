@@ -8,6 +8,7 @@ import sharp from "sharp";
 
 import type { InvitationStatus } from "@/lib/invitation-policy";
 import {
+  invitationInviteLine,
   INVITE_TICKET_FIELDS,
   INVITE_TICKET_HEIGHT,
   INVITE_TICKET_WIDTH,
@@ -32,6 +33,8 @@ export type InvitationTicketView = {
   status: InvitationStatus;
   bear: Buffer;
   qr: Buffer;
+  shared?: boolean;
+  inviterName?: string | null;
 };
 
 export async function loadInvitationTicketAssets(inviteUrl: string) {
@@ -74,10 +77,13 @@ function GoldenTicket({
   status,
   bear,
   qr,
+  shared = false,
+  inviterName,
 }: InvitationTicketView) {
   const stamp = status === "available" ? null : STATUS_STAMP[status];
   const bearSrc = dataUri(bear);
   const qrSrc = dataUri(qr);
+  const hostLine = shared ? invitationInviteLine(inviterName?.trim() || "un miembro") : null;
 
   return (
     <div
@@ -182,13 +188,16 @@ function GoldenTicket({
                 height: 44,
                 background: INK,
                 color: GOLD,
-                fontSize: 18,
+                fontSize: hostLine ? 20 : 18,
                 fontWeight: 800,
-                letterSpacing: 8,
+                letterSpacing: hostLine ? 0.6 : 8,
                 textTransform: "uppercase",
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+                padding: hostLine ? "0 16px" : 0,
               }}
             >
-              {INVITE_TICKET_FIELDS.admit}
+              {hostLine ?? INVITE_TICKET_FIELDS.admit}
             </div>
 
             <div
@@ -245,7 +254,7 @@ function GoldenTicket({
               />
               <FactRow
                 left={{ label: "Válido", value: expiresLabel }}
-                right={{ label: "Pase", value: INVITE_TICKET_FIELDS.admit }}
+                right={{ label: "Pase", value: hostLine ? "Sin tope" : INVITE_TICKET_FIELDS.admit }}
                 last
               />
             </div>
@@ -353,7 +362,9 @@ function GoldenTicket({
                     lineHeight: 1.35,
                   }}
                 >
-                  Escaneá el QR o abrí el enlace. Entrá con Google; es de una sola vez.
+                  {hostLine
+                    ? "Escaneá el QR o abrí el enlace. Entrá con Google. Pueden usarlo varias personas."
+                    : "Escaneá el QR o abrí el enlace. Entrá con Google; es de una sola vez."}
                 </div>
                 <div
                   style={{
@@ -365,7 +376,7 @@ function GoldenTicket({
                     textTransform: "uppercase",
                   }}
                 >
-                  No transferible
+                  {hostLine ? "Varias personas" : "No transferible"}
                 </div>
               </div>
             </div>

@@ -3,13 +3,13 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/authz";
-import { parseInvitationCount } from "@/lib/invitation-policy";
+import { parseInviterMemberId } from "@/lib/invitation-policy";
 import {
   invitationSerial,
   invitationTicketPath,
 } from "@/lib/invitation-ticket-policy";
 import {
-  createInvitationBatch,
+  createMemberInvitation,
   revokeInvitation,
 } from "@/lib/invitations";
 
@@ -19,6 +19,7 @@ export type GeneratedInvitationLink = {
   expiresAt: string;
   serial: string;
   ticketPath: string;
+  inviterName: string;
 };
 
 export type GenerateInvitationsState = {
@@ -43,21 +44,24 @@ export async function generateInvitationsAction(
   const admin = await requireAdmin();
 
   try {
-    const count = parseInvitationCount(formData.get("count"));
-    const invitations = await createInvitationBatch(admin.id, count);
+    const invitation = await createMemberInvitation(
+      admin.id,
+      parseInviterMemberId(formData.get("inviterMemberId")),
+    );
     const baseUrl = applicationUrl();
 
     revalidatePath("/admin/invitaciones");
     revalidatePath("/admin/miembros");
     return {
       error: null,
-      links: invitations.map((invitation) => ({
+      links: [{
         id: invitation.id,
         url: new URL(`/invite/${invitation.token}`, baseUrl).toString(),
         expiresAt: invitation.expiresAt.toISOString(),
         serial: invitationSerial(invitation.id),
         ticketPath: invitationTicketPath(invitation.token),
-      })),
+        inviterName: invitation.inviterName,
+      }],
     };
   } catch (error) {
     return {

@@ -44,6 +44,10 @@ export default async function MemberDetailPage({
   const nights = catalogForMember(history, member.id);
   const counts = sumMemberAttendance(history, member.id);
   const ownFilms = filmsWatchedOnOwn(history, member.outsideFilmIds);
+  const inviter = member.invitedByMemberId
+    ? members.find((row) => row.id === member.invitedByMemberId) ?? null
+    : null;
+  const invited = members.filter((row) => row.invitedByMemberId === member.id);
   const lastAdmin =
     member.role === "admin" &&
     member.active &&
@@ -64,6 +68,12 @@ export default async function MemberDetailPage({
           <p className="pageIntro">
             {member.email}
             {member.role === "admin" ? " · Administrador" : ""}
+            {inviter ? (
+              <>
+                {" · Invitado por "}
+                <Link className="inlineLink" href={`/admin/miembros/${inviter.id}`}>{inviter.name}</Link>
+              </>
+            ) : member.invitedByMemberId ? " · Invitado por un miembro" : ""}
           </p>
           <AdminNav current="/admin/miembros" />
         </div>
@@ -205,6 +215,30 @@ export default async function MemberDetailPage({
           </div>
         )}
       </section>
+
+      {invited.length > 0 ? (
+        <section className="invitationHistory">
+          <div className="sectionHeading">
+            <div>
+              <p className="kicker">Invitaciones</p>
+              <h2>Entraron con su pase</h2>
+            </div>
+            <span>{invited.length}</span>
+          </div>
+          <ul className="recommendationPreferenceList">
+            {invited.map((person) => (
+              <li key={person.id}>
+                <p>
+                  <strong>
+                    <Link className="inlineLink" href={`/admin/miembros/${person.id}`}>{person.name}</Link>
+                  </strong>
+                  <span>{person.email}</span>
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {ownFilms.length > 0 ? (
         <section className="invitationHistory">

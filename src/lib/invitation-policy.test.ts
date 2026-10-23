@@ -5,7 +5,11 @@ import {
   invitationExpiration,
   invitationStatus,
   isInvitationToken,
+  isMemberInvitation,
+  nextRedemptionMemberIds,
   parseInvitationCount,
+  parseInviterMemberId,
+  readRedemptionMemberIds,
 } from "./invitation-policy";
 
 describe("invitation tokens", () => {
@@ -51,5 +55,23 @@ describe("invitation lifecycle", () => {
     expect(() => parseInvitationCount("0")).toThrow();
     expect(() => parseInvitationCount("1.5")).toThrow();
     expect(() => parseInvitationCount("21")).toThrow();
+  });
+});
+
+describe("member invitations", () => {
+  it("accepts a member id and rejects a path", () => {
+    expect(parseInviterMemberId("ana")).toBe("ana");
+    expect(parseInviterMemberId("member-550e8400-e29b-41d4-a716-446655440000")).toMatch(/^member-/);
+    expect(() => parseInviterMemberId("ana/otra")).toThrow(/quién invita/);
+    expect(() => parseInviterMemberId("")).toThrow(/quién invita/);
+    expect(isMemberInvitation("member")).toBe(true);
+    expect(isMemberInvitation(undefined)).toBe(false);
+  });
+
+  it("records each person once, in arrival order, without a cap", () => {
+    expect(readRedemptionMemberIds(["ana", "ana", "no/id", 3])).toEqual(["ana"]);
+    expect(nextRedemptionMemberIds(["ana"], "luis")).toEqual(["ana", "luis"]);
+    expect(nextRedemptionMemberIds(["ana", "luis"], "ana")).toEqual(["ana", "luis"]);
+    expect(nextRedemptionMemberIds(undefined, "ana")).toEqual(["ana"]);
   });
 });

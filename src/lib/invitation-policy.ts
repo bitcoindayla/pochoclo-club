@@ -5,6 +5,40 @@ export const MAX_INVITATION_BATCH = 20;
 
 const TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 
+export function isMemberId(value: unknown): value is string {
+  return typeof value === "string"
+    && value.length > 0
+    && value.length <= 128
+    && !value.includes("/")
+    && value !== "."
+    && value !== "..";
+}
+
+export function isMemberInvitation(kind: unknown) {
+  return kind === "member";
+}
+
+export function parseInviterMemberId(value: FormDataEntryValue | null) {
+  if (!isMemberId(value)) throw new Error("Elegí quién invita.");
+  return value;
+}
+
+export function readRedemptionMemberIds(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  const ids: string[] = [];
+  for (const entry of value) {
+    if (!isMemberId(entry) || ids.includes(entry)) continue;
+    ids.push(entry);
+  }
+  return ids;
+}
+
+export function nextRedemptionMemberIds(current: unknown, memberId: string) {
+  const ids = readRedemptionMemberIds(current);
+  if (!isMemberId(memberId) || ids.includes(memberId)) return ids;
+  return [...ids, memberId];
+}
+
 export type InvitationLifecycle = {
   expiresAt: Date;
   revokedAt: Date | null;

@@ -25,18 +25,12 @@ function formatExpiry(value: string) {
   }).format(new Date(value));
 }
 
-export function InvitationManager() {
+export function InvitationManager({ members }: { members: Array<{ id: string; name: string; email: string }> }) {
   const [state, action, pending] = useActionState(
     generateInvitationsAction,
     initialGenerateInvitationsState,
   );
-  const [copied, setCopied] = useState<"all" | string | null>(null);
-
-  async function copyLinks() {
-    await navigator.clipboard.writeText(state.links.map((link) => link.url).join("\n"));
-    setCopied("all");
-    window.setTimeout(() => setCopied(null), 1800);
-  }
+  const [copied, setCopied] = useState<string | null>(null);
 
   async function copyLink(link: GeneratedInvitationLink) {
     await navigator.clipboard.writeText(link.url);
@@ -57,44 +51,39 @@ export function InvitationManager() {
     URL.revokeObjectURL(href);
   }
 
-  async function sendWhatsApp(link: GeneratedInvitationLink) {
+  function sendWhatsApp(link: GeneratedInvitationLink) {
     const text = invitationTicketShareText({
       url: link.url,
       expiresAt: new Date(link.expiresAt),
+      inviterName: link.inviterName,
     });
-    try {
-      const response = await fetch(link.ticketPath);
-      const blob = await response.blob();
-      const file = new File([blob], `pochoclo-${link.serial}.png`, { type: "image/png" });
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], text, title: "Pochoclo Club" });
-        return;
-      }
-    } catch {
-      // WhatsApp web still gets the invite link; the ticket travels as the preview.
-    }
     window.open(whatsappShareUrl(text), "_blank", "noopener,noreferrer");
   }
 
   return (
     <section className="generatorCard">
       <div>
-        <p className="kicker">Nuevo lote</p>
-        <h2>Generar invitaciones</h2>
-        <p>Cada pase es individual, vence en 30 días y se usa una sola vez. Mandalo por WhatsApp con el ticket.</p>
+        <p className="kicker">Nuevo pase</p>
+        <h2>Generar invitación</h2>
+        <p>El pase es de un miembro: vence en 30 días y pueden entrar varias personas. En el seguimiento queda quién invitó. WhatsApp abre directo, con el nombre en el mensaje y en el ticket.</p>
       </div>
 
-      <form action={action} className="generatorForm">
-        <label htmlFor="count">Cantidad</label>
-        <select defaultValue="1" id="count" name="count">
-          {[1, 2, 3, 4, 5, 10, 15, 20].map((count) => (
-            <option key={count} value={count}>{count}</option>
-          ))}
-        </select>
-        <button className="primaryButton" disabled={pending} type="submit">
-          {pending ? "Generando…" : "Generar lote"}
-        </button>
-      </form>
+      {members.length === 0 ? (
+        <p>No hay miembros activos para generar un pase.</p>
+      ) : (
+        <form action={action} className="generatorForm">
+          <label htmlFor="inviterMemberId">Quién invita</label>
+          <select defaultValue="" id="inviterMemberId" name="inviterMemberId" required>
+            <option value="" disabled>Elegí un miembro</option>
+            {members.map((member) => (
+              <option key={member.id} value={member.id}>{member.name} · {member.email}</option>
+            ))}
+          </select>
+          <button className="primaryButton" disabled={pending} type="submit">
+            {pending ? "Generando…" : "Generar pase"}
+          </button>
+        </form>
+      )}
 
       {state.error ? <p className="formError" role="alert">{state.error}</p> : null}
 
@@ -102,29 +91,26 @@ export function InvitationManager() {
         <div className="freshLinks" aria-live="polite">
           <div className="freshLinksHeader">
             <div>
-              <strong>{state.links.length} {state.links.length === 1 ? "pase listo" : "pases listos"}</strong>
-              <span>Enviá el ticket por WhatsApp. El enlace no se puede recuperar después.</span>
+              <strong>{state.links.length === 1 ? `Pase de ${state.links[0]?.inviterName}` : `${state.links.length} pases listos`}</strong>
+              <span>WhatsApp abre con el mensaje y el enlace. El pase no se puede recuperar después.</span>
             </div>
-            <button className="copyButton" onClick={copyLinks} type="button">
-              {copied === "all" ? "Copiados ✓" : "Copiar todos"}
-            </button>
           </div>
           <ul className="invitePassList">
             {state.links.map((link) => (
               <li className="invitePass" key={link.id}>
                 <img
-                  alt={`Pase ${link.serial}`}
+                  alt={`Invita ${link.inviterName}. Pase ${link.serial}`}
                   className="invitePassImage"
                   height={1200}
                   src={link.ticketPath}
                   width={720}
                 />
                 <div className="invitePassMeta">
-                  <strong>{link.serial}</strong>
-                  <span>vence {formatExpiry(link.expiresAt)}</span>
+                  <strong>Invita {link.inviterName}</strong>
+                  <span>{link.serial} · vence {formatExpiry(link.expiresAt)}</span>
                 </div>
                 <div className="invitePassActions">
-                  <button className="inviteWhatsApp" onClick={() => void sendWhatsApp(link)} type="button">
+                  <button className="inviteWhatsApp" onClick={() => sendWhatsApp(link)} type="button">
                     WhatsApp
                   </button>
                   <button className="secondaryButton" onClick={() => void downloadPass(link)} type="button">

@@ -34,6 +34,8 @@ export async function GET(request: Request, context: RouteContext) {
     status: payload.status,
     bear,
     qr,
+    shared: payload.kind === "member",
+    inviterName: payload.inviterName,
   });
 }
 

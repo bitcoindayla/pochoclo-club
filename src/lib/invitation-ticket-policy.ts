@@ -32,19 +32,33 @@ export function formatInvitationExpiry(
     .replace(/\s+de\s+/g, " ");
 }
 
+const INVITE_LINE_MAX = 36;
+
+export function invitationInviteLine(name: string) {
+  const clean = name.trim().replace(/\s+/g, " ");
+  const line = `Invita ${clean}`;
+  if (line.length <= INVITE_LINE_MAX) return line;
+  return `${line.slice(0, INVITE_LINE_MAX - 1).trimEnd()}…`;
+}
+
 export function invitationTicketShareText({
   url,
   expiresAt,
+  inviterName,
 }: {
   url: string;
   expiresAt: Date;
+  inviterName?: string | null;
 }) {
+  const host = inviterName?.trim();
   return [
-    "Hay un lugar para vos en Pochoclo Club.",
+    host ? `${host} te invita a Pochoclo Club.` : "Hay un lugar para vos en Pochoclo Club.",
     "",
     "Cine por invitación, sala privada en Mendoza. Este es tu pase:",
     url,
     "",
-    `Vence el ${formatInvitationExpiry(expiresAt)}. Entrá con Google; es de una sola vez.`,
+    host
+      ? `Vence el ${formatInvitationExpiry(expiresAt)}. Entrá con Google.`
+      : `Vence el ${formatInvitationExpiry(expiresAt)}. Entrá con Google; es de una sola vez.`,
   ].join("\n");
 }

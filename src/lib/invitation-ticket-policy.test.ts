@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   formatInvitationExpiry,
+  invitationInviteLine,
   invitationSerial,
   invitationTicketPath,
   invitationTicketShareText,
@@ -30,6 +31,23 @@ describe("invitation ticket", () => {
     expect(text).toContain(url);
     expect(text.match(/pochoclo\.club/g)).toHaveLength(1);
     expect(text).toMatch(/Vence el /);
+    expect(text).toMatch(/una sola vez/);
+  });
+
+  it("names the member who invites, once, without a single-use limit", () => {
+    const url = "https://pochoclo.club/invite/abc";
+    const text = invitationTicketShareText({
+      url,
+      expiresAt: new Date("2026-11-12T12:00:00.000Z"),
+      inviterName: "  Ana López  ",
+    });
+    expect(text.startsWith("Ana López te invita a Pochoclo Club.")).toBe(true);
+    expect(text).toContain(url);
+    expect(text.match(/pochoclo\.club\/invite\/abc/g)).toHaveLength(1);
+    expect(text).not.toMatch(/sola vez/);
+    expect(invitationInviteLine("Ana López")).toBe("Invita Ana López");
+    expect(invitationInviteLine("María Guadalupe Fernández del Valle")).toMatch(/^Invita /);
+    expect(invitationInviteLine("María Guadalupe Fernández del Valle").endsWith("…")).toBe(true);
   });
 
   it("formats the expiry in Mendoza", () => {

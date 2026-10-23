@@ -27,5 +27,18 @@ describe("invitation ticket image", () => {
     expect(bytes.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
     expect(bytes.byteLength).toBeGreaterThan(20_000);
     await writeFile("/tmp/pochoclo-invite-ticket.png", bytes);
+
+    const shared = invitationTicketImage({
+      serial: invitationSerial(hashInvitationToken(token)),
+      expiresLabel: "12 nov 2026",
+      status: "available",
+      bear,
+      qr,
+      shared: true,
+      inviterName: "Ana López",
+    });
+    const sharedBytes = Buffer.from(await shared.arrayBuffer());
+    expect(sharedBytes.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
+    await writeFile("/tmp/pochoclo-invite-ticket-member.png", sharedBytes);
   }, 30_000);
 });
