@@ -292,7 +292,7 @@ export function OccupancyManager({
                 <span className="waitPosition">{index + 1}</span>
                 <div className="waitIdentity">
                   <strong>{entry.displayName}</strong>
-                  {entry.kind === "guest" ? <small>+1 de {entry.bookedByName}</small> : <small>Miembro</small>}
+                  {entry.kind === "guest" ? <small>+1 de {entry.bookedByName}</small> : <small>{entry.memberId ? "Miembro" : "Solo nombre"}</small>}
                 </div>
                 {readOnly ? <span className="mutedText">Solo lectura</span> : <div className="compactActions">
                   <form action={reorderAction}>

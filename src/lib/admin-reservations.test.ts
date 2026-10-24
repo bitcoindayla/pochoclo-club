@@ -62,10 +62,11 @@ vi.mock("@/lib/firebase/admin", () => {
   }) };
 });
 
-import { reserveSeatAsAdmin } from "./admin-reservations";
-import { parseAdminReservationInput, type AdminReservationInput } from "./admin-reservation-policy";
+import { addToWaitlistAsAdmin, reserveSeatAsAdmin } from "./admin-reservations";
+import { parseAdminReservationInput, parseAdminWaitlistInput, type AdminReservationInput, type AdminWaitlistInput } from "./admin-reservation-policy";
 import { generateInvitationToken, hashInvitationToken } from "./invitation-policy";
 import { authorizeFirebaseIdentity, getMemberByFirebaseUid, memberEmailLockId } from "./members";
+import { ALL_PLACE_CODES } from "./room";
 import { cancelOwnReservation, changeOwnSeat, reserveGuestSeat, reserveOwnSeat } from "./screenings";
 import { openCritiqueSession } from "./critiques";
 
@@ -184,6 +185,95 @@ describe("admin reservation transaction", () => {
     expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
     expect([...docs.keys()].filter((path) => path.startsWith("screenings/night/reservations/"))).toHaveLength(1);
     expect(docs.has(`memberEmails/${memberEmailLockId("nueva@example.com")}`)).toBe(false);
+  });
+});
+
+describe("admin waitlist when the room is full", () => {
+  const waitInput = (person: AdminWaitlistInput["person"]): AdminWaitlistInput => ({
+    screeningId: "night", requestId: randomUUID(), person,
+  });
+  function blockRoom() {
+    for (const code of ALL_PLACE_CODES) {
+      docs.set(`screenings/night/blocks/${code}`, { placeCode: code, blockedByMemberId: "admin" });
+    }
+  }
+  function occupyRoom() {
+    for (const code of ALL_PLACE_CODES) {
+      const id = `holder-${code}`;
+      const now = Timestamp.now();
+      docs.set(`screenings/night/places/${code}`, {
+        memberId: id, reservationId: id, kind: "self", bookedByMemberId: id, createdAt: now,
+      });
+      docs.set(`screenings/night/reservations/${id}`, {
+        memberId: id, placeCode: code, kind: "self", bookedByMemberId: id, createdAt: now, updatedAt: now,
+      });
+    }
+  }
+
+  it("adds a member to the waitlist without taking a seat", async () => {
+    blockRoom();
+    const result = await addToWaitlistAsAdmin("admin", waitInput({ mode: "member", memberId: "ana" }));
+    expect(result).toMatchObject({ personId: "ana", name: "Ana", position: 1, createdMember: false, exemptionGranted: true });
+    expect(docs.get("screenings/night/waitlist/ana")).toMatchObject({
+      reservationId: "ana", memberId: "ana", displayName: "Ana", kind: "self", bookedByMemberId: "admin", order: 1,
+    });
+    expect(docs.has("screenings/night/reservations/ana")).toBe(false);
+    expect(docs.get("screenings/night/state/waitlist")).toMatchObject({ count: 1, nextOrder: 1 });
+    expect(docs.has("movieBallots/night/exemptions/ana")).toBe(true);
+  });
+
+  it("keeps a named visitor out of the member list and promotes them when a seat opens", async () => {
+    occupyRoom();
+    const visitor = await addToWaitlistAsAdmin("admin", waitInput({ mode: "name", name: "En espera" }));
+    expect(visitor.position).toBe(1);
+    expect(docs.get(`screenings/night/waitlist/${visitor.personId}`)).toMatchObject({
+      memberId: null, displayName: "En espera", kind: "self", bookedByMemberId: "admin",
+    });
+    expect([...docs.keys()].filter((path) => path.startsWith("members/"))).toHaveLength(2);
+    await cancelOwnReservation("night", { id: "holder-A1" });
+    const placed = [...docs.entries()].find(([path, data]) =>
+      path.startsWith("screenings/night/places/") && data.memberId === visitor.personId);
+    expect(placed?.[1]).toMatchObject({ displayName: "En espera", kind: "self", bookedByMemberId: "admin" });
+    expect(docs.get(`screenings/night/reservations/${visitor.personId}`)).toMatchObject({ displayName: "En espera", kind: "self" });
+    expect(docs.has(`screenings/night/waitlist/${visitor.personId}`)).toBe(false);
+    expect(docs.get("screenings/night/state/waitlist")?.count).toBe(0);
+  });
+
+  it("creates an account on the waitlist and accepts five people, not six", async () => {
+    blockRoom();
+    const account = await addToWaitlistAsAdmin("admin", waitInput({ mode: "account", name: "Nueva", email: "nueva@example.com" }));
+    expect(account).toMatchObject({ position: 1, createdMember: true, exemptionGranted: true });
+    expect(docs.get(`members/${account.personId}`)).toMatchObject({ email: "nueva@example.com", createdByMemberId: "admin" });
+    expect(docs.get(`screenings/night/waitlist/${account.personId}`)?.memberId).toBe(account.personId);
+    for (let index = 2; index <= 5; index += 1) {
+      const named = await addToWaitlistAsAdmin("admin", waitInput({ mode: "name", name: `Persona ${index}` }));
+      expect(named.position).toBe(index);
+    }
+    await expect(addToWaitlistAsAdmin("admin", waitInput({ mode: "name", name: "Persona 6" }))).rejects.toThrow(/cinco/);
+    expect([...docs.keys()].filter((path) => path.startsWith("screenings/night/waitlist/"))).toHaveLength(5);
+  });
+
+  it("refuses the waitlist while a seat is still free, or for someone already in the room", async () => {
+    blockRoom();
+    docs.delete("screenings/night/blocks/B2");
+    await expect(addToWaitlistAsAdmin("admin", waitInput({ mode: "member", memberId: "ana" }))).rejects.toThrow(/lugar/);
+    expect(docs.has("screenings/night/waitlist/ana")).toBe(false);
+    docs.set("screenings/night/blocks/B2", { placeCode: "B2" });
+    docs.set("screenings/night/reservations/ana", { placeCode: "A2" });
+    await expect(addToWaitlistAsAdmin("admin", waitInput({ mode: "member", memberId: "ana" }))).rejects.toThrow(/lugar A2/);
+    docs.delete("screenings/night/reservations/ana");
+    docs.set("screenings/night/waitlist/ana", { displayName: "Ana" });
+    await expect(addToWaitlistAsAdmin("admin", waitInput({ mode: "member", memberId: "ana" }))).rejects.toThrow(/lista de espera/);
+  });
+
+  it("replays the same waitlist request and rejects reuse for another person", async () => {
+    blockRoom();
+    const request = waitInput({ mode: "name", name: "Invitado" });
+    const first = await addToWaitlistAsAdmin("admin", request);
+    const before = [...docs.entries()];
+    expect(await addToWaitlistAsAdmin("admin", request)).toEqual(first);
+    await expect(addToWaitlistAsAdmin("admin", { ...request, person: { mode: "name", name: "Otra" } })).rejects.toThrow(/operación/);
+    expect([...docs.entries()]).toEqual(before);
   });
 });
 
@@ -354,6 +444,13 @@ describe("reservation input validation", () => {
   };
   it("normalizes names and emails and accepts floor spaces", () => {
     expect(parseAdminReservationInput(form())).toMatchObject({ placeCode: "P1", person: { mode: "account", name: "Nueva", email: "nueva@example.com" } });
+  });
+  it("reads a waitlist entry without a seat", () => {
+    const data = form();
+    data.delete("placeCode");
+    expect(parseAdminWaitlistInput(data)).toMatchObject({ screeningId: "night", person: { mode: "account", name: "Nueva", email: "nueva@example.com" } });
+    data.set("mode", "name");
+    expect(parseAdminWaitlistInput(data)).toMatchObject({ person: { mode: "name", name: "Nueva" } });
   });
   it.each([["placeCode", "Z99"], ["screeningId", "a/b"], ["requestId", "-".repeat(36)], ["mode", "admin"], ["name", " "], ["email", "invalid"], ["email", "a@b"], ["email", "a@@b.com"]])("rejects %s=%s", (key, value) => {
     const data = form(); data.set(key, value);

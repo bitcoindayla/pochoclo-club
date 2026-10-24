@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/authz";
-import { AdminReservationError, parseAdminReservationInput } from "@/lib/admin-reservation-policy";
-import { reserveSeatAsAdmin } from "@/lib/admin-reservations";
+import { AdminReservationError, parseAdminReservationInput, parseAdminWaitlistInput } from "@/lib/admin-reservation-policy";
+import { addToWaitlistAsAdmin, reserveSeatAsAdmin } from "@/lib/admin-reservations";
 import { MemberAdminError } from "@/lib/member-admin-policy";
 import {
   blockPlace,
@@ -48,6 +48,14 @@ export async function reserveSeatAdminAction(
 ): Promise<OccupancyActionState> {
   const admin = await requireAdmin();
   try {
+    if (formData.get("destination") === "waitlist") {
+      const result = await addToWaitlistAsAdmin(admin.id, parseAdminWaitlistInput(formData));
+      refreshOccupancy();
+      return {
+        error: null,
+        message: `${result.name} quedó en la lista de espera, posición ${result.position}.${result.createdMember ? " Su ficha ya está creada; puede entrar con Google usando ese mail." : ""}${result.exemptionGranted ? " Se registró una excepción de votación para esta función." : ""}`,
+      };
+    }
     const result = await reserveSeatAsAdmin(admin.id, parseAdminReservationInput(formData));
     refreshOccupancy();
     return {
