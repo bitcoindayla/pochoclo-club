@@ -188,6 +188,7 @@ export async function saveFilmEssayAction(
     const saved = await saveFilmEssay(
       filmId,
       formData.get("essay"),
+      formData.get("criticName"),
       image instanceof File && image.size > 0 ? image : null,
     );
     refresh();

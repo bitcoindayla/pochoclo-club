@@ -173,6 +173,7 @@ export function EssayForm({
     director: string;
     score: number;
     essay: string | null;
+    criticName: string | null;
     hasEssayImage: boolean;
   }>;
 }) {
@@ -211,13 +212,25 @@ export function EssayForm({
         />
       </label>
       <label className="wideField">
+        Crítico
+        <input
+          autoComplete="name"
+          defaultValue={selected?.criticName ?? ""}
+          key={`${filmId}-critic`}
+          maxLength={80}
+          name="criticName"
+          placeholder="Nombre y apellido"
+          required
+        />
+      </label>
+      <label className="wideField">
         Foto de la escena
         <input accept="image/jpeg,image/png,image/webp" name="image" type="file" />
       </label>
       <p className="pageIntro">
         {selected?.hasEssayImage
           ? "Ya hay una foto. Si subís otra, reemplaza la anterior."
-          : "La foto queda en la infografía y en el enlace que mandamos por WhatsApp."}
+          : "La foto es opcional ahora. Después podés sumar el fotograma de la escena."}
       </p>
       <button className="primaryButton" disabled={pending || films.length === 0} type="submit">
         {pending ? "Publicando…" : "Publicar reseña"}

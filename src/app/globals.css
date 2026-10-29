@@ -1133,7 +1133,7 @@ td small { display: block; margin-top: 0.3rem; color: var(--muted); font-size: 0
   background: var(--bg);
 }
 .screeningForm { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: end; }
-.screeningForm select, .screeningForm textarea {
+.screeningForm select, .screeningForm textarea, .screeningForm input:not([type=file]) {
   width: 100%;
   min-height: 48px;
   padding: 0.75rem 0.9rem;
@@ -3639,6 +3639,13 @@ body:has(.directorLanding) .siteFooter { display: none; }
   line-height: 1.62;
 }
 .essayText p { margin: 0; white-space: pre-wrap; }
+.essayCritic {
+  margin: 1.85rem 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
 .essayShare {
   margin-top: 2.5rem;
   padding: 0;

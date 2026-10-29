@@ -6,8 +6,10 @@ import {
   EssayPolicyError,
   essayImageUrl,
   isFilmHistoryId,
+  parseCriticName,
   parseEssay,
   parseEssayImage,
+  readCriticName,
   type EssayImageRecord,
 } from "@/lib/essay-policy";
 import { getAdminFirestore } from "@/lib/firebase/admin";
@@ -26,6 +28,7 @@ type FilmHistoryEssayDocument = {
   score: number;
   watchedAt: Timestamp;
   essay?: string | null;
+  criticName?: string | null;
   essayImage?: EssayImageRecord | null;
 };
 
@@ -37,6 +40,7 @@ export type PublicFilmEssay = {
   score: number;
   watchedAt: Date;
   essay: string;
+  criticName: string | null;
   imageUrl: string | null;
   portraitUrl: string | null;
   imageVersion: string | null;
@@ -55,6 +59,7 @@ function publicFrom(id: string, data: FilmHistoryEssayDocument): PublicFilmEssay
     score: data.score,
     watchedAt: data.watchedAt.toDate(),
     essay,
+    criticName: readCriticName(data.criticName),
     imageUrl: image ? essayImageUrl(id, image.version, "landscape") : null,
     portraitUrl: image ? essayImageUrl(id, image.version, "portrait") : null,
     imageVersion: image?.version ?? null,
@@ -69,13 +74,20 @@ export async function getPublicFilmEssay(filmId: string): Promise<PublicFilmEssa
   return publicFrom(snapshot.id, snapshot.data() as FilmHistoryEssayDocument);
 }
 
-export async function saveFilmEssay(filmId: string, essayInput: unknown, file: File | null) {
+export async function saveFilmEssay(
+  filmId: string,
+  essayInput: unknown,
+  criticInput: unknown,
+  file: File | null,
+) {
   if (!isFilmHistoryId(filmId)) {
     throw new FilmEssayError("La película no es válida.");
   }
   let essay: string;
+  let criticName: string;
   try {
     essay = parseEssay(essayInput);
+    criticName = parseCriticName(criticInput);
   } catch (error) {
     throw new FilmEssayError(error instanceof EssayPolicyError ? error.message : "La reseña no es válida.");
   }
@@ -92,17 +104,15 @@ export async function saveFilmEssay(filmId: string, essayInput: unknown, file: F
     const { uploadEssayImage } = await import("@/lib/essay-images");
     nextImage = await uploadEssayImage(filmId, file);
   }
-  if (!nextImage) {
-    throw new FilmEssayError("Elegí una foto de la escena.");
-  }
 
   await reference.update({
     essay,
-    essayImage: nextImage,
+    criticName,
+    ...(nextImage ? { essayImage: nextImage } : {}),
     essayUpdatedAt: FieldValue.serverTimestamp(),
   });
 
-  if (previousImage && nextImage.version !== previousImage.version) {
+  if (previousImage && nextImage && nextImage.version !== previousImage.version) {
     const { deleteEssayImages } = await import("@/lib/essay-images");
     await deleteEssayImages([previousImage.landscapePath, previousImage.portraitPath]);
   }
@@ -110,6 +120,7 @@ export async function saveFilmEssay(filmId: string, essayInput: unknown, file: F
   return publicFrom(filmId, {
     ...previous,
     essay,
+    criticName,
     essayImage: nextImage,
   });
 }

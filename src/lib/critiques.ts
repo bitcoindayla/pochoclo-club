@@ -3,6 +3,7 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { hashCritiqueAccess, hasCritiqueAccess } from "@/lib/critique-access";
+import { readCriticName } from "@/lib/essay-policy";
 
 import {
   CRITIQUE_CATEGORIES,
@@ -92,6 +93,7 @@ type FilmHistoryDocument = {
   presentCount?: number;
   absentCount?: number;
   essay?: string | null;
+  criticName?: string | null;
   essayImage?: {
     landscapePath: string;
     portraitPath: string;
@@ -152,6 +154,7 @@ export type FilmHistoryEntry = {
   presentCount: number;
   absentCount: number;
   essay: string | null;
+  criticName: string | null;
   hasEssayImage: boolean;
 };
 
@@ -202,6 +205,7 @@ function historyFrom(id: string, data: FilmHistoryDocument): FilmHistoryEntry {
     presentCount: data.presentCount ?? counts.present,
     absentCount: data.absentCount ?? counts.absent,
     essay: typeof data.essay === "string" && data.essay.trim() ? data.essay.trim() : null,
+    criticName: readCriticName(data.criticName),
     hasEssayImage: Boolean(
       data.essayImage &&
         typeof data.essayImage === "object" &&

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { Brand } from "@/components/brand";
 import { EssayShare } from "@/components/essay-share";
-import { essayExcerpt, formatClubScore } from "@/lib/essay-policy";
+import { essayCriticLine, essayExcerpt, formatClubScore } from "@/lib/essay-policy";
 import { getPublicFilmEssay } from "@/lib/film-essays";
 
 type PageProps = {
@@ -77,7 +77,9 @@ export default async function FilmEssayPage({ params }: PageProps) {
             <p key={`${index}:${paragraph.length}`}>{paragraph}</p>
           ))}
         </div>
+        {film.criticName ? <p className="essayCritic">{essayCriticLine(film.criticName)}</p> : null}
         <EssayShare
+          criticName={film.criticName}
           director={film.director}
           score={film.score}
           title={film.title}

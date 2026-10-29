@@ -1,5 +1,7 @@
 export const MIN_ESSAY_CHARS = 40;
 export const MAX_ESSAY_CHARS = 8000;
+export const MAX_CRITIC_NAME_CHARS = 80;
+export const ESSAY_CRITIC_PREFIX = "Reseña curada y escrita bajo la matriz crítica de:";
 
 export class EssayPolicyError extends Error {
   constructor(message: string) {
@@ -42,6 +44,37 @@ export function parseEssay(value: unknown) {
   return essay;
 }
 
+export function parseCriticName(value: unknown) {
+  if (typeof value !== "string") {
+    throw new EssayPolicyError("Escribí el nombre y apellido de quien firma la reseña.");
+  }
+  const name = value.replace(/\s+/g, " ").trim().replace(/[.,;:]+$/g, "");
+  if (!name) {
+    throw new EssayPolicyError("Escribí el nombre y apellido de quien firma la reseña.");
+  }
+  if (name.length > MAX_CRITIC_NAME_CHARS) {
+    throw new EssayPolicyError(
+      `El nombre del crítico puede tener hasta ${MAX_CRITIC_NAME_CHARS} caracteres.`,
+    );
+  }
+  if (name.split(" ").length < 2) {
+    throw new EssayPolicyError("El crítico necesita nombre y apellido.");
+  }
+  return name;
+}
+
+export function readCriticName(value: unknown) {
+  try {
+    return parseCriticName(value);
+  } catch {
+    return null;
+  }
+}
+
+export function essayCriticLine(criticName: string) {
+  return `${ESSAY_CRITIC_PREFIX} ${criticName}.`;
+}
+
 export function parseEssayImage(value: unknown): EssayImageRecord | null {
   if (!value || typeof value !== "object") return null;
   const image = value as Partial<EssayImageRecord>;
@@ -80,21 +113,26 @@ export function essayShareText({
   director,
   score,
   url,
+  criticName,
 }: {
   title: string;
   year: number;
   director: string;
   score: number;
   url: string;
+  criticName?: string | null;
 }) {
-  return [
-    "Te comparto la reseña de la peli que vimos el Domingo en el ciclo de Pochoclo.club",
+  const lines = [
+    "Ya está lista la reseña de la peli que vimos el Domingo en el ciclo de Pochoclo.club",
     "",
     `${title} (${year})`,
     director,
     `Puntaje de la sala: ${formatClubScore(score)}`,
     url,
-  ].join("\n");
+  ];
+  const critic = readCriticName(criticName);
+  if (critic) lines.push(essayCriticLine(critic));
+  return lines.join("\n");
 }
 
 export function whatsappShareUrl(text: string) {

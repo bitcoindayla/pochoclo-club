@@ -1,14 +1,17 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  essayCriticLine,
   essayExcerpt,
   essayImageUrl,
   essayShareText,
   formatClubScore,
   isEssayImagePath,
   isFilmHistoryId,
+  parseCriticName,
   parseEssay,
   parseEssayImage,
+  readCriticName,
   whatsappShareUrl,
 } from "./essay-policy";
 
@@ -43,18 +46,40 @@ describe("essay policy", () => {
     expect(parseEssayImage({ landscapePath: "landing/v1-landscape.webp" })).toBeNull();
   });
 
-  it("builds a WhatsApp text with comma score and a permalink, not the full essay", () => {
+  it("asks for a first and last name for the critic", () => {
+    expect(parseCriticName("  Susan   Sontag.  ")).toBe("Susan Sontag");
+    expect(essayCriticLine("Susan Sontag")).toBe(
+      "Reseña curada y escrita bajo la matriz crítica de: Susan Sontag.",
+    );
+    expect(readCriticName("Sontag")).toBeNull();
+    expect(() => parseCriticName("Sontag")).toThrow(/nombre y apellido/);
+    expect(() => parseCriticName("")).toThrow(/nombre y apellido/);
+  });
+
+  it("builds a WhatsApp text with comma score, permalink and critic", () => {
     const text = essayShareText({
-      title: "Past Lives",
-      year: 2023,
-      director: "Celine Song",
-      score: 8.6,
-      url: "https://pochoclo.club/visto/GNZXnAswzdwG7dUQhbqY",
+      title: "The Ugly Stepsister",
+      year: 2025,
+      director: "Emilie Blichfeldt",
+      score: 7.5,
+      url: "https://pochoclo.club/visto/PZJTP2bkIO4p0Cm3D2G6",
+      criticName: "Susan Sontag",
     });
     expect(text).toBe(
-      "Te comparto la reseña de la peli que vimos el Domingo en el ciclo de Pochoclo.club\n\nPast Lives (2023)\nCeline Song\nPuntaje de la sala: 8,6\nhttps://pochoclo.club/visto/GNZXnAswzdwG7dUQhbqY",
+      "Ya está lista la reseña de la peli que vimos el Domingo en el ciclo de Pochoclo.club\n\nThe Ugly Stepsister (2025)\nEmilie Blichfeldt\nPuntaje de la sala: 7,5\nhttps://pochoclo.club/visto/PZJTP2bkIO4p0Cm3D2G6\nReseña curada y escrita bajo la matriz crítica de: Susan Sontag.",
     );
     expect(text.match(/https:\/\/pochoclo\.club\/visto\//g)).toHaveLength(1);
+    expect(
+      essayShareText({
+        title: "Past Lives",
+        year: 2023,
+        director: "Celine Song",
+        score: 8.6,
+        url: "https://pochoclo.club/visto/GNZXnAswzdwG7dUQhbqY",
+      }),
+    ).toBe(
+      "Ya está lista la reseña de la peli que vimos el Domingo en el ciclo de Pochoclo.club\n\nPast Lives (2023)\nCeline Song\nPuntaje de la sala: 8,6\nhttps://pochoclo.club/visto/GNZXnAswzdwG7dUQhbqY",
+    );
     expect(formatClubScore(8)).toBe("8,0");
     expect(whatsappShareUrl(text)).toContain("wa.me/?text=");
     expect(essayImageUrl("film1", "v2")).toBe("/api/essay-image/film1?variant=landscape&v=v2");
