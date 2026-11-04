@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { toggleSalaListVoteAction } from "@/app/actions/sala-list";
 import { SalaListMark } from "@/components/sala-list-marks";
-import { SALA_LIST, salaListCopy } from "@/lib/sala-list-policy";
+import { SALA_LIST, SALA_LIST_THANKS, salaListCopy } from "@/lib/sala-list-policy";
 
 export function SalaList({
   counts,
@@ -106,6 +106,16 @@ export function SalaList({
           );
         })}
       </ol>
+      <footer className="salaThanks">
+        <img
+          alt=""
+          className="salaThanksBear"
+          height={56}
+          src="/brand/pochoclo-oso.png"
+          width={56}
+        />
+        <p>{SALA_LIST_THANKS}</p>
+      </footer>
     </section>
   );
 }

@@ -129,3 +129,5 @@ export function salaListCopy(votedCount: number) {
   if (votedCount === 1) return "Marcaste 1. La sala anota.";
   return `Marcaste ${votedCount}. La sala anota.`;
 }
+
+export const SALA_LIST_THANKS = "Gracias por tus votos. Miremos el mundo a través de las ganadoras ;)";

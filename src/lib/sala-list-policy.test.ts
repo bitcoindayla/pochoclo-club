@@ -11,6 +11,7 @@ import {
   parseSalaListVoterId,
   planSalaListToggle,
   SALA_LIST,
+  SALA_LIST_THANKS,
   salaListCopy,
 } from "./sala-list-policy";
 
@@ -69,5 +70,12 @@ describe("sala list votes", () => {
     expect(salaListCopy(0)).toMatch(/Tocá las que querés/);
     expect(salaListCopy(1)).toBe("Marcaste 1. La sala anota.");
     expect(salaListCopy(7)).toBe("Marcaste 7. La sala anota.");
+  });
+
+  it("closes the list with a short thank-you", () => {
+    expect(SALA_LIST_THANKS).toBe(
+      "Gracias por tus votos. Miremos el mundo a través de las ganadoras ;)",
+    );
+    expect(SALA_LIST_THANKS.length).toBeLessThan(90);
   });
 });
