@@ -71,7 +71,7 @@ export function SalaList({
         <p className="kicker">Cincuenta pendientes</p>
         <h1>La lista que pide sala</h1>
         <p>
-          Pelis que el club todavía no proyectó. Tocá las que te queman ver, o volver a ver.
+          Pelis que el club todavía no proyectó. Tocá las que te gustaría ver, o volver a ver.
           Las que más votos junten, piden un domingo.
         </p>
         <p className="salaPulse">{error ?? salaListCopy(voted.size)}</p>
