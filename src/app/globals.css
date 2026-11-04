@@ -3415,6 +3415,112 @@ body:has(.directorLanding) .siteFooter { display: none; }
   .directorFilms, .directorPortrait { animation: none; }
 }
 
+.salaList {
+  width: min(100%, 54rem);
+  margin-inline: auto;
+  padding: 2.6rem clamp(1.2rem, 4vw, 3.4rem) 5.5rem;
+}
+.salaIntro { max-width: 38rem; margin-bottom: 2.4rem; }
+.salaIntro h1 {
+  margin: 0 0 0.85rem;
+  font-size: clamp(2.7rem, 8vw, 5.4rem);
+  font-weight: 800;
+  letter-spacing: -0.075em;
+  line-height: 0.9;
+  text-wrap: balance;
+}
+.salaIntro p {
+  margin: 0;
+  max-width: 34rem;
+  color: var(--muted);
+  font-size: 1.02rem;
+  line-height: 1.45;
+}
+.salaPulse {
+  margin-top: 0.9rem !important;
+  color: var(--cream) !important;
+  font-size: 0.78rem !important;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.salaRows { margin: 0; padding: 0; list-style: none; }
+.salaRows li { margin: 0; }
+.salaRow {
+  display: grid;
+  grid-template-columns: 2rem 2.25rem minmax(0, 1fr) auto;
+  gap: 0.75rem 0.95rem;
+  align-items: start;
+  width: 100%;
+  padding: 1.15rem 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  transition: color 160ms ease;
+}
+.salaRow:hover { color: #fff; }
+.salaRow.isVoted { color: var(--cream); }
+.salaRow.isPending { opacity: 0.62; }
+.salaRow:focus-visible { outline: 2px solid var(--cream); outline-offset: 6px; }
+.salaIndex {
+  padding-top: 0.55rem;
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+.salaMark {
+  width: 2.2rem;
+  height: 2.2rem;
+  margin-top: 0.2rem;
+  display: block;
+  color: rgba(244, 241, 234, 0.72);
+}
+.salaRow.isVoted .salaMark { color: var(--accent); }
+.salaBody { display: grid; min-width: 0; }
+.salaTitle {
+  font-size: clamp(1.35rem, 3.4vw, 2.2rem);
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 1.02;
+}
+.salaCredit {
+  margin-top: 0.28rem;
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.salaBio {
+  margin-top: 0.38rem;
+  color: rgba(244, 241, 234, 0.72);
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+.salaCount {
+  padding-top: 0.35rem;
+  color: var(--muted);
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+}
+.salaRow.isVoted .salaCount { color: var(--accent); }
+@media (max-width: 640px) {
+  .salaList { padding: 1.6rem 1rem 4.5rem; }
+  .salaIntro { margin-bottom: 1.6rem; }
+  .salaRow {
+    grid-template-columns: 1.6rem 1.9rem minmax(0, 1fr) auto;
+    gap: 0.55rem 0.7rem;
+    padding: 0.95rem 0;
+  }
+  .salaMark { width: 1.9rem; height: 1.9rem; }
+  .salaBio { font-size: 0.88rem; }
+}
+
 .screeningPrelude {
   position: relative;
   min-height: 100svh;

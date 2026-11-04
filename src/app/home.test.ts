@@ -15,8 +15,13 @@ vi.mock("@/lib/landing-directors", () => ({
 vi.mock("@/lib/landing-stats", () => ({
   getLandingStats: async () => ({ functionsCount: 46, people: 460 }),
 }));
+vi.mock("@/lib/sala-list", () => ({
+  getSalaListState: async () => ({ counts: {}, votedIds: [] }),
+}));
 vi.mock("@/components/landing-refresh", () => ({ LandingRefresh: () => null }));
-vi.mock("@/components/director-mosaic", () => ({ DirectorMosaic: () => React.createElement("div", { "data-mosaic": true }) }));
+vi.mock("@/components/sala-list", () => ({
+  SalaList: () => React.createElement("div", { "data-sala-list": true }, "La lista que pide sala"),
+}));
 vi.mock("@/components/landing-access", () => ({ LandingAccess: () => React.createElement("button", null, "Ya soy miembro") }));
 vi.mock("@/components/landing-photo-editor", () => ({ LandingPhotoEditor: () => null }));
 vi.mock("@/components/landing-wordmark", () => ({ LandingWordmark: () => null }));
@@ -26,14 +31,16 @@ import Home from "./page";
 
 describe("home switches with the ballot", () => {
   beforeEach(() => { state.live = false; vi.clearAllMocks(); });
-  it("shows the directors and member access between ballots", async () => {
+  it("shows the pending list and member access between ballots", async () => {
     const html = renderToStaticMarkup(await Home());
     expect(html).toContain("directorLanding");
-    expect(html).toContain("data-mosaic");
+    expect(html).toContain("data-sala-list");
+    expect(html).toContain("La lista que pide sala");
     expect(html).toContain("Ya soy miembro");
     expect(html).toContain("Otra mirada, algo nos queda.");
     expect(html).toContain("46 FUNCIONES | 460 ESPECTADORES");
     expect(html).not.toContain("landingStill");
+    expect(html).not.toContain("data-mosaic");
   });
   it("restores the existing photo and voting copy when a ballot opens", async () => {
     state.live = true;
@@ -41,7 +48,7 @@ describe("home switches with the ballot", () => {
     expect(html).toContain("landingStage");
     expect(html).toContain("Votá la próxima película.");
     expect(html).toContain("/original-photo.jpg");
-    expect(html).not.toContain("data-mosaic");
+    expect(html).not.toContain("data-sala-list");
     expect(state.getDirectors).not.toHaveBeenCalled();
   });
 });

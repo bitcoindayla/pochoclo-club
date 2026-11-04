@@ -1,16 +1,17 @@
 import Link from "next/link";
 
 import { Brand } from "@/components/brand";
-import { DirectorMosaic } from "@/components/director-mosaic";
 import { LandingRefresh } from "@/components/landing-refresh";
 import { LandingAccess } from "@/components/landing-access";
 import { LandingPhotoEditor } from "@/components/landing-photo-editor";
 import { LandingWordmark } from "@/components/landing-wordmark";
+import { SalaList } from "@/components/sala-list";
 import { SiteMenu } from "@/components/site-menu";
 import { getCurrentMember } from "@/lib/authz";
 import { getLandingVisual } from "@/lib/landing";
-import { getLandingDirectors, hasLiveLandingBallot } from "@/lib/landing-directors";
+import { hasLiveLandingBallot } from "@/lib/landing-directors";
 import { getLandingStats } from "@/lib/landing-stats";
+import { getSalaListState } from "@/lib/sala-list";
 import { menuLinksFor } from "@/lib/nav";
 
 export default async function Home() {
@@ -18,7 +19,7 @@ export default async function Home() {
     getCurrentMember(), getLandingVisual(), hasLiveLandingBallot(),
   ]);
   if (!liveBallot) {
-    const [directors, stats] = await Promise.all([getLandingDirectors(), getLandingStats()]);
+    const [stats, sala] = await Promise.all([getLandingStats(), getSalaListState()]);
     return (
       <div className="directorLanding">
         <LandingRefresh />
@@ -33,7 +34,7 @@ export default async function Home() {
             {member ? <Link className="landingCta landingCtaMember" href="/club">Entrar al club</Link> : <LandingAccess compact />}
           </div>
         </header>
-        <DirectorMosaic directors={directors} />
+        <SalaList counts={sala.counts} votedIds={sala.votedIds} />
       </div>
     );
   }
