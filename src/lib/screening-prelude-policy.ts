@@ -59,9 +59,11 @@ export function preludeFilmsFrom({
   screeningId,
   movie,
   ballot,
+  stillUrl = null,
 }: {
   screeningId: string;
   movie: { title: string; year: number; director: string; bio: string } | null;
+  stillUrl?: string | null;
   ballot: {
     winnerOptionId: string | null;
     counts: Record<string, number>;
@@ -98,7 +100,7 @@ export function preludeFilmsFrom({
       director: movie.director,
       bio: movie.bio,
       votes: 0,
-      stillUrl: null,
+      stillUrl: stillUrl ?? null,
       isWinner: true,
     },
   ];

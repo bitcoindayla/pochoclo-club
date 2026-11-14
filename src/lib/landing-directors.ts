@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getAdminFirestore } from "@/lib/firebase/admin";
-import { groupDirectors, isLandingBallotLive } from "@/lib/director-mosaic";
+import { groupDirectors, isLandingBallotLive, isLandingScreeningLive } from "@/lib/director-mosaic";
 
 export async function hasLiveLandingBallot() {
   const db = getAdminFirestore();
@@ -11,6 +11,18 @@ export async function hasLiveLandingBallot() {
   const snapshot = await db.collection("movieBallots").doc(id).get();
   const ballot = snapshot.data();
   return isLandingBallotLive(ballot ? { status: ballot.status, closesAt: ballot.closesAt.toMillis() } : null);
+}
+
+export async function hasOpenLandingScreening() {
+  const db = getAdminFirestore();
+  const pointer = await db.doc("system/openScreening").get();
+  const id = pointer.data()?.screeningId;
+  if (typeof id !== "string" || !id || id.includes("/")) return false;
+  const snapshot = await db.collection("screenings").doc(id).get();
+  const screening = snapshot.data();
+  return isLandingScreeningLive(
+    screening ? { status: screening.status, movie: screening.movie ?? null } : null,
+  );
 }
 
 export async function getLandingDirectors() {

@@ -117,7 +117,10 @@ describe("screening prelude", () => {
         screeningId: "s1",
         movie: { title: "Past Lives", year: 2023, director: "Celine Song", bio: "Nora." },
         ballot: null,
+        stillUrl: "/api/landing-image/landscape",
       }),
-    ).toMatchObject([{ id: "tonight", title: "Past Lives", isWinner: true, stillUrl: null }]);
+    ).toMatchObject([
+      { id: "tonight", title: "Past Lives", isWinner: true, stillUrl: "/api/landing-image/landscape" },
+    ]);
   });
 });

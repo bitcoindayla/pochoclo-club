@@ -82,3 +82,7 @@ export function layoutDirectors(directors: DirectorGroup[], width: number, heigh
 export function isLandingBallotLive(ballot: { status: string; closesAt: number } | null, now = Date.now()) {
   return ballot?.status === "open" && ballot.closesAt > now;
 }
+
+export function isLandingScreeningLive(screening: { status: string; movie: { title?: string } | null } | null) {
+  return Boolean(screening?.status === "open" && screening.movie?.title?.trim());
+}

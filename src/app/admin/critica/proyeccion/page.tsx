@@ -6,6 +6,7 @@ import { ScreeningPrelude } from "@/components/screening-prelude";
 import { requireAdmin } from "@/lib/authz";
 import { critiqueQrSvg } from "@/lib/critique-qr";
 import { getCritiqueSession } from "@/lib/critiques";
+import { getLandingVisual } from "@/lib/landing";
 import { getMovieBallot } from "@/lib/movie-voting";
 import { preludeFilmsFrom } from "@/lib/screening-prelude-policy";
 import { getOpenScreeningForMember } from "@/lib/screenings";
@@ -41,11 +42,12 @@ export default async function CritiqueProjectionPage() {
     );
   }
 
-  const ballot = await getMovieBallot(screening.id);
+  const [ballot, visual] = await Promise.all([getMovieBallot(screening.id), getLandingVisual()]);
   const films = preludeFilmsFrom({
     screeningId: screening.id,
     movie: screening.movie,
     ballot,
+    stillUrl: visual?.landscapeUrl ?? null,
   });
   if (films.length === 0) redirect("/admin/critica");
 

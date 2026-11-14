@@ -9,16 +9,16 @@ import { SalaList } from "@/components/sala-list";
 import { SiteMenu } from "@/components/site-menu";
 import { getCurrentMember } from "@/lib/authz";
 import { getLandingVisual } from "@/lib/landing";
-import { hasLiveLandingBallot } from "@/lib/landing-directors";
+import { hasLiveLandingBallot, hasOpenLandingScreening } from "@/lib/landing-directors";
 import { getLandingStats } from "@/lib/landing-stats";
 import { getSalaListState } from "@/lib/sala-list";
 import { menuLinksFor } from "@/lib/nav";
 
 export default async function Home() {
-  const [member, visual, liveBallot] = await Promise.all([
-    getCurrentMember(), getLandingVisual(), hasLiveLandingBallot(),
+  const [member, visual, liveBallot, liveScreening] = await Promise.all([
+    getCurrentMember(), getLandingVisual(), hasLiveLandingBallot(), hasOpenLandingScreening(),
   ]);
-  if (!liveBallot) {
+  if (!liveBallot && !liveScreening) {
     const [stats, sala] = await Promise.all([getLandingStats(), getSalaListState()]);
     return (
       <div className="directorLanding">
@@ -55,12 +55,24 @@ export default async function Home() {
         <div className="landingCopy">
           <p className="kicker">El domingo es para cine</p>
           <h1>
-            Votá la próxima película.
-            <br />
-            Asegurá tu lugar.
+            {liveBallot ? (
+              <>
+                Votá la próxima película.
+                <br />
+                Asegurá tu lugar.
+              </>
+            ) : (
+              <>
+                {visual?.movie?.title ? `Este domingo, ${visual.movie.title}.` : "Este domingo hay película."}
+                <br />
+                Asegurá tu lugar.
+              </>
+            )}
           </h1>
           <p className="heroCopy">
-            Entrá, votá la cartelera y reservá. Catorce lugares, casi todos los domingos.
+            {liveBallot
+              ? "Entrá, votá la cartelera y reservá. Catorce lugares, casi todos los domingos."
+              : "Entrá y reservá tu asiento. Catorce lugares, una sola propuesta."}
           </p>
           <p className="landingNote">
             Somos el primer club debate de cine de la Argentina, con sala privada.

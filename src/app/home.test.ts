@@ -2,14 +2,18 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const state = vi.hoisted(() => ({ live: false, getDirectors: vi.fn(async () => []) }));
+const state = vi.hoisted(() => ({ live: false, screening: false, getDirectors: vi.fn(async () => []) }));
 vi.stubGlobal("React", React);
 vi.mock("@/lib/authz", () => ({ getCurrentMember: async () => null }));
 vi.mock("@/lib/landing", () => ({ getLandingVisual: async () => ({
-  version: "original", accent: "#d0ad4c", landscapeUrl: "/original-photo.jpg", movie: null,
+  version: "original",
+  accent: "#d0ad4c",
+  landscapeUrl: "/original-photo.jpg",
+  movie: state.screening ? { title: "HOPE", year: 2026, director: "Na Hong-jin" } : null,
 }) }));
 vi.mock("@/lib/landing-directors", () => ({
   hasLiveLandingBallot: async () => state.live,
+  hasOpenLandingScreening: async () => state.screening,
   getLandingDirectors: state.getDirectors,
 }));
 vi.mock("@/lib/landing-stats", () => ({
@@ -30,7 +34,7 @@ vi.mock("@/components/site-menu", () => ({ SiteMenu: () => null }));
 import Home from "./page";
 
 describe("home switches with the ballot", () => {
-  beforeEach(() => { state.live = false; vi.clearAllMocks(); });
+  beforeEach(() => { state.live = false; state.screening = false; vi.clearAllMocks(); });
   it("shows the pending list and member access between ballots", async () => {
     const html = renderToStaticMarkup(await Home());
     expect(html).toContain("directorLanding");
@@ -50,5 +54,15 @@ describe("home switches with the ballot", () => {
     expect(html).toContain("/original-photo.jpg");
     expect(html).not.toContain("data-sala-list");
     expect(state.getDirectors).not.toHaveBeenCalled();
+  });
+  it("shows the still and seat copy when Sunday already has its film", async () => {
+    state.screening = true;
+    const html = renderToStaticMarkup(await Home());
+    expect(html).toContain("landingStage");
+    expect(html).toContain("Este domingo, HOPE.");
+    expect(html).toContain("Entrá y reservá tu asiento.");
+    expect(html).toContain("/original-photo.jpg");
+    expect(html).not.toContain("Votá la próxima película.");
+    expect(html).not.toContain("data-sala-list");
   });
 });

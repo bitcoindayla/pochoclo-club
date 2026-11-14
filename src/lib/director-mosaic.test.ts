@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { groupDirectors, isLandingBallotLive, layoutDirectors } from "./director-mosaic";
+import { groupDirectors, isLandingBallotLive, isLandingScreeningLive, layoutDirectors } from "./director-mosaic";
 
 const films = [
   { id: "1", director: "Ruben Ostlund", title: "The Square", year: 2017, score: 8 },
@@ -55,5 +55,12 @@ describe("director archive", () => {
     for (const status of ["draft", "closed", "canceled", "tie"]) {
       expect(isLandingBallotLive({ status, closesAt: 101 }, 100)).toBe(false);
     }
+  });
+
+  it("shows the original home when a Sunday screening already has its film", () => {
+    expect(isLandingScreeningLive(null)).toBe(false);
+    expect(isLandingScreeningLive({ status: "open", movie: null })).toBe(false);
+    expect(isLandingScreeningLive({ status: "draft", movie: { title: "HOPE" } })).toBe(false);
+    expect(isLandingScreeningLive({ status: "open", movie: { title: "HOPE" } })).toBe(true);
   });
 });

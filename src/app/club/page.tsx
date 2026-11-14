@@ -87,7 +87,7 @@ export default async function ClubPage() {
 
   return (
     <div className={ballot ? "clubPage hasCinematic" : "clubPage"}>
-      {latestWinner && !ballot ? <LatestWinner movie={latestWinner.movie} /> : null}
+      {latestWinner && !ballot && !screening?.movie ? <LatestWinner movie={latestWinner.movie} /> : null}
       {ballot ? (
         <MovieBallotPanel ballot={ballot} hasSeat={Boolean(screening?.ownPlaceCode)} />
       ) : null}
