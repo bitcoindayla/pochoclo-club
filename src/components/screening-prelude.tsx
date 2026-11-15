@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { FullscreenButton } from "@/components/fullscreen-button";
 import {
   defaultFeaturedId,
   formatCountdown,
@@ -38,6 +39,7 @@ export function ScreeningPrelude({
 
   return (
     <section className="screeningPrelude">
+      <FullscreenButton />
       {featured.stillUrl && !stillError ? (
         // Auth-gated still of tonight's ballot; the TV browser is already signed in.
         // eslint-disable-next-line @next/next/no-img-element

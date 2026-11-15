@@ -3665,6 +3665,24 @@ body:has(.directorLanding) .siteFooter { display: none; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.fullscreenButton {
+  position: fixed;
+  top: 1.05rem;
+  right: 1.15rem;
+  z-index: 40;
+  padding: 0.48rem 0.72rem;
+  color: var(--cream);
+  border: 1px solid rgba(244, 241, 234, 0.28);
+  background: rgba(5, 5, 5, 0.5);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.fullscreenButton:hover,
+.fullscreenButton.isActive {
+  background: rgba(5, 5, 5, 0.78);
+}
 
 .essayPage {
   min-height: 100svh;

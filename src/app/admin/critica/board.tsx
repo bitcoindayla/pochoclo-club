@@ -8,6 +8,7 @@ import {
   SCORE_SCALE_LEGEND,
 } from "@/lib/critique-policy";
 import type { CritiqueSession } from "@/lib/critiques";
+import { FullscreenButton } from "@/components/fullscreen-button";
 import { RecommendationScreen } from "@/components/recommendation-screen";
 import { RecommendationControls } from "./recommendation-controls";
 
@@ -61,6 +62,7 @@ export function CritiqueBoard({
   if (session.recommendations && session.recommendations.status !== "draft") {
     return (
       <section className={`critiqueBoard hasRecommendations${projection ? " isProjection" : ""}`}>
+        {projection ? <FullscreenButton /> : null}
         <RecommendationScreen round={session.recommendations} />
         {connectionError ? <p className="recommendationConnection" role="status">Reconectando con la sala…</p> : null}
         {!projection ? <>
@@ -73,6 +75,7 @@ export function CritiqueBoard({
 
   return (
     <section className={projection ? "critiqueBoard isProjection" : "critiqueBoard"}>
+      {projection ? <FullscreenButton /> : null}
       {connectionError ? <p className="recommendationConnection" role="status">Reconectando con la sala…</p> : null}
       <p className="kicker">
         {session.status === "closed" ? "El debate" : session.status === "scoring" ? "Puntuación" : "La crítica"}
