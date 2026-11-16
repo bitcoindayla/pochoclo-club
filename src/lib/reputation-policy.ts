@@ -20,6 +20,14 @@ export const REPUTATION_TONE_LABEL: Record<ReputationTone, string> = {
   drift: "Intermitente",
 };
 
+export const REPUTATION_RATIONALE_TITLE = "Cómo se arma esta nota";
+
+export const REPUTATION_RATIONALE = [
+  "El número grande es la reputación en el club, no el puntaje de la película.",
+  "Sube si venís a las funciones, si traés un invitado y si no faltás. El 10 es de quien ya vino más de una vez, invitó a alguien y no se ausentó. Un 8 suele ser la primera noche, o alguien que viene y todavía no trajo un +1. Faltar baja la nota.",
+  "Las F son las funciones. El +1 son los invitados que trajo.",
+] as const;
+
 export type Reputation = {
   memberId: string;
   nights: number;

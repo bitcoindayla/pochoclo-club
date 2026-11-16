@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { AdminNav } from "@/components/admin-nav";
+import { ReputationHelp } from "@/components/reputation-help";
 import { ReputationMark } from "@/components/reputation-mark";
 import { SignOutButton } from "@/components/session-actions";
 import { requireAdmin } from "@/lib/authz";
@@ -92,7 +93,12 @@ export default async function MembersPage() {
                 <tr>
                   <th>Nombre</th>
                   <th>Estado</th>
-                  <th>Reputación</th>
+                  <th>
+                    <span className="repColumnHead">
+                      Reputación
+                      <ReputationHelp />
+                    </span>
+                  </th>
                   <th>
                     <span className="srOnly">Acciones</span>
                   </th>

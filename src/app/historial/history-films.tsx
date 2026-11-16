@@ -1,5 +1,6 @@
 "use client";
 
+import { ReputationHelp } from "@/components/reputation-help";
 import { ReputationMark } from "@/components/reputation-mark";
 import { presentAttendees, type AttendanceRecord } from "@/lib/attendance-policy";
 import { CRITIQUE_CATEGORIES, type CritiqueScores } from "@/lib/critique-policy";
@@ -39,7 +40,14 @@ function PersonBreakdown({
   person: AttendanceRecord;
   reputation: Reputation | null;
 }) {
-  const mark = reputation ? <ReputationMark compact reputation={reputation} /> : null;
+  const mark = reputation ? (
+    <span className="historyPersonRep">
+      <ReputationHelp />
+      <ReputationMark compact reputation={reputation} />
+    </span>
+  ) : (
+    <span className="historyPersonRepPad" aria-hidden="true" />
+  );
   if (!person.scores) {
     return (
       <li className="historyPerson">

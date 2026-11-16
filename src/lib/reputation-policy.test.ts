@@ -4,6 +4,8 @@ import {
   buildMemberReputation,
   isFounderEmail,
   isFoundingEmail,
+  REPUTATION_RATIONALE,
+  REPUTATION_RATIONALE_TITLE,
   reputationStars,
   reputationSummary,
   reputationTone,
@@ -138,6 +140,17 @@ describe("buildMemberReputation", () => {
 });
 
 describe("copy", () => {
+  it("explains why some members have 10 and others 8", () => {
+    const text = REPUTATION_RATIONALE.join(" ");
+    expect(REPUTATION_RATIONALE_TITLE).toMatch(/nota/i);
+    expect(text).toMatch(/reputación/);
+    expect(text).toMatch(/película/);
+    expect(text).toMatch(/10/);
+    expect(text).toMatch(/8/);
+    expect(text).toMatch(/invit/);
+    expect(text).toMatch(/falt/);
+  });
+
   it("builds a readable tooltip", () => {
     expect(
       reputationSummary({
