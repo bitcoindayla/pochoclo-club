@@ -1,3 +1,5 @@
+import { parseFestivalMarks, type FestivalMark } from "@/lib/festival-policy";
+
 export type LandingImageRecord = {
   landscapePath: string;
   portraitPath: string;
@@ -11,7 +13,38 @@ export type LandingMovie = {
   title: string;
   year: number;
   director: string;
+  awards?: FestivalMark[];
 };
+
+export function readLandingMovie(value: unknown): LandingMovie | null {
+  if (!value || typeof value !== "object") return null;
+  const movie = value as Partial<LandingMovie>;
+  if (
+    typeof movie.title !== "string" ||
+    !movie.title.trim() ||
+    typeof movie.director !== "string" ||
+    !movie.director.trim() ||
+    typeof movie.year !== "number" ||
+    !Number.isInteger(movie.year)
+  ) {
+    return null;
+  }
+  const awards = parseFestivalMarks(movie.awards);
+  return {
+    title: movie.title.trim(),
+    director: movie.director.trim(),
+    year: movie.year,
+    ...(awards.length ? { awards } : {}),
+  };
+}
+
+export function movieWithPreservedAwards(movie: LandingMovie, previous: LandingMovie | null) {
+  if (movie.awards?.length) return movie;
+  if (previous?.awards?.length && previous.title === movie.title) {
+    return { ...movie, awards: previous.awards };
+  }
+  return movie;
+}
 
 export function parseLandingMovie(formData: FormData): LandingMovie {
   const text = (key: string, label: string) => {

@@ -5,6 +5,7 @@ import { LandingRefresh } from "@/components/landing-refresh";
 import { LandingAccess } from "@/components/landing-access";
 import { LandingPhotoEditor } from "@/components/landing-photo-editor";
 import { LandingWordmark } from "@/components/landing-wordmark";
+import { FestivalMarks } from "@/components/festival-marks";
 import { SalaList } from "@/components/sala-list";
 import { SiteMenu } from "@/components/site-menu";
 import { getCurrentMember } from "@/lib/authz";
@@ -99,6 +100,7 @@ export default async function Home() {
             {visual.movie ? (
               <div className="landingFilmCredit">
                 <p title={filmCredit}>{filmCredit}</p>
+                <FestivalMarks marks={visual.movie.awards} />
               </div>
             ) : null}
           </>

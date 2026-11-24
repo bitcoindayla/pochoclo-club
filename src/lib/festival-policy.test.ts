@@ -66,6 +66,10 @@ describe("festival marks", () => {
     ]);
   });
 
+  it("seeds Fjord Palme d'Or", () => {
+    expect(catalogFestivalMarks("tt35410859")).toEqual([{ id: "cannes", result: "won" }]);
+  });
+
   it("maps Wikidata awards to the four festivals and ignores the rest", () => {
     expect(
       marksFromAwardHints([

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { isLandingImagePath, landingImageUrls, parseLandingMovie } from "./landing-policy";
+import {
+  isLandingImagePath,
+  landingImageUrls,
+  movieWithPreservedAwards,
+  parseLandingMovie,
+  readLandingMovie,
+} from "./landing-policy";
 
 describe("landing image policy", () => {
   it("accepts only versioned landing webp paths", () => {
@@ -36,5 +42,43 @@ describe("landing image policy", () => {
       }
       form.set(field, original);
     }
+  });
+
+  it("reads landing credits and keeps Cannes wins on the same title", () => {
+    expect(
+      readLandingMovie({
+        title: "Fjord",
+        year: 2026,
+        director: "Cristian Mungiu",
+        awards: [{ id: "cannes", result: "won" }],
+      }),
+    ).toEqual({
+      title: "Fjord",
+      year: 2026,
+      director: "Cristian Mungiu",
+      awards: [{ id: "cannes", result: "won" }],
+    });
+    expect(
+      movieWithPreservedAwards(
+        { title: "Fjord", year: 2026, director: "Cristian Mungiu" },
+        {
+          title: "Fjord",
+          year: 2026,
+          director: "Cristian Mungiu",
+          awards: [{ id: "cannes", result: "won" }],
+        },
+      ).awards,
+    ).toEqual([{ id: "cannes", result: "won" }]);
+    expect(
+      movieWithPreservedAwards(
+        { title: "HOPE", year: 2026, director: "Na Hong-jin" },
+        {
+          title: "Fjord",
+          year: 2026,
+          director: "Cristian Mungiu",
+          awards: [{ id: "cannes", result: "won" }],
+        },
+      ).awards,
+    ).toBeUndefined();
   });
 });

@@ -299,6 +299,10 @@ body:has(.screeningPrelude) { overflow: hidden; }
   right: 0;
   bottom: 0;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
   padding: 2rem clamp(1.2rem, 3vw, 2rem) 1.2rem;
   color: rgba(244,241,234,0.65);
   background: linear-gradient(transparent, rgba(0,0,0,0.45));
@@ -310,7 +314,13 @@ body:has(.screeningPrelude) { overflow: hidden; }
   text-shadow: 0 1px 4px #000;
   pointer-events: none;
 }
-.landingFilmCredit p { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.landingFilmCredit p { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.landingFilmCredit .festivalMarks {
+  position: static;
+  transform: none;
+  margin: 0;
+  font-size: 1.35rem;
+}
 .landingFallback {
   width: 100%;
   height: 100%;
@@ -2438,7 +2448,7 @@ h1 .founderTag {
   .siteMenuStill { display: none; }
   .landingStage { grid-template-columns: 1fr; }
   .landingStill { position: absolute; inset: 0; min-height: 100svh; }
-  .landingStill img { object-position: 88% 28%; }
+  .landingStill img { object-position: center 70%; }
   .landingPanel {
     position: relative;
     z-index: 1;
@@ -2448,6 +2458,7 @@ h1 .founderTag {
   .landingStage:has(.landingFilmCredit) .landingStill { display: contents; }
   .landingStage:has(.landingFilmCredit) .landingPanel { min-height: 0; padding-bottom: 2rem; }
   .landingFilmCredit { position: relative; grid-row: 2; padding: 1rem 1.2rem 1.2rem; background: #050505; font-size: 8px; }
+  .landingFilmCredit .festivalMarks { font-size: 1.15rem; }
   .landingChrome {
     grid-template-columns: 1fr;
     justify-items: center;

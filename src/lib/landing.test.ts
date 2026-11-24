@@ -31,6 +31,20 @@ describe("landing persistence", () => {
     expect(await getLandingVisual()).toMatchObject({ version: oldImage.version, movie: null });
   });
 
+  it("keeps a Cannes mark when the same title is saved without awards", async () => {
+    const fjord = {
+      title: "Fjord",
+      year: 2026,
+      director: "Cristian Mungiu",
+      awards: [{ id: "cannes" as const, result: "won" as const }],
+    };
+    mocks.get.mockResolvedValue({ exists: true, data: () => ({ ...oldImage, movie: fjord }) });
+    const credits = { title: "Fjord", year: 2026, director: "Cristian Mungiu" };
+    expect(await saveLandingImage("admin", null, credits, oldImage.version)).toMatchObject({
+      movie: fjord,
+    });
+  });
+
   it("edits credits without uploading or deleting the current image", async () => {
     expect(await saveLandingImage("admin", null, movie, oldImage.version)).toMatchObject({ version: oldImage.version, movie });
     expect(mocks.set).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ ...oldImage, movie, updatedBy: "admin" }));

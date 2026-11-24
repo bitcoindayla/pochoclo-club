@@ -3,7 +3,13 @@ import "server-only";
 import { FieldValue } from "firebase-admin/firestore";
 
 import { getAdminFirestore } from "@/lib/firebase/admin";
-import { landingImageUrls, type LandingImageRecord, type LandingMovie } from "@/lib/landing-policy";
+import {
+  landingImageUrls,
+  movieWithPreservedAwards,
+  readLandingMovie,
+  type LandingImageRecord,
+  type LandingMovie,
+} from "@/lib/landing-policy";
 
 const LANDING_DOC = ["system", "landing"] as const;
 
@@ -27,7 +33,7 @@ function visualFrom(record: LandingImageRecord & { movie?: LandingMovie }): Land
     accent: record.accent ?? null,
     landscapeUrl: urls.landscape,
     portraitUrl: urls.portrait,
-    movie: record.movie ?? null,
+    movie: readLandingMovie(record.movie),
   };
 }
 
@@ -72,7 +78,10 @@ export async function saveLandingImage(
       }
       const image = uploaded ?? previousData;
       if (!image) throw new Error("Elegí una foto para la portada.");
-      const next = { ...image, movie };
+      const next = {
+        ...image,
+        movie: movieWithPreservedAwards(movie, readLandingMovie(previousData?.movie)),
+      };
       transaction.set(reference, {
         ...next,
         updatedBy: adminId,

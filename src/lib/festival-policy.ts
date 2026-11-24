@@ -66,6 +66,7 @@ export const KNOWN_FESTIVAL_MARKS: Record<string, FestivalMark[]> = {
     { id: "oscar", result: "nominated" },
   ],
   tt29344903: [{ id: "oscar", result: "nominated" }],
+  tt35410859: [{ id: "cannes", result: "won" }],
 };
 
 export function isFestivalId(value: string): value is FestivalId {

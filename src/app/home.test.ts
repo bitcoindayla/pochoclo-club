@@ -9,7 +9,14 @@ vi.mock("@/lib/landing", () => ({ getLandingVisual: async () => ({
   version: "original",
   accent: "#d0ad4c",
   landscapeUrl: "/original-photo.jpg",
-  movie: state.screening ? { title: "HOPE", year: 2026, director: "Na Hong-jin" } : null,
+  movie: state.screening
+    ? {
+        title: "Fjord",
+        year: 2026,
+        director: "Cristian Mungiu",
+        awards: [{ id: "cannes", result: "won" }],
+      }
+    : null,
 }) }));
 vi.mock("@/lib/landing-directors", () => ({
   hasLiveLandingBallot: async () => state.live,
@@ -59,7 +66,10 @@ describe("home switches with the ballot", () => {
     state.screening = true;
     const html = renderToStaticMarkup(await Home());
     expect(html).toContain("landingStage");
-    expect(html).toContain("Este domingo, HOPE.");
+    expect(html).toContain("Este domingo, Fjord.");
+    expect(html).toContain("Fjord (2026) | Dirección: Cristian Mungiu");
+    expect(html).toContain("/festivals/cannes.png");
+    expect(html).toContain("Ganó en Cannes");
     expect(html).toContain("Entrá y reservá tu asiento.");
     expect(html).toContain("/original-photo.jpg");
     expect(html).not.toContain("Votá la próxima película.");
