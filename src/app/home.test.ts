@@ -70,6 +70,7 @@ describe("home switches with the ballot", () => {
     expect(html).toContain("Fjord (2026) | Dirección: Cristian Mungiu");
     expect(html).toContain("/festivals/cannes.png");
     expect(html).toContain("Ganó en Cannes");
+    expect(html).toContain("Palme d&#x27;Or Cannes");
     expect(html).toContain("Entrá y reservá tu asiento.");
     expect(html).toContain("/original-photo.jpg");
     expect(html).not.toContain("Votá la próxima película.");

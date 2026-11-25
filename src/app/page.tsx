@@ -100,7 +100,7 @@ export default async function Home() {
             {visual.movie ? (
               <div className="landingFilmCredit">
                 <p title={filmCredit}>{filmCredit}</p>
-                <FestivalMarks marks={visual.movie.awards} />
+                <FestivalMarks marks={visual.movie.awards} caption />
               </div>
             ) : null}
           </>

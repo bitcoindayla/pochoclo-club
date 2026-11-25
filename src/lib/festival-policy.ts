@@ -78,6 +78,11 @@ export function festivalMarkLabel(mark: FestivalMark) {
   return mark.result === "won" ? `Ganó en ${name}` : `Nominada en ${name}`;
 }
 
+export function festivalMarkInscription(mark: FestivalMark) {
+  if (mark.id === "cannes" && mark.result === "won") return "Palme d'Or Cannes";
+  return null;
+}
+
 export function festivalMarksKey(marks: FestivalMark[] | null | undefined) {
   return mergeFestivalMarks(marks ?? [])
     .map((mark) => `${mark.id}:${mark.result}`)

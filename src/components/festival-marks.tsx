@@ -1,4 +1,5 @@
 import {
+  festivalMarkInscription,
   festivalMarkLabel,
   mergeFestivalMarks,
   type FestivalId,
@@ -12,16 +13,23 @@ const MARK_SRC: Record<FestivalId, string> = {
   sansebastian: "/festivals/sansebastian.png",
 };
 
-export function FestivalMarks({ marks }: { marks?: FestivalMark[] | null }) {
+export function FestivalMarks({
+  marks,
+  caption,
+}: {
+  marks?: FestivalMark[] | null;
+  caption?: boolean;
+}) {
   const visible = mergeFestivalMarks(marks ?? []);
   if (!visible.length) return null;
   return (
     <span
-      className="festivalMarks"
+      className={`festivalMarks${caption ? " hasCaption" : ""}`}
       aria-label={visible.map(festivalMarkLabel).join(". ")}
     >
       {visible.map((mark) => {
         const label = festivalMarkLabel(mark);
+        const inscription = caption ? festivalMarkInscription(mark) : null;
         return (
           <span
             className={`festivalMark${mark.id === "oscar" ? " isOscar" : ""}${mark.result === "nominated" ? " isNominated" : ""}`}
@@ -29,7 +37,9 @@ export function FestivalMarks({ marks }: { marks?: FestivalMark[] | null }) {
             title={label}
           >
             <img alt="" src={MARK_SRC[mark.id]} />
-            <span className="festivalMarkLabel">{label}</span>
+            <span className={`festivalMarkLabel${inscription ? " isCaption" : ""}`}>
+              {inscription ?? label}
+            </span>
           </span>
         );
       })}

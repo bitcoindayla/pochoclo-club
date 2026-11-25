@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   catalogFestivalMarks,
   festivalFromAwardHint,
+  festivalMarkInscription,
   festivalMarkLabel,
   festivalMarksKey,
   marksFromAwardHints,
@@ -68,6 +69,12 @@ describe("festival marks", () => {
 
   it("seeds Fjord Palme d'Or", () => {
     expect(catalogFestivalMarks("tt35410859")).toEqual([{ id: "cannes", result: "won" }]);
+  });
+
+  it("inscribes a Cannes Palme d'Or", () => {
+    expect(festivalMarkInscription({ id: "cannes", result: "won" })).toBe("Palme d'Or Cannes");
+    expect(festivalMarkInscription({ id: "cannes", result: "nominated" })).toBeNull();
+    expect(festivalMarkInscription({ id: "oscar", result: "won" })).toBeNull();
   });
 
   it("maps Wikidata awards to the four festivals and ignores the rest", () => {
