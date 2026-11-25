@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { AdminNav } from "@/components/admin-nav";
+import { FestivalMarks } from "@/components/festival-marks";
 import { SignOutButton } from "@/components/session-actions";
 import { requireMember } from "@/lib/authz";
 import { ticketQrSvg } from "@/lib/critique-qr";
@@ -11,7 +12,7 @@ import {
   getMemberMovieBallot,
 } from "@/lib/movie-voting";
 import { listMemberReputations } from "@/lib/reputation";
-import { CLUB_TIME_ZONE } from "@/lib/screening-policy";
+import { CLUB_TIME_ZONE, screeningHeadline } from "@/lib/screening-policy";
 import { getOpenScreeningForMember } from "@/lib/screenings";
 
 import { ReservationTickets } from "./reservation-tickets";
@@ -108,7 +109,16 @@ export default async function ClubPage() {
                 <p className="kicker">
                   {screening.status === "closed" ? "Función cerrada · solo lectura" : "Reservas abiertas"}
                 </p>
-                <h2>{screening.title || "Próxima función"}</h2>
+                <h2>{screeningHeadline(screening.title, screening.movie)}</h2>
+                {screening.movie ? (
+                  <p className="screeningFilmMeta">
+                    <span>
+                      {screening.movie.year} · {screening.movie.director}
+                    </span>
+                    <FestivalMarks marks={screening.movie.awards} />
+                  </p>
+                ) : null}
+                {screening.movie?.bio ? <p className="screeningFilmBio">{screening.movie.bio}</p> : null}
                 <p className="screeningDate">{screeningDate}</p>
                 {screening.message ? <p className="screeningMessage">{screening.message}</p> : null}
               </div>
@@ -155,7 +165,7 @@ export default async function ClubPage() {
             movies={ticketMovies}
             ownPlaceCode={screening.ownPlaceCode}
             screeningId={screening.id}
-            screeningTitle={screening.title || "Próxima función"}
+            screeningTitle={screeningHeadline(screening.title, screening.movie)}
             timeLabel={ticketTime}
           />
         ) : null}

@@ -1,3 +1,5 @@
+import type { FestivalMark } from "@/lib/festival-policy";
+
 export type PreludeFilm = {
   id: string;
   title: string;
@@ -7,6 +9,7 @@ export type PreludeFilm = {
   votes: number;
   stillUrl: string | null;
   isWinner: boolean;
+  awards?: FestivalMark[] | null;
 };
 
 export type PreludeCountdown = {
@@ -62,7 +65,13 @@ export function preludeFilmsFrom({
   stillUrl = null,
 }: {
   screeningId: string;
-  movie: { title: string; year: number; director: string; bio: string } | null;
+  movie: {
+    title: string;
+    year: number;
+    director: string;
+    bio: string;
+    awards?: FestivalMark[] | null;
+  } | null;
   stillUrl?: string | null;
   ballot: {
     winnerOptionId: string | null;
@@ -73,6 +82,7 @@ export function preludeFilmsFrom({
       year: number;
       director: string;
       bio: string;
+      awards?: FestivalMark[] | null;
       image?: { landscapePath?: string | null } | null;
     }>;
   } | null;
@@ -89,6 +99,7 @@ export function preludeFilmsFrom({
         ? `/api/movie-images/${screeningId}/${option.id}/landscape`
         : null,
       isWinner: option.id === ballot.winnerOptionId,
+      ...(option.awards?.length ? { awards: option.awards } : {}),
     }));
   }
   if (!movie) return [];
@@ -102,6 +113,7 @@ export function preludeFilmsFrom({
       votes: 0,
       stillUrl: stillUrl ?? null,
       isWinner: true,
+      ...(movie.awards?.length ? { awards: movie.awards } : {}),
     },
   ];
 }

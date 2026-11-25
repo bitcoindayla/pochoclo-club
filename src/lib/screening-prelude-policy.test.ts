@@ -122,5 +122,20 @@ describe("screening prelude", () => {
     ).toMatchObject([
       { id: "tonight", title: "Past Lives", isWinner: true, stillUrl: "/api/landing-image/landscape" },
     ]);
+    expect(
+      preludeFilmsFrom({
+        screeningId: "s1",
+        movie: {
+          title: "Fjord",
+          year: 2026,
+          director: "Cristian Mungiu",
+          bio: "Palma de Oro.",
+          awards: [{ id: "cannes", result: "won" }],
+        },
+        ballot: null,
+      }),
+    ).toMatchObject([
+      { title: "Fjord", awards: [{ id: "cannes", result: "won" }] },
+    ]);
   });
 });

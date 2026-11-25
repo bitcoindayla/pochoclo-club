@@ -1,6 +1,13 @@
 export const CLUB_TIME_ZONE = "America/Argentina/Mendoza";
 export const DEFAULT_SCREENING_TIME = "20:00";
 
+export function screeningHeadline(
+  title: string | null | undefined,
+  movie: { title?: string | null } | null | undefined,
+) {
+  return movie?.title?.trim() || title?.trim() || "Próxima función";
+}
+
 export type ScreeningInput = {
   localDate: string;
   localTime: string;

@@ -3,9 +3,18 @@ import { describe, expect, it } from "vitest";
 import {
   localScreeningDate,
   parseScreeningInput,
+  screeningHeadline,
   suggestBallotClose,
   suggestNextScreening,
 } from "./screening-policy";
+
+describe("screening headline", () => {
+  it("prefers the film title over the night name", () => {
+    expect(screeningHeadline("El estreno del mes!", { title: "Fjord" })).toBe("Fjord");
+    expect(screeningHeadline("El estreno del mes!", null)).toBe("El estreno del mes!");
+    expect(screeningHeadline(null, null)).toBe("Próxima función");
+  });
+});
 
 describe("screening input", () => {
   it("converts Mendoza local time to the correct instant", () => {

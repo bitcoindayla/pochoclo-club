@@ -170,6 +170,8 @@ function movieForScreening(option: MovieOption) {
     year: option.year,
     director: option.director,
     bio: option.bio,
+    imdbId: option.imdbId ?? null,
+    awards: option.awards ?? [],
   };
 }
 

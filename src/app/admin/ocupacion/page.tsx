@@ -6,7 +6,7 @@ import { SignOutButton } from "@/components/session-actions";
 import { requireAdmin } from "@/lib/authz";
 import { listMembers } from "@/lib/members";
 import { ALL_PLACE_CODES, FLOOR_PLACES, ROOM_ROWS, type PlaceCode } from "@/lib/room";
-import { CLUB_TIME_ZONE } from "@/lib/screening-policy";
+import { CLUB_TIME_ZONE, screeningHeadline } from "@/lib/screening-policy";
 import { getOpenScreeningForMember } from "@/lib/screenings";
 
 import { OccupancyManager } from "./occupancy-manager";
@@ -55,7 +55,7 @@ export default async function OccupancyPage() {
               <p className="kicker">
                 {screening.status === "closed" ? "Función cerrada · solo lectura" : "Función abierta"}
               </p>
-              <h2>{screening.title || "Próxima función"}</h2>
+              <h2>{screeningHeadline(screening.title, screening.movie)}</h2>
               <p>{date}</p>
             </div>
             <div className="occupancyStats">

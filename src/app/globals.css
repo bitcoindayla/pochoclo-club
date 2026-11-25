@@ -1943,6 +1943,27 @@ body:has(.cinematicBallot) .eyebrow {
   border-bottom: 1px solid var(--line);
 }
 .screeningDate { margin: 0.7rem 0 0; font-weight: 700; text-transform: capitalize; }
+.screeningFilmMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.8rem;
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+.screeningFilmMeta .festivalMarks {
+  position: static;
+  transform: none;
+  margin: 0;
+  font-size: 1.2rem;
+}
+.screeningFilmBio {
+  max-width: 42rem;
+  margin: 0.9rem 0 0;
+  color: var(--ink);
+  line-height: 1.55;
+}
 .screeningMessage { max-width: 42rem; margin: 1rem 0 0; color: var(--muted); line-height: 1.5; }
 .availabilityCount {
   display: grid;
@@ -3729,6 +3750,33 @@ body:has(.directorLanding) .siteFooter { display: none; }
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+}
+.preludeCopy .festivalMarks {
+  position: static;
+  display: flex;
+  margin: 0.85rem 0 0;
+  transform: none;
+  font-size: 1.45rem;
+}
+.preludeCopy .festivalMark {
+  height: auto;
+  flex-direction: row-reverse;
+  gap: 0.45rem;
+}
+.preludeCopy .festivalMark img { height: 1.35em; }
+.preludeCopy .festivalMarkLabel.isCaption {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+  color: #e8c36a;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 .preludeBio {
   max-width: 38rem;

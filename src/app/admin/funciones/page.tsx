@@ -4,7 +4,7 @@ import Link from "next/link";
 import { AdminNav } from "@/components/admin-nav";
 import { SignOutButton } from "@/components/session-actions";
 import { requireAdmin } from "@/lib/authz";
-import { CLUB_TIME_ZONE } from "@/lib/screening-policy";
+import { CLUB_TIME_ZONE, screeningHeadline } from "@/lib/screening-policy";
 import { listScreenings } from "@/lib/screenings";
 
 import {
@@ -77,7 +77,7 @@ export default async function ScreeningsPage() {
                   <span className={`status status-${screening.status}`}>
                     {statusLabels[screening.status]}
                   </span>
-                  <h3>{screening.title || "Función sin título"}</h3>
+                  <h3>{screeningHeadline(screening.title, screening.movie)}</h3>
                   <p>{formatScreeningDate(screening.startsAt)}</p>
                   {screening.message ? <small>{screening.message}</small> : null}
                 </div>

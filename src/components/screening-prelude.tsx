@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { FestivalMarks } from "@/components/festival-marks";
 import { FullscreenButton } from "@/components/fullscreen-button";
 import {
   defaultFeaturedId,
@@ -64,6 +65,7 @@ export function ScreeningPrelude({
               {featured.year} · {featured.director}
             </small>
           </h1>
+          <FestivalMarks marks={featured.awards} caption />
           {featured.bio ? <p className="preludeBio">{featured.bio}</p> : null}
         </div>
         <p className="preludeTimer" aria-live="polite">

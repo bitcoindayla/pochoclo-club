@@ -21,6 +21,7 @@ import {
   planScreeningOpening,
   ScreeningLifecycleError,
 } from "@/lib/screening-lifecycle-policy";
+import { parseFestivalMarks, type FestivalMark } from "@/lib/festival-policy";
 import type { ScreeningInput } from "@/lib/screening-policy";
 import {
   claimWaitlistSlot,
@@ -36,6 +37,8 @@ export type ScreeningMovie = {
   year: number;
   director: string;
   bio: string;
+  imdbId?: string | null;
+  awards?: FestivalMark[];
 };
 
 type ScreeningDocument = {
@@ -182,7 +185,14 @@ function screeningFromDocument(id: string, document: ScreeningDocument): Screeni
       Number.isInteger(movie.year) &&
       typeof movie.director === "string" &&
       typeof movie.bio === "string"
-        ? movie
+        ? {
+            title: movie.title,
+            year: movie.year,
+            director: movie.director,
+            bio: movie.bio,
+            imdbId: typeof movie.imdbId === "string" ? movie.imdbId : null,
+            awards: parseFestivalMarks(movie.awards),
+          }
         : null,
     status: document.status,
     createdAt: document.createdAt.toDate(),
